@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/user.dart';
@@ -10,18 +11,54 @@ final authStateProvider =
 });
 
 class AuthStateNotifier extends StateNotifier<AppUser?> {
+  StreamSubscription? _authSubscription;
+
   AuthStateNotifier() : super(null) {
     _initializeAuthState();
   }
 
   void _initializeAuthState() {
+    // Check for an existing session on startup and fetch DB role
     final currentUser = SupabaseService().currentUser;
     if (currentUser != null) {
-      state = AppUser.fromSupabase(currentUser);
+      _fetchAndSetUser(currentUser.id);
+    }
+
+    // Subscribe to future auth state changes (sign-in / sign-out / token refresh)
+    _authSubscription = SupabaseService()
+        .auth
+        .onAuthStateChange
+        .listen((data) async {
+      final session = data.session;
+      if (session?.user == null) {
+        state = null;
+      } else {
+        await _fetchAndSetUser(session!.user.id);
+      }
+    });
+  }
+
+  /// Fetches the full user row (including role) from the `users` table and
+  /// sets state. Falls back to a minimal AppUser built from Auth metadata if
+  /// the DB fetch fails (e.g. no network on first launch).
+  Future<void> _fetchAndSetUser(String userId) async {
+    try {
+      final response = await SupabaseService()
+          .from('users')
+          .select()
+          .eq('id', userId)
+          .single();
+      state = AppUser.fromMap(response);
+    } catch (_) {
+      // Fallback: build from Supabase Auth metadata if DB unavailable
+      final authUser = SupabaseService().currentUser;
+      if (authUser != null) {
+        state = AppUser.fromSupabase(authUser);
+      }
     }
   }
 
-  // Set user state (for testing/design mode)
+  // Set user state manually (used after sign-up / profile update)
   void setUser(AppUser? user) {
     state = user;
   }
@@ -29,6 +66,12 @@ class AuthStateNotifier extends StateNotifier<AppUser?> {
   // Clear user state
   void clearUser() {
     state = null;
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 }
 
@@ -57,7 +100,7 @@ class AuthService {
     }
   }
 
-  // Verify OTP
+  // Verify OTP — fetches the full DB user row so the role is correct
   Future<AppUser> verifyOTP(String phone, String token) async {
     try {
       final response = await _supabase.auth.verifyOTP(
@@ -70,7 +113,7 @@ class AuthService {
         throw Exception('Verification failed');
       }
 
-      // Check if user exists in database
+      // Upsert user row in case this is a brand-new account
       final existingUser = await _supabase
           .from('users')
           .select()
@@ -78,7 +121,6 @@ class AuthService {
           .maybeSingle();
 
       if (existingUser == null) {
-        // Create new user in database
         await _supabase.from('users').insert({
           'id': response.user!.id,
           'phone': phone,
@@ -86,8 +128,14 @@ class AuthService {
         });
       }
 
-      final user = AppUser.fromSupabase(response.user!);
-      return user;
+      // Always read the authoritative role from the DB table (not metadata)
+      final userRow = await _supabase
+          .from('users')
+          .select()
+          .eq('id', response.user!.id)
+          .single();
+
+      return AppUser.fromMap(userRow);
     } catch (e) {
       throw Exception('Failed to verify OTP: $e');
     }
@@ -123,7 +171,7 @@ class AuthService {
     }
   }
 
-  // Get current user from database
+  // Get current user from database (with correct role)
   Future<AppUser?> getCurrentUser() async {
     try {
       final userId = _supabase.auth.currentUser?.id;
@@ -136,15 +184,6 @@ class AuthService {
     } catch (e) {
       return null;
     }
-  }
-
-  // Listen to auth changes
-  Stream<AppUser?> authStateChanges() {
-    return _supabase.auth.onAuthStateChange.map((data) {
-      final session = data.session;
-      if (session?.user == null) return null;
-      return AppUser.fromSupabase(session!.user);
-    });
   }
 }
 
@@ -164,7 +203,7 @@ class AuthController extends AsyncNotifier<void> {
     });
   }
 
-  // Verify OTP
+  // Verify OTP — role is now fetched from DB inside AuthService
   Future<AppUser> verifyOTP(String phone, String token) async {
     state = const AsyncValue.loading();
     final user = await AsyncValue.guard(() async {
@@ -176,7 +215,7 @@ class AuthController extends AsyncNotifier<void> {
       throw user.error!;
     }
 
-    // Update auth state
+    // Push the correct user (with DB role) into the auth state notifier
     ref.read(authStateProvider.notifier).setUser(user.value);
     return user.value!;
   }
@@ -188,7 +227,6 @@ class AuthController extends AsyncNotifier<void> {
       await _authService.signOut();
     });
 
-    // Clear auth state
     ref.read(authStateProvider.notifier).clearUser();
   }
 
@@ -202,7 +240,6 @@ class AuthController extends AsyncNotifier<void> {
       await _authService.updateProfile(name: name, avatarUrl: avatarUrl);
     });
 
-    // Refresh user data
     final updatedUser = await _authService.getCurrentUser();
     if (updatedUser != null) {
       ref.read(authStateProvider.notifier).setUser(updatedUser);
