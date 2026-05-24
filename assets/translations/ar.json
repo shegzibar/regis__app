@@ -1,0 +1,167 @@
+{
+  "@@locale": "ar",
+  "@@context": "GamingHub App",
+  
+  "app_name": "جيمينج هب",
+  "@app_name": {
+    "description": "اسم التطبيق"
+  },
+  
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "close": "إغلاق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "refresh": "تحديث",
+    "settings": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "logout": "تسجيل الخروج",
+    "back": "رجوع",
+    "next": "التالي",
+    "done": "تم",
+    "yes": "نعم",
+    "no": "لا",
+    "ok": "موافق",
+    "retry": "إعادة المحاولة",
+    "view_all": "عرض الكل",
+    "available": "متاح",
+    "occupied": "مشغول",
+    "open_now": "مفتوح الآن",
+    "closed": "مغلق",
+    "egp": "جنيه",
+    "per_hour": "بالساعة",
+    "hours_ago": "ساعات مضت",
+    "days_ago": "أيام مضت",
+    "minutes_ago": "دقائق مضت",
+    "ago": "مضت"
+  },
+  
+  "auth": {
+    "login": "تسجيل الدخول",
+    "phone_number": "رقم الهاتف",
+    "enter_phone": "أدخل رقم هاتفك",
+    "send_verification_code": "إرسال رمز التحقق",
+    "verification_code": "رمز التحقق",
+    "enter_code": "أدخل رمز 4 أرقام",
+    "resend_code": "إعادة إرسال الرمز",
+    "verify": "تحقق",
+    "expires_in": "ينتهي في",
+    "pay_now_to_lock_slot": "ادفع الآن لتأكيد الحجز",
+    "complete_payment": "إكمال الدفع",
+    "booking_id": "رقم الحجز",
+    "select_payment_method": "اختر طريقة الدفع",
+    "session_price": "سعر الجلسة",
+    "platform_fee": "رسوم المنصة",
+    "total_to_pay": "المبلغ الإجمالي",
+    "confirm_payment": "تأكيد الدفع"
+  },
+  
+  "home": {
+    "gaming_centers_map": "خريطة مراكز الألعاب",
+    "search_location": "ابحث عن موقع...",
+    "explore": "استكشف",
+    "featured_centers": "المراكز المميزة",
+    "nearby_you": "بالقرب منك",
+    "select_room": "اختر الغرفة",
+    "book_station": "احجز محطة",
+    "starting_from": "بدءاً من"
+  },
+  
+  "booking": {
+    "select_date": "اختر التاريخ",
+    "duration": "المدة",
+    "available_slots": "الأوقات المتاحة",
+    "hour_intervals": "فترات 2 ساعة",
+    "confirm_pay_fee": "تأكيد ودفع الرسوم",
+    "please_select_room": "يرجى اختيار غرفة أولاً",
+    "please_select_time": "يرجى اختيار وقت الحجز"
+  },
+  
+  "payment": {
+    "instapay": "انستا باي",
+    "vodafone_cash": "فودافون كاش",
+    "fawry_pay": "فوري باي",
+    "transfer_to": "تحويل إلى",
+    "send_to": "إرسال إلى",
+    "reference_code_provided": "سيتم توفير رمز المرجع لاحقاً",
+    "processing_payment": "جاري معالجة الدفع..."
+  },
+  
+  "profile": {
+    "personal_information": "المعلومات الشخصية",
+    "payment_methods": "طرق الدفع",
+    "booking_history": "سجل الحجوزات",
+    "help_support": "المساعدة والدعم",
+    "member_since": "عضو منذ",
+    "gaming_statistics": "إحصائيات الألعاب",
+    "hours_played": "ساعات اللعب",
+    "total_bookings": "إجمالي الحجوزات",
+    "favorites": "المفضلة",
+    "achievements": "الإنجازات",
+    "favorite_centers": "المراكز المفضلة",
+    "recent_activity": "النشاط الأخير",
+    "booked_vip_room": "حجز غرفة VIP",
+    "reviewed_center": "قيم",
+    "achievement_unlocked": "إنجاز مفتوح",
+    "logout_confirm": "هل أنت متأكد من تسجيل الخروج؟",
+    "logging_out": "جاري تسجيل الخروج..."
+  },
+  
+  "admin": {
+    "fee_queue": "طابور الرسوم",
+    "manage_fees": "إدارة رسوم الحجز 5 جنيه",
+    "verify_receipts": "تحقق من لقطات الشاشات الإيصالات مقابل رسوم المنصة 5 جنيه. يتم تأكيد الحجوزات المعتمدة فوراً.",
+    "pending": "في الانتظار",
+    "confirmed": "مؤكد",
+    "rejected": "مرفوض",
+    "revenue": "الإيرادات",
+    "pending_review": "قيد المراجعة",
+    "newest_first": "الأحدث أولاً",
+    "view_receipt": "عرض الإيصال",
+    "deposit_approved": "تمت الموافقة على الإيداع بنجاح",
+    "deposit_rejected": "تم رفض الإيداع",
+    "refreshing_data": "جاري تحديث البيانات..."
+  },
+  
+  "cyber": {
+    "dashboard": "لوحة التحكم",
+    "today_bookings": "حجوزات اليوم",
+    "revenue_today": "إيرادات اليوم",
+    "active_stations": "المحطات النشطة",
+    "occupancy_rate": "معدل الإشغال",
+    "manage_bookings": "إدارة الحجوزات",
+    "manage_rooms": "إدارة الغرف",
+    "view_analytics": "عرض التحليلات"
+  },
+  
+  "rooms": {
+    "pro_pc_zone": "منطقة احترافية لأجهزة الكمبيوتر",
+    "playstation_vip": "بلايستيشن 5 VIP",
+    "private_streaming": "جناح البث الخاص",
+    "stations_available": "محطات متاحة"
+  },
+  
+  "map": {
+    "nearest_gaming_center": "أقرب مركز ألعاب",
+    "km_away": "كم",
+    "recentering_map": "جاري إعادة توسيط الخريطة...",
+    "filter_options": "خيارات التصفية قادمة قريباً!",
+    "interactive_map": "خريطة تفاعلية",
+    "google_maps_integration": "دمج خرائط جوجل قادم قريباً"
+  },
+  
+  "errors": {
+    "network_error": "خطأ في الشبكة. يرجى فحص اتصالك.",
+    "server_error": "خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً.",
+    "invalid_credentials": "بيانات غير صالحة. يرجى المحاولة مرة أخرى.",
+    "something_went_wrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "no_data_available": "لا توجد بيانات متاحة."
+  }
+}

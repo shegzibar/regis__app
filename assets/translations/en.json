@@ -1,0 +1,167 @@
+{
+  "@@locale": "en",
+  "@@context": "GamingHub App",
+  
+  "app_name": "GamingHub",
+  "@app_name": {
+    "description": "The name of the application"
+  },
+  
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "refresh": "Refresh",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "retry": "Retry",
+    "view_all": "See All",
+    "available": "Available",
+    "occupied": "Occupied",
+    "open_now": "Open Now",
+    "closed": "Closed",
+    "egp": "EGP",
+    "per_hour": "per hour",
+    "hours_ago": "hours ago",
+    "days_ago": "days ago",
+    "minutes_ago": "minutes ago",
+    "ago": "ago"
+  },
+  
+  "auth": {
+    "login": "Login",
+    "phone_number": "Phone Number",
+    "enter_phone": "Enter your phone number",
+    "send_verification_code": "Send Verification Code",
+    "verification_code": "Verification Code",
+    "enter_code": "Enter 4-digit code",
+    "resend_code": "Resend Code",
+    "verify": "Verify",
+    "expires_in": "Expires in",
+    "pay_now_to_lock_slot": "Pay now to lock slot",
+    "complete_payment": "Complete Payment",
+    "booking_id": "Booking ID",
+    "select_payment_method": "Select Payment Method",
+    "session_price": "Session Price",
+    "platform_fee": "Platform Fee",
+    "total_to_pay": "Total to Pay",
+    "confirm_payment": "Confirm Payment"
+  },
+  
+  "home": {
+    "gaming_centers_map": "Gaming Centers Map",
+    "search_location": "Search location...",
+    "explore": "Explore",
+    "featured_centers": "Featured Centers",
+    "nearby_you": "Nearby You",
+    "select_room": "Select Room",
+    "book_station": "Book a Station",
+    "starting_from": "Starting from"
+  },
+  
+  "booking": {
+    "select_date": "Select Date",
+    "duration": "Duration",
+    "available_slots": "Available Slots",
+    "hour_intervals": "2-hour intervals",
+    "confirm_pay_fee": "Confirm & Pay Fee",
+    "please_select_room": "Please select a room first",
+    "please_select_time": "Please select a time slot"
+  },
+  
+  "payment": {
+    "instapay": "InstaPay",
+    "vodafone_cash": "Vodafone Cash",
+    "fawry_pay": "Fawry Pay",
+    "transfer_to": "Transfer to",
+    "send_to": "Send to",
+    "reference_code_provided": "Reference code provided after",
+    "processing_payment": "Processing payment..."
+  },
+  
+  "profile": {
+    "personal_information": "Personal Information",
+    "payment_methods": "Payment Methods",
+    "booking_history": "Booking History",
+    "help_support": "Help & Support",
+    "member_since": "Member since",
+    "gaming_statistics": "Gaming Statistics",
+    "hours_played": "Hours Played",
+    "total_bookings": "Total Bookings",
+    "favorites": "Favorites",
+    "achievements": "Achievements",
+    "favorite_centers": "Favorite Centers",
+    "recent_activity": "Recent Activity",
+    "booked_vip_room": "Booked VIP Room",
+    "reviewed_center": "Reviewed",
+    "achievement_unlocked": "Achievement Unlocked",
+    "logout_confirm": "Are you sure you want to logout?",
+    "logging_out": "Logging out..."
+  },
+  
+  "admin": {
+    "fee_queue": "Fee Queue",
+    "manage_fees": "Manage 5 EGP booking fees",
+    "verify_receipts": "Verify receipt screenshots against the 5 EGP platform fee. Approved bookings are confirmed instantly.",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "rejected": "Rejected",
+    "revenue": "Revenue",
+    "pending_review": "Pending Review",
+    "newest_first": "Newest first",
+    "view_receipt": "View Receipt",
+    "deposit_approved": "Deposit approved successfully",
+    "deposit_rejected": "Deposit rejected",
+    "refreshing_data": "Refreshing data..."
+  },
+  
+  "cyber": {
+    "dashboard": "Dashboard",
+    "today_bookings": "Today's Bookings",
+    "revenue_today": "Revenue Today",
+    "active_stations": "Active Stations",
+    "occupancy_rate": "Occupancy Rate",
+    "manage_bookings": "Manage Bookings",
+    "manage_rooms": "Manage Rooms",
+    "view_analytics": "View Analytics"
+  },
+  
+  "rooms": {
+    "pro_pc_zone": "Pro PC Zone",
+    "playstation_vip": "PlayStation 5 VIP",
+    "private_streaming": "Private Streaming Suite",
+    "stations_available": "stations available"
+  },
+  
+  "map": {
+    "nearest_gaming_center": "Nearest Gaming Center",
+    "km_away": "km away",
+    "recentering_map": "Recentering map...",
+    "filter_options": "Filter options coming soon!",
+    "interactive_map": "Interactive Map",
+    "google_maps_integration": "Google Maps integration coming soon"
+  },
+  
+  "errors": {
+    "network_error": "Network error. Please check your connection.",
+    "server_error": "Server error. Please try again later.",
+    "invalid_credentials": "Invalid credentials. Please try again.",
+    "something_went_wrong": "Something went wrong. Please try again.",
+    "no_data_available": "No data available."
+  }
+}
