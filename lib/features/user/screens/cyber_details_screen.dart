@@ -1,108 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/providers/cyber_provider.dart';
+import '../../../core/providers/room_provider.dart';
+import '../../../core/providers/review_provider.dart';
 import '../../../shared/widgets/room_card.dart';
 import '../../../shared/widgets/review_card.dart';
 
-class CyberDetailsScreen extends StatefulWidget {
+class CyberDetailsScreen extends ConsumerStatefulWidget {
   final String cyberId;
   
   const CyberDetailsScreen({super.key, required this.cyberId});
 
   @override
-  State<CyberDetailsScreen> createState() => _CyberDetailsScreenState();
+  ConsumerState<CyberDetailsScreen> createState() => _CyberDetailsScreenState();
 }
 
-class _CyberDetailsScreenState extends State<CyberDetailsScreen> {
-  final List<Map<String, dynamic>> _rooms = [
-    {
-      'id': '1',
-      'name': 'Pro PC Zone',
-      'icon': Icons.computer,
-      'iconColor': AppColors.green,
-      'availableStations': 12,
-      'pricePerHour': 40,
-      'isSelected': false,
-    },
-    {
-      'id': '2',
-      'name': 'PlayStation 5 VIP',
-      'icon': Icons.videogame_asset,
-      'iconColor': Colors.blue,
-      'availableStations': 8,
-      'pricePerHour': 50,
-      'isSelected': false,
-    },
-    {
-      'id': '3',
-      'name': 'Private Streaming Suite',
-      'icon': Icons.live_tv,
-      'iconColor': Colors.purple,
-      'availableStations': 4,
-      'pricePerHour': 60,
-      'isSelected': false,
-    },
-  ];
-  
-  final List<Map<String, dynamic>> _reviews = [
-    {
-      'id': '1',
-      'userName': 'Ahmed M.',
-      'initials': 'AM',
-      'timeAgo': '2 days ago',
-      'rating': 5.0,
-      'comment': 'Amazing gaming experience! The PCs are top-notch and the staff is very helpful. Will definitely come back.',
-    },
-    {
-      'id': '2',
-      'userName': 'Sarah K.',
-      'initials': 'SK',
-      'timeAgo': '1 week ago',
-      'rating': 4.5,
-      'comment': 'Great atmosphere and comfortable setup. The PS5 VIP room is perfect for competitive gaming.',
-    },
-    {
-      'id': '3',
-      'userName': 'Mohamed R.',
-      'initials': 'MR',
-      'timeAgo': '2 weeks ago',
-      'rating': 4.0,
-      'comment': 'Good value for money. The equipment is well-maintained and the internet speed is excellent.',
-    },
-  ];
-  
+class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
   String? _selectedRoomId;
-  int _minPrice = 40;
-
-  @override
-  void initState() {
-    super.initState();
-    // Find the minimum price
-    _minPrice = _rooms.map((room) => room['pricePerHour'] as int).reduce((a, b) => a < b ? a : b);
-  }
+  double _minPrice = 15;
 
   void _selectRoom(String roomId) {
     setState(() {
       _selectedRoomId = roomId;
-      // Update room selection states
-      for (var room in _rooms) {
-        room['isSelected'] = room['id'] == roomId;
-      }
     });
-  }
-
-  void _shareCyber() {
-    // TODO: Implement share functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share functionality coming soon!')),
-    );
   }
 
   void _bookStation() {
     if (_selectedRoomId != null) {
-      // TODO: Navigate to booking screen
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Navigating to booking...')),
-      );
+      context.push('/booking/$_selectedRoomId');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a room first')),
@@ -110,8 +37,44 @@ class _CyberDetailsScreenState extends State<CyberDetailsScreen> {
     }
   }
 
+  void _shareCyber() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Share functionality coming soon!')),
+    );
+  }
+
+  IconData _getRoomIcon(String type) {
+    switch (type.toLowerCase()) {
+      case 'ps5':
+        return Icons.sports_esports;
+      case 'pc':
+        return Icons.computer;
+      case 'vip':
+        return Icons.star;
+      default:
+        return Icons.videogame_asset;
+    }
+  }
+
+  Color _getRoomIconColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'ps5':
+        return Colors.blue;
+      case 'pc':
+        return AppColors.green;
+      case 'vip':
+        return Colors.purple;
+      default:
+        return Colors.amber;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cyberAsync = ref.watch(cyberByIdProvider(widget.cyberId));
+    final roomsAsync = ref.watch(cyberRoomsProvider(widget.cyberId));
+    final reviewsAsync = ref.watch(cyberReviewsProvider(widget.cyberId));
+
     return Scaffold(
       backgroundColor: AppColors.darkBg,
       body: SafeArea(
@@ -140,13 +103,17 @@ class _CyberDetailsScreenState extends State<CyberDetailsScreen> {
                     ),
                   ),
                   const Spacer(),
-                  const Text(
-                    'Select Room',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  cyberAsync.when(
+                    data: (cyber) => Text(
+                      cyber?.name ?? 'Details',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
+                    loading: () => const Text('Loading...', style: TextStyle(color: Colors.white)),
+                    error: (_, __) => const Text('Details', style: TextStyle(color: Colors.white)),
                   ),
                   const Spacer(),
                   GestureDetector(
@@ -189,21 +156,42 @@ class _CyberDetailsScreenState extends State<CyberDetailsScreen> {
                     
                     const SizedBox(height: 16),
                     
-                    // Room Cards
-                    ..._rooms.map((room) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: RoomCard(
-                          name: room['name'],
-                          icon: room['icon'],
-                          iconColor: room['iconColor'],
-                          availableStations: room['availableStations'],
-                          pricePerHour: room['pricePerHour'],
-                          isSelected: room['isSelected'],
-                          onTap: () => _selectRoom(room['id']),
-                        ),
-                      );
-                    }),
+                    roomsAsync.when(
+                      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.green)),
+                      error: (err, _) => Text('Error loading rooms: $err', style: const TextStyle(color: Colors.red)),
+                      data: (rooms) {
+                        if (rooms.isEmpty) {
+                          return const Text('No rooms active at this center.', style: TextStyle(color: AppColors.textMuted));
+                        }
+
+                        // Dynamically update minPrice in microtask if needed
+                        final currentMin = rooms.map((r) => r.pricePerHour).reduce((a, b) => a < b ? a : b);
+                        if (currentMin != _minPrice) {
+                          Future.microtask(() {
+                            setState(() {
+                              _minPrice = currentMin;
+                            });
+                          });
+                        }
+
+                        return Column(
+                          children: rooms.map((room) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
+                              child: RoomCard(
+                                name: room.name,
+                                icon: _getRoomIcon(room.type),
+                                iconColor: _getRoomIconColor(room.type),
+                                availableStations: 8, // Default fallback count
+                                pricePerHour: room.pricePerHour.toInt(),
+                                isSelected: _selectedRoomId == room.id,
+                                onTap: () => _selectRoom(room.id),
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
                     
                     const SizedBox(height: 32),
                     
@@ -220,9 +208,7 @@ class _CyberDetailsScreenState extends State<CyberDetailsScreen> {
                           ),
                         ),
                         TextButton(
-                          onPressed: () {
-                            // TODO: Show all reviews
-                          },
+                          onPressed: () {},
                           child: const Text(
                             'See All',
                             style: TextStyle(
@@ -237,19 +223,36 @@ class _CyberDetailsScreenState extends State<CyberDetailsScreen> {
                     
                     const SizedBox(height: 16),
                     
-                    // Review Cards
-                    ..._reviews.map((review) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: ReviewCard(
-                          userName: review['userName'],
-                          initials: review['initials'],
-                          timeAgo: review['timeAgo'],
-                          rating: review['rating'],
-                          comment: review['comment'],
-                        ),
-                      );
-                    }),
+                    reviewsAsync.when(
+                      loading: () => const SizedBox.shrink(),
+                      error: (err, _) => Text('Error loading reviews: $err', style: const TextStyle(color: Colors.red)),
+                      data: (reviews) {
+                        if (reviews.isEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              'No reviews yet. Be the first to review!',
+                              style: TextStyle(color: AppColors.textMuted),
+                            ),
+                          );
+                        }
+
+                        return Column(
+                          children: reviews.map((review) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
+                              child: ReviewCard(
+                                userName: 'User', // Fallback, or fetch user profile
+                                initials: 'U',
+                                timeAgo: 'Recently',
+                                rating: review.rating.toDouble(),
+                                comment: review.comment ?? 'No comment',
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
                     
                     const SizedBox(height: 32),
                   ],
@@ -280,7 +283,7 @@ class _CyberDetailsScreenState extends State<CyberDetailsScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '$_minPrice EGP/hr',
+                        '${_minPrice.toInt()} EGP/hr',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,

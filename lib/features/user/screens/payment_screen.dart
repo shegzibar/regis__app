@@ -1,19 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/providers/payment_provider.dart';
+import '../../../core/providers/booking_provider.dart';
 import '../../../shared/widgets/payment_method_card.dart';
 
-class PaymentScreen extends StatefulWidget {
+class PaymentScreen extends ConsumerStatefulWidget {
   final String bookingId;
+  final double amount;
   
-  const PaymentScreen({super.key, required this.bookingId});
+  const PaymentScreen({
+    super.key,
+    required this.bookingId,
+    required this.amount,
+  });
 
   @override
-  State<PaymentScreen> createState() => _PaymentScreenState();
+  ConsumerState<PaymentScreen> createState() => _PaymentScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen> {
+class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   int _remainingSeconds = 892; // 14:52 in seconds
   String _selectedPaymentMethod = 'instapay';
+  bool _isUploadingReceipt = false;
+  String? _receiptScreenshotUrl;
+  bool _isSubmitting = false;
   
   final List<Map<String, dynamic>> _paymentMethods = [
     {
@@ -39,11 +51,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
     },
   ];
   
-  // Pricing details
-  final double _sessionPrice = 120.00;
-  final double _platformFee = 5.00;
-  double get _totalToPay => _sessionPrice + _platformFee;
-
   @override
   void initState() {
     super.initState();
@@ -67,11 +74,62 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
   }
 
-  void _confirmPayment() {
-    // TODO: Implement payment processing
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Processing payment...')),
-    );
+  Future<void> _simulateReceiptUpload() async {
+    setState(() => _isUploadingReceipt = true);
+    // Simulate short network delay
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
+      setState(() {
+        _isUploadingReceipt = false;
+        _receiptScreenshotUrl = 'https://picsum.photos/seed/receipt/300/400';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Receipt uploaded successfully!')),
+      );
+    }
+  }
+
+  Future<void> _confirmPayment() async {
+    if (_selectedPaymentMethod != 'fawry' && _receiptScreenshotUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please upload a screenshot of your transaction receipt first.')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      // Create payment row in Supabase
+      await ref.read(paymentNotifierProvider.notifier).submitPayment(
+            bookingId: widget.bookingId,
+            amount: widget.amount,
+            method: _selectedPaymentMethod,
+            screenshotUrl: _receiptScreenshotUrl,
+          );
+
+      // Update booking status to fee_under_review
+      await ref.read(bookingNotifierProvider.notifier).updateStatus(widget.bookingId, 'fee_under_review');
+
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payment submitted! A manager will review your receipt shortly.'),
+            backgroundColor: AppColors.green,
+          ),
+        );
+        // Clear history and navigate to explore/bookings
+        context.go('/explore');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to submit payment: $e')),
+        );
+      }
+    }
   }
 
   String _formatTime(int seconds) {
@@ -119,7 +177,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ),
                   ),
                   const Spacer(),
-                  const SizedBox(width: 48), // Balance the header
+                  const SizedBox(width: 48),
                 ],
               ),
             ),
@@ -130,7 +188,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Booking ID: #GH-8829',
+                  'Booking ID: #${widget.bookingId.substring(0, 8).toUpperCase()}',
                   style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 14,
@@ -210,7 +268,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ),
                       child: Column(
                         children: [
-                          // Cyber Info
                           Row(
                             children: [
                               Container(
@@ -232,7 +289,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'CyberZone Maadi',
+                                      'Gaming Hub Station',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 18,
@@ -241,7 +298,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      'VIP Room • Station 04',
+                                      'Reserved Slot',
                                       style: TextStyle(
                                         color: AppColors.textMuted,
                                         fontSize: 14,
@@ -254,25 +311,28 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           ),
                           
                           const SizedBox(height: 20),
-                          
-                          // Pricing Breakdown
                           const Divider(color: AppColors.darkBorder),
-                          
                           const SizedBox(height: 16),
                           
-                          _buildPriceRow('Session Price', _sessionPrice),
-                          
-                          const SizedBox(height: 12),
-                          
-                          _buildPriceRow('Platform Fee', _platformFee),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Session Fee', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
+                              Text('${widget.amount.toInt()} EGP', style: const TextStyle(color: AppColors.textMuted, fontSize: 14)),
+                            ],
+                          ),
                           
                           const SizedBox(height: 16),
-                          
                           const Divider(color: AppColors.darkBorder),
-                          
                           const SizedBox(height: 16),
                           
-                          _buildPriceRow('Total to Pay', _totalToPay, isTotal: true),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Total to Pay', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              Text('${widget.amount.toInt()} EGP', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -306,7 +366,50 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       );
                     }),
                     
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
+
+                    // Receipt Upload Button (if not Fawry)
+                    if (_selectedPaymentMethod != 'fawry') ...[
+                      const Text(
+                        'Upload Transaction Receipt',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: _isUploadingReceipt ? null : _simulateReceiptUpload,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          decoration: BoxDecoration(
+                            color: AppColors.darkCard,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.darkBorder, style: BorderStyle.values[1]), // Dashed effect simulator
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                _receiptScreenshotUrl != null ? Icons.check_circle : Icons.cloud_upload_outlined,
+                                color: _receiptScreenshotUrl != null ? AppColors.green : AppColors.textMuted,
+                                size: 36,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _receiptScreenshotUrl != null 
+                                    ? 'Receipt attached (Tap to change)' 
+                                    : 'Upload transaction screenshot',
+                                style: const TextStyle(color: Colors.white, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
                   ],
                 ),
               ),
@@ -322,7 +425,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
               child: ElevatedButton(
-                onPressed: _confirmPayment,
+                onPressed: _isSubmitting ? null : _confirmPayment,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.green,
                   foregroundColor: Colors.white,
@@ -333,42 +436,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   minimumSize: const Size(double.infinity, 56),
                 ),
-                child: const Text(
-                  'Confirm Payment',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: _isSubmitting
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Confirm Payment',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-  
-  Widget _buildPriceRow(String label, double price, {bool isTotal = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: isTotal ? Colors.white : AppColors.textMuted,
-            fontSize: isTotal ? 16 : 14,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        Text(
-          '${price.toStringAsFixed(2)} EGP',
-          style: TextStyle(
-            color: isTotal ? Colors.white : AppColors.textMuted,
-            fontSize: isTotal ? 16 : 14,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ],
     );
   }
 }

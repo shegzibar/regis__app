@@ -17,8 +17,6 @@ final ownerRecentBookingsProvider =
     FutureProvider.autoDispose<List<Booking>>((ref) async {
   final user = ref.watch(authStateProvider);
   if (user == null) return [];
-  // Fetch all bookings for owner's cybers via the booking repo
-  // (uses Supabase RLS — owner can read bookings for their cybers)
   final response = await BookingRepository().getUserBookings(user.id);
   return response.take(5).toList();
 });
@@ -32,9 +30,11 @@ class OwnerHomeScreen extends ConsumerWidget {
     final cybersAsync = ref.watch(ownerCybersProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: RefreshIndicator(
+          color: AppColors.green,
+          backgroundColor: AppColors.darkCard,
           onRefresh: () async {
             ref.invalidate(ownerCybersProvider);
           },
@@ -51,25 +51,25 @@ class OwnerHomeScreen extends ConsumerWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: AppColors.teal.withOpacity(0.12),
+                        color: AppColors.green.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Icon(Icons.store,
-                          color: AppColors.teal, size: 26),
+                          color: AppColors.green, size: 26),
                     ),
                     const SizedBox(width: 14),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Welcome back,',
                           style: TextStyle(
-                              color: AppColors.textSecondary, fontSize: 13),
+                              color: AppColors.textMuted, fontSize: 13),
                         ),
                         Text(
                           user?.name ?? 'Owner',
                           style: const TextStyle(
-                            color: AppColors.textPrimary,
+                            color: Colors.white,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -94,7 +94,7 @@ class OwnerHomeScreen extends ConsumerWidget {
                 const Text(
                   'Quick Actions',
                   style: TextStyle(
-                    color: AppColors.textPrimary,
+                    color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -106,8 +106,8 @@ class OwnerHomeScreen extends ConsumerWidget {
                       child: _QuickActionCard(
                         icon: Icons.calendar_view_day,
                         label: 'Schedule',
-                        color: AppColors.teal,
-                        onTap: () => context.go('/owner/schedule'),
+                        color: AppColors.green,
+                        onTap: () => context.push('/owner/schedule'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -116,7 +116,7 @@ class OwnerHomeScreen extends ConsumerWidget {
                         icon: Icons.pending_actions,
                         label: 'Requests',
                         color: AppColors.purple,
-                        onTap: () => context.go('/owner/requests'),
+                        onTap: () => context.push('/owner/requests'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -124,8 +124,8 @@ class OwnerHomeScreen extends ConsumerWidget {
                       child: _QuickActionCard(
                         icon: Icons.computer,
                         label: 'Stations',
-                        color: AppColors.statusPending,
-                        onTap: () => context.go('/owner/stations'),
+                        color: Colors.amber,
+                        onTap: () => context.push('/owner/stations'),
                       ),
                     ),
                   ],
@@ -140,7 +140,7 @@ class OwnerHomeScreen extends ConsumerWidget {
                     const Text(
                       'My Gaming Centers',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -150,13 +150,12 @@ class OwnerHomeScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 cybersAsync.when(
                   loading: () =>
-                      const CircularProgressIndicator(color: AppColors.teal),
+                      const Center(child: CircularProgressIndicator(color: AppColors.green)),
                   error: (e, _) => Text('Error: $e',
-                      style:
-                          const TextStyle(color: AppColors.error)),
+                      style: const TextStyle(color: AppColors.error)),
                   data: (cybers) {
                     if (cybers.isEmpty) {
-                      return _EmptyCard(
+                      return const _EmptyCard(
                         icon: Icons.store_mall_directory_outlined,
                         message: 'No gaming centers yet',
                         sub: 'Contact admin to register your center',
@@ -166,7 +165,7 @@ class OwnerHomeScreen extends ConsumerWidget {
                       children: cybers
                           .map((cyber) => _CyberSummaryCard(
                                 name: cyber.name,
-                                city: cyber.city ?? 'Unknown',
+                                city: cyber.city ?? 'Cairo',
                                 rating: cyber.rating,
                                 isActive: cyber.isActive,
                               ))
@@ -198,7 +197,7 @@ class _StatsRow extends StatelessWidget {
             label: 'Centers',
             value: '$cyberCount',
             icon: Icons.store,
-            color: AppColors.teal,
+            color: AppColors.green,
           ),
         ),
         const SizedBox(width: 12),
@@ -216,7 +215,7 @@ class _StatsRow extends StatelessWidget {
             label: 'Pending',
             value: '—',
             icon: Icons.pending_actions,
-            color: AppColors.statusPending,
+            color: Colors.amber,
           ),
         ),
       ],
@@ -254,7 +253,7 @@ class _StatCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color: color,
+              color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
@@ -262,8 +261,8 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              color: AppColors.textSecondary,
+            style: const TextStyle(
+              color: AppColors.textMuted,
               fontSize: 11,
             ),
           ),
@@ -293,9 +292,9 @@ class _QuickActionCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: AppColors.darkCard,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: AppColors.darkBorder),
         ),
         child: Column(
           children: [
@@ -303,8 +302,8 @@ class _QuickActionCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: TextStyle(
-                color: color,
+              style: const TextStyle(
+                color: Colors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -335,16 +334,9 @@ class _CyberSummaryCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.lightGray),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: AppColors.darkBorder),
       ),
       child: Row(
         children: [
@@ -352,11 +344,11 @@ class _CyberSummaryCard extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: AppColors.teal.withOpacity(0.1),
+              color: AppColors.green.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.videogame_asset,
-                color: AppColors.teal, size: 22),
+                color: AppColors.green, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -365,7 +357,7 @@ class _CyberSummaryCard extends StatelessWidget {
               children: [
                 Text(name,
                     style: const TextStyle(
-                      color: AppColors.textPrimary,
+                      color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                     )),
@@ -373,11 +365,11 @@ class _CyberSummaryCard extends StatelessWidget {
                 Row(
                   children: [
                     const Icon(Icons.location_on,
-                        size: 12, color: AppColors.textSecondary),
+                        size: 12, color: AppColors.textMuted),
                     const SizedBox(width: 3),
                     Text(city,
                         style: const TextStyle(
-                            color: AppColors.textSecondary, fontSize: 12)),
+                            color: AppColors.textMuted, fontSize: 12)),
                   ],
                 ),
               ],
@@ -389,12 +381,12 @@ class _CyberSummaryCard extends StatelessWidget {
               Row(
                 children: [
                   const Icon(Icons.star_rounded,
-                      size: 14, color: AppColors.statusPending),
+                      size: 14, color: Colors.amber),
                   const SizedBox(width: 3),
                   Text(
                     rating.toStringAsFixed(1),
                     style: const TextStyle(
-                      color: AppColors.textPrimary,
+                      color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -407,14 +399,17 @@ class _CyberSummaryCard extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? AppColors.teal.withOpacity(0.1)
+                      ? AppColors.green.withOpacity(0.1)
                       : AppColors.error.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isActive ? AppColors.green : AppColors.error,
+                  ),
                 ),
                 child: Text(
                   isActive ? 'Active' : 'Inactive',
                   style: TextStyle(
-                    color: isActive ? AppColors.teal : AppColors.error,
+                    color: isActive ? AppColors.green : AppColors.error,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
@@ -441,23 +436,24 @@ class _EmptyCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppColors.lightGray,
+        color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.darkBorder),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 48, color: AppColors.gray),
+          Icon(icon, size: 48, color: AppColors.textMuted),
           const SizedBox(height: 12),
           Text(message,
               style: const TextStyle(
-                  color: AppColors.textPrimary,
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 15)),
           const SizedBox(height: 4),
           Text(sub,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  color: AppColors.textSecondary, fontSize: 13)),
+                  color: AppColors.textMuted, fontSize: 13)),
         ],
       ),
     );
@@ -477,8 +473,9 @@ class _StatsShimmer extends StatelessWidget {
                   margin: const EdgeInsets.only(right: 12),
                   height: 90,
                   decoration: BoxDecoration(
-                    color: AppColors.lightGray,
+                    color: AppColors.darkCard,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.darkBorder),
                   ),
                 ),
               )),
@@ -494,8 +491,9 @@ class _StatsError extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.errorLight,
+        color: AppColors.error.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.error),
       ),
       child: const Row(
         children: [

@@ -40,7 +40,11 @@
     "hours_ago": "hours ago",
     "days_ago": "days ago",
     "minutes_ago": "minutes ago",
-    "ago": "ago"
+    "ago": "ago",
+    "language": "Language",
+    "select_language": "Select Language",
+    "english": "English",
+    "arabic": "العربية"
   },
   
   "auth": {

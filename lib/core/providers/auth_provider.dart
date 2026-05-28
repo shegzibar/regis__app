@@ -10,6 +10,14 @@ final authStateProvider =
   return AuthStateNotifier();
 });
 
+// Exposes whether the app is still restoring a session on cold start
+final authInitializingProvider = Provider<bool>((ref) {
+  // Check if a Supabase session exists but AppUser hasn't been hydrated yet
+  final user = ref.watch(authStateProvider);
+  final supabaseUser = SupabaseService().currentUser;
+  return user == null && supabaseUser != null;
+});
+
 class AuthStateNotifier extends StateNotifier<AppUser?> {
   StreamSubscription? _authSubscription;
 
@@ -141,6 +149,66 @@ class AuthService {
     }
   }
 
+  // Sign In with Email & Password
+  Future<AppUser> signInWithEmailAndPassword(String email, String password) async {
+    try {
+      final response = await _supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+
+      if (response.user == null) {
+        throw Exception('Login failed');
+      }
+
+      // Always read the authoritative role from the DB table
+      final userRow = await _supabase
+          .from('users')
+          .select()
+          .eq('id', response.user!.id)
+          .single();
+
+      return AppUser.fromMap(userRow);
+    } catch (e) {
+      throw Exception('Failed to sign in: $e');
+    }
+  }
+
+  // Sign Up with Email & Password
+  Future<AppUser> signUpWithEmailAndPassword(String email, String password, String name, String phone) async {
+    try {
+      final response = await _supabase.auth.signUp(
+        email: email,
+        password: password,
+      );
+
+      if (response.user == null) {
+        throw Exception('Sign up failed');
+      }
+
+      // Create user row
+      final userData = {
+        'id': response.user!.id,
+        'phone': phone,
+        'name': name,
+        'role': 'user',
+      };
+
+      await _supabase.from('users').upsert(userData);
+
+      // Read back to ensure we have the full object
+      final userRow = await _supabase
+          .from('users')
+          .select()
+          .eq('id', response.user!.id)
+          .single();
+
+      return AppUser.fromMap(userRow);
+    } catch (e) {
+      throw Exception('Failed to sign up: $e');
+    }
+  }
+
   // Sign out
   Future<void> signOut() async {
     try {
@@ -216,6 +284,38 @@ class AuthController extends AsyncNotifier<void> {
     }
 
     // Push the correct user (with DB role) into the auth state notifier
+    ref.read(authStateProvider.notifier).setUser(user.value);
+    return user.value!;
+  }
+
+  // Sign In with Email & Password
+  Future<AppUser> signInWithEmailAndPassword(String email, String password) async {
+    state = const AsyncValue.loading();
+    final user = await AsyncValue.guard(() async {
+      return await _authService.signInWithEmailAndPassword(email, password);
+    });
+
+    if (user.hasError) {
+      state = AsyncValue.error(user.error!, StackTrace.current);
+      throw user.error!;
+    }
+
+    ref.read(authStateProvider.notifier).setUser(user.value);
+    return user.value!;
+  }
+
+  // Sign Up with Email & Password
+  Future<AppUser> signUpWithEmailAndPassword(String email, String password, String name, String phone) async {
+    state = const AsyncValue.loading();
+    final user = await AsyncValue.guard(() async {
+      return await _authService.signUpWithEmailAndPassword(email, password, name, phone);
+    });
+
+    if (user.hasError) {
+      state = AsyncValue.error(user.error!, StackTrace.current);
+      throw user.error!;
+    }
+
     ref.read(authStateProvider.notifier).setUser(user.value);
     return user.value!;
   }

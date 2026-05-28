@@ -3,11 +3,11 @@ import 'package:easy_localization/easy_localization.dart';
 
 class AppLocalization {
   static const List<Locale> supportedLocales = [
-    Locale('en', 'US'), // English
-    Locale('ar', 'EG'), // Arabic (Egypt)
+    Locale('en'), // English
+    Locale('ar'), // Arabic
   ];
 
-  static const Locale fallbackLocale = Locale('en', 'US');
+  static const Locale fallbackLocale = Locale('en');
 
   static Future<void> init() async {
     await EasyLocalization.ensureInitialized();
@@ -16,19 +16,22 @@ class AppLocalization {
   static BuildContext? getContext(BuildContext context) => context;
 
   // Language switching
-  static Future<void> changeLanguage(String languageCode, BuildContext context) async {
+  static Future<void> changeLanguage(
+      String languageCode, BuildContext context) async {
     final localizationContext = EasyLocalization.of(context);
     if (localizationContext != null) {
       await localizationContext.setLocale(Locale(languageCode));
     }
   }
 
-  static Locale getCurrentLocale(BuildContext context) => 
+  static Locale getCurrentLocale(BuildContext context) =>
       EasyLocalization.of(context)?.currentLocale ?? fallbackLocale;
 
-  static bool isRTL(BuildContext context) => getCurrentLocale(context).languageCode == 'ar';
+  static bool isRTL(BuildContext context) =>
+      getCurrentLocale(context).languageCode == 'ar';
 
-  static String getCurrentLanguage(BuildContext context) => getCurrentLocale(context).languageCode;
+  static String getCurrentLanguage(BuildContext context) =>
+      getCurrentLocale(context).languageCode;
 
   // Translation helpers
   static String tr(String key) => key.tr();
@@ -37,7 +40,7 @@ class AppLocalization {
 
   // Common translations
   static String get appName => 'app_name'.tr();
-  
+
   // Common
   static String get loading => 'common.loading'.tr();
   static String get error => 'common.error'.tr();
@@ -113,7 +116,8 @@ class AppLocalization {
   static String get fawryPay => 'payment.fawry_pay'.tr();
   static String get transferTo => 'payment.transfer_to'.tr();
   static String get sendTo => 'payment.send_to'.tr();
-  static String get referenceCodeProvided => 'payment.reference_code_provided'.tr();
+  static String get referenceCodeProvided =>
+      'payment.reference_code_provided'.tr();
   static String get processingPayment => 'payment.processing_payment'.tr();
 
   // Profile

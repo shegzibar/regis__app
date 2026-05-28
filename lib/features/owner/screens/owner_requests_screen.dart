@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/payment_provider.dart';
 import '../../../data/models/booking.dart';
 import '../../../data/repositories/booking_repository.dart';
 import '../../../data/supabase/supabase_client.dart';
@@ -42,7 +43,7 @@ class OwnerRequestsScreen extends ConsumerWidget {
     final requestsAsync = ref.watch(ownerPendingRequestsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,7 +56,7 @@ class OwnerRequestsScreen extends ConsumerWidget {
                   const Text(
                     'Booking Requests',
                     style: TextStyle(
-                      color: AppColors.textPrimary,
+                      color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -67,8 +68,9 @@ class OwnerRequestsScreen extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.purple.withOpacity(0.12),
+                              color: AppColors.purple.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppColors.purple.withOpacity(0.4)),
                             ),
                             child: Text(
                               '${list.length} pending',
@@ -91,18 +93,18 @@ class OwnerRequestsScreen extends ConsumerWidget {
               padding: EdgeInsets.symmetric(horizontal: 24),
               child: Text(
                 'Review and approve or reject incoming bookings',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
               ),
             ),
 
             const SizedBox(height: 20),
-            const Divider(color: AppColors.lightGray, height: 1),
+            const Divider(color: AppColors.darkBorder, height: 1),
 
             // Content
             Expanded(
               child: requestsAsync.when(
                 loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.teal)),
+                    child: CircularProgressIndicator(color: AppColors.green)),
                 error: (e, _) => Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -111,13 +113,13 @@ class OwnerRequestsScreen extends ConsumerWidget {
                           color: AppColors.error, size: 48),
                       const SizedBox(height: 12),
                       const Text('Failed to load requests',
-                          style: TextStyle(color: AppColors.textPrimary)),
+                          style: TextStyle(color: Colors.white)),
                       const SizedBox(height: 8),
                       TextButton(
                         onPressed: () =>
                             ref.invalidate(ownerPendingRequestsProvider),
                         child: const Text('Retry',
-                            style: TextStyle(color: AppColors.teal)),
+                            style: TextStyle(color: AppColors.green)),
                       ),
                     ],
                   ),
@@ -132,17 +134,17 @@ class OwnerRequestsScreen extends ConsumerWidget {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: AppColors.teal.withOpacity(0.08),
+                              color: AppColors.green.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.check_circle_outline,
-                                color: AppColors.teal, size: 40),
+                                color: AppColors.green, size: 40),
                           ),
                           const SizedBox(height: 16),
                           const Text(
                             'All caught up!',
                             style: TextStyle(
-                              color: AppColors.textPrimary,
+                              color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -151,7 +153,7 @@ class OwnerRequestsScreen extends ConsumerWidget {
                           const Text(
                             'No pending booking requests',
                             style: TextStyle(
-                                color: AppColors.textSecondary, fontSize: 14),
+                                color: AppColors.textMuted, fontSize: 14),
                           ),
                         ],
                       ),
@@ -183,17 +185,17 @@ class OwnerRequestsScreen extends ConsumerWidget {
   }
 }
 
-class _RequestCard extends StatefulWidget {
+class _RequestCard extends ConsumerStatefulWidget {
   final Booking booking;
   final VoidCallback onDecision;
 
   const _RequestCard({required this.booking, required this.onDecision});
 
   @override
-  State<_RequestCard> createState() => _RequestCardState();
+  ConsumerState<_RequestCard> createState() => _RequestCardState();
 }
 
-class _RequestCardState extends State<_RequestCard> {
+class _RequestCardState extends ConsumerState<_RequestCard> {
   bool _isProcessing = false;
 
   Future<void> _handleDecision(BuildContext context, String newStatus) async {
@@ -212,7 +214,7 @@ class _RequestCardState extends State<_RequestCard> {
                 ? 'Booking confirmed ✓'
                 : 'Booking rejected'),
             backgroundColor:
-                newStatus == 'confirmed' ? AppColors.teal : AppColors.error,
+                newStatus == 'confirmed' ? AppColors.green : AppColors.error,
           ),
         );
       }
@@ -227,35 +229,66 @@ class _RequestCardState extends State<_RequestCard> {
     }
   }
 
+  void _viewReceipt(String screenshotUrl) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: AppColors.darkCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Payment Receipt', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            InteractiveViewer(
+              child: Image.network(
+                screenshotUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: Text('Failed to load image', style: TextStyle(color: Colors.red)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
-    final isUnderReview = booking.isFeeUnderReview;
+    final isUnderReview = booking.status == 'fee_under_review';
+    final paymentAsync = ref.watch(bookingPaymentProvider(booking.id));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lightGray),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 3))
-        ],
+        border: Border.all(color: AppColors.darkBorder),
       ),
       child: Column(
         children: [
-          // Status bar top
+          // Status bar top indicator
           Container(
             height: 4,
             decoration: BoxDecoration(
-              color: isUnderReview
-                  ? AppColors.purple
-                  : AppColors.statusPending,
-              borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16)),
+              color: isUnderReview ? AppColors.purple : AppColors.green,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             ),
           ),
 
@@ -271,11 +304,11 @@ class _RequestCardState extends State<_RequestCard> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: AppColors.teal.withOpacity(0.1),
+                        color: AppColors.green.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.person_outline,
-                          color: AppColors.teal, size: 20),
+                          color: AppColors.green, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -285,19 +318,15 @@ class _RequestCardState extends State<_RequestCard> {
                           Text(
                             'Booking #${booking.id.substring(0, 8).toUpperCase()}',
                             style: const TextStyle(
-                              color: AppColors.textPrimary,
+                              color: Colors.white,
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
                           ),
                           Text(
-                            isUnderReview
-                                ? 'Fee Under Review'
-                                : 'Pending Payment',
+                            isUnderReview ? 'Fee Under Review' : 'Pending Payment',
                             style: TextStyle(
-                              color: isUnderReview
-                                  ? AppColors.purple
-                                  : AppColors.statusPending,
+                              color: isUnderReview ? AppColors.purple : AppColors.green,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -309,7 +338,7 @@ class _RequestCardState extends State<_RequestCard> {
                 ),
 
                 const SizedBox(height: 14),
-                const Divider(color: AppColors.lightGray, height: 1),
+                const Divider(color: AppColors.darkBorder, height: 1),
                 const SizedBox(height: 14),
 
                 // Info grid
@@ -323,8 +352,7 @@ class _RequestCardState extends State<_RequestCard> {
                     Expanded(
                       child: _InfoRow(
                           icon: Icons.timelapse,
-                          label:
-                              '${booking.durationHours.toInt()}h session'),
+                          label: '${booking.durationHours.toInt()}h session'),
                     ),
                   ],
                 ),
@@ -334,59 +362,87 @@ class _RequestCardState extends State<_RequestCard> {
                     Expanded(
                       child: _InfoRow(
                           icon: Icons.payments_outlined,
-                          label:
-                              'EGP ${booking.totalAmount.toStringAsFixed(0)} total'),
+                          label: 'EGP ${booking.totalAmount.toStringAsFixed(0)} total'),
                     ),
                     Expanded(
                       child: _InfoRow(
                           icon: Icons.confirmation_number_outlined,
-                          label:
-                              'Fee: EGP ${booking.bookingFee.toStringAsFixed(0)}'),
+                          label: 'Fee: EGP ${booking.bookingFee.toStringAsFixed(0)}'),
                     ),
                   ],
                 ),
 
                 const SizedBox(height: 16),
 
+                // Show payment receipt if uploaded
+                paymentAsync.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                  data: (payment) {
+                    if (payment == null || payment.screenshotUrl == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: InkWell(
+                        onTap: () => _viewReceipt(payment.screenshotUrl!),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.darkSurface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.darkBorder),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.image_outlined, color: AppColors.green, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'View Transaction Screenshot',
+                                style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                              ),
+                              Spacer(),
+                              Icon(Icons.chevron_right, color: AppColors.textMuted, size: 20),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
                 // Action buttons
                 if (_isProcessing)
                   const Center(
-                      child: CircularProgressIndicator(
-                          color: AppColors.teal))
+                      child: CircularProgressIndicator(color: AppColors.green))
                 else
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () =>
-                              _handleDecision(context, 'rejected'),
+                          onPressed: () => _handleDecision(context, 'rejected'),
                           icon: const Icon(Icons.close, size: 16),
                           label: const Text('Reject'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.error,
-                            side: BorderSide(
-                                color: AppColors.error.withOpacity(0.5)),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: AppColors.error.withOpacity(0.5)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () =>
-                              _handleDecision(context, 'confirmed'),
+                          onPressed: () => _handleDecision(context, 'confirmed'),
                           icon: const Icon(Icons.check, size: 16),
                           label: const Text('Confirm'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.teal,
+                            backgroundColor: AppColors.green,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
                       ),
@@ -421,13 +477,12 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: AppColors.textSecondary),
+        Icon(icon, size: 14, color: AppColors.textMuted),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
-                color: AppColors.textSecondary, fontSize: 12),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
             overflow: TextOverflow.ellipsis,
           ),
         ),

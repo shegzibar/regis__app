@@ -398,7 +398,7 @@ class _BookingCard extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () =>
-                          context.push('/payment/${booking.id}'),
+                          context.push('/payment/${booking.id}?amount=${booking.totalAmount}'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.green,
                         foregroundColor: Colors.white,

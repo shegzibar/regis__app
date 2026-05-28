@@ -1,20 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/providers/location_provider.dart';
+import '../../../core/providers/cyber_provider.dart';
 import '../../../shared/widgets/gaming_center_card.dart';
 import '../../../shared/widgets/category_chip.dart';
 
-class ExploreScreen extends StatefulWidget {
+class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
 
   @override
-  State<ExploreScreen> createState() => _ExploreScreenState();
+  ConsumerState<ExploreScreen> createState() => _ExploreScreenState();
 }
 
-class _ExploreScreenState extends State<ExploreScreen> {
+class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'All';
+  String _searchQuery = '';
 
   final List<String> _categories = ['All', 'PS5', 'PC Gaming', 'VIP Rooms'];
+
+  @override
+  void initState() {
+    super.initState();
+    // Request location on startup
+    Future.microtask(() => ref.read(locationProvider.notifier).requestAndGetLocation());
+    
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.trim();
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -162,120 +180,154 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
             // Content
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Featured Centers Header
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Featured Centers',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final cybersAsync = ref.watch(cyberSearchProvider(_searchQuery));
+                  final featuredAsync = ref.watch(featuredCybersProvider);
+
+                  return cybersAsync.when(
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(color: AppColors.green),
+                    ),
+                    error: (err, stack) => Center(
+                      child: Text(
+                        'Error loading centers: $err',
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                    data: (cybers) {
+                      if (cybers.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No gaming centers found',
+                            style: TextStyle(color: AppColors.textMuted, fontSize: 16),
                           ),
-                          TextButton(
-                            onPressed: () {},
-                            child: const Text(
-                              'See All',
-                              style: TextStyle(
-                                color: AppColors.green,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                        );
+                      }
+
+                      return SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Featured Centers Header (only if not searching)
+                            if (_searchQuery.isEmpty) ...[
+                              featuredAsync.when(
+                                data: (featured) {
+                                  if (featured.isEmpty) return const SizedBox.shrink();
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            const Text(
+                                              'Featured Centers',
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {},
+                                              child: const Text(
+                                                'See All',
+                                                style: TextStyle(
+                                                  color: AppColors.green,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      SizedBox(
+                                        height: 200,
+                                        child: ListView.builder(
+                                          scrollDirection: Axis.horizontal,
+                                          physics: const AlwaysScrollableScrollPhysics(),
+                                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                          itemCount: featured.length,
+                                          itemBuilder: (context, index) {
+                                            final cyber = featured[index];
+                                            return Padding(
+                                              padding: const EdgeInsets.only(right: 16.0),
+                                              child: GamingCenterCard(
+                                                isFeatured: true,
+                                                name: cyber.name,
+                                                rating: cyber.rating,
+                                                location: cyber.address ?? cyber.city ?? '',
+                                                price: 'From EGP 15/hr', // Default room pricing
+                                                imageUrl: cyber.images.isNotEmpty 
+                                                    ? cyber.images[0] 
+                                                    : 'https://picsum.photos/seed/${cyber.id}/300/150',
+                                                isAvailable: cyber.isActive,
+                                                onTap: () => context.push('/cyber/${cyber.id}'),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(height: 32),
+                                    ],
+                                  );
+                                },
+                                loading: () => const SizedBox.shrink(),
+                                error: (e, s) => const SizedBox.shrink(),
+                              ),
+                            ],
+
+                            // Nearby You / Search Results Header
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                              child: Text(
+                                _searchQuery.isEmpty ? 'Nearby You' : 'Search Results',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
 
-                    const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                    // Featured Centers Horizontal List
-                    SizedBox(
-                      height: 200,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        itemCount: 3,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 16.0),
-                            child: GamingCenterCard(
-                              isFeatured: true,
-                              name: 'Cyber Galaxy',
-                              rating: 4.9,
-                              location: 'Road 9, Maadi',
-                              price: 'From EGP 40/hr',
-                              imageUrl:
-                                  'https://picsum.photos/seed/coffeelovers/300/150',
-                              isAvailable: true,
-                              onTap: () {},
+                            // Centers List
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                              child: Column(
+                                children: cybers.map((cyber) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16.0),
+                                    child: GamingCenterCard(
+                                      isFeatured: false,
+                                      name: cyber.name,
+                                      rating: cyber.rating,
+                                      reviewCount: cyber.reviewCount,
+                                      location: cyber.address ?? cyber.city ?? '',
+                                      price: 'EGP 15 per hour',
+                                      imageUrl: cyber.images.isNotEmpty 
+                                          ? cyber.images[0] 
+                                          : 'https://picsum.photos/seed/${cyber.id}/80/80',
+                                      consoles: const ['PS5', 'PC'], // Mock capabilities
+                                      onTap: () => context.push('/cyber/${cyber.id}'),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
 
-                    const SizedBox(height: 32),
-
-                    // Nearby You
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: const Text(
-                        'Nearby You',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                            const SizedBox(height: 32),
+                          ],
                         ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Nearby Centers Vertical List
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Column(
-                        children: [
-                          GamingCenterCard(
-                            isFeatured: false,
-                            name: 'Pixel Gaming Lounge',
-                            rating: 4.5,
-                            reviewCount: 128,
-                            location: 'Maadi',
-                            price: 'EGP 30 per hour',
-                            imageUrl: 'https://picsum.photos/seed/pixel/80/80',
-                            consoles: ['PS5', 'PC'],
-                            onTap: () {},
-                          ),
-                          const SizedBox(height: 16),
-                          GamingCenterCard(
-                            isFeatured: false,
-                            name: 'Rush Esports',
-                            rating: 4.6,
-                            reviewCount: 89,
-                            location: 'Maadi',
-                            price: 'EGP 45 per hour',
-                            imageUrl: 'https://picsum.photos/seed/rush/80/80',
-                            consoles: ['PC High-End'],
-                            onTap: () {},
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-                  ],
-                ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],

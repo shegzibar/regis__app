@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/screens/auth_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/auth/screens/splash_screen.dart';
 import '../../features/user/screens/explore_screen.dart';
 import '../../features/user/screens/cyber_details_screen.dart';
 import '../../features/user/screens/booking_screen.dart';
@@ -22,26 +23,38 @@ import '../providers/auth_provider.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+  final isInitializing = ref.watch(authInitializingProvider);
 
   return GoRouter(
-    initialLocation: '/auth',
+    initialLocation: '/splash',
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final user = authState;
 
+      // Show splash screen while restoring session from Supabase on cold start
+      if (isInitializing) {
+        return state.uri.toString() == '/splash' ? null : '/splash';
+      }
+
       // If not authenticated, redirect to auth
       if (user == null) {
         final isAuthRoute = state.uri.toString().startsWith('/auth') ||
-            state.uri.toString().startsWith('/signup');
+            state.uri.toString().startsWith('/signup') ||
+            state.uri.toString().startsWith('/splash');
         if (!isAuthRoute) {
+          return '/auth';
+        }
+        // If on splash but not initializing → not logged in, go to auth
+        if (state.uri.toString() == '/splash') {
           return '/auth';
         }
         return null;
       }
 
-      // If authenticated and on auth route, redirect based on role
+      // If authenticated and on auth or splash route, redirect based on role
       final isAuthRoute = state.uri.toString().startsWith('/auth') ||
-          state.uri.toString().startsWith('/signup');
+          state.uri.toString().startsWith('/signup') ||
+          state.uri.toString().startsWith('/splash');
       if (isAuthRoute) {
         switch (user.role) {
           case 'owner':
@@ -76,6 +89,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      // Splash Route
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+
       // Authentication Routes
       GoRoute(
         path: '/auth',
@@ -120,7 +140,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'payment',
             builder: (context, state) {
               final bookingId = state.pathParameters['bookingId']!;
-              return PaymentScreen(bookingId: bookingId);
+              final amountStr = state.uri.queryParameters['amount'];
+              final amount = double.tryParse(amountStr ?? '') ?? 0.0;
+              return PaymentScreen(bookingId: bookingId, amount: amount);
             },
           ),
           GoRoute(

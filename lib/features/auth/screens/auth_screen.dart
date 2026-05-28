@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../data/models/user.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -32,32 +31,23 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Replace with actual Firebase/Supabase login
-      // For now, create test user
-      final testUser = AppUser(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        phone: '',
-        name: 'User',
-        role: 'user',
-        createdAt: DateTime.now(),
+      await ref.read(authControllerProvider.notifier).signInWithEmailAndPassword(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
 
-      // Set the user in auth state
-      ref.read(authStateProvider.notifier).setUser(testUser);
-
+      // Navigation is handled automatically by the router listening to authStateProvider
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful! (Design Test Mode)'),
-          ),
-        );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red.shade700,
+          ),
         );
       }
     }

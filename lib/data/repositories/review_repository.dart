@@ -148,7 +148,7 @@ class ReviewRepository {
           .eq('cyber_id', cyberId)
           .count();
 
-      return response;
+      return response.count;
     } catch (e) {
       throw Exception('Failed to get review count: $e');
     }

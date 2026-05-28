@@ -191,6 +191,23 @@ class BookingRepository {
     }
   }
 
+  // Get ALL fee_under_review bookings (manager queue — not filtered by user)
+  Future<List<Booking>> getPendingPaymentBookingsForManager() async {
+    try {
+      final response = await _supabase
+          .from('bookings')
+          .select()
+          .inFilter('status', ['pending_payment', 'fee_under_review'])
+          .order('created_at', ascending: true);
+
+      return (response as List)
+          .map((booking) => Booking.fromMap(booking))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch manager queue: $e');
+    }
+  }
+
   // Delete booking
   Future<void> deleteBooking(String bookingId) async {
     try {
@@ -200,3 +217,4 @@ class BookingRepository {
     }
   }
 }
+

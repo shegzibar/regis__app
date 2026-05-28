@@ -32,32 +32,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Replace with actual Firebase/Supabase login
-      // For now, create test user
-      final testUser = AppUser(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        phone: '',
-        name: 'User',
-        role: 'user',
-        createdAt: DateTime.now(),
+      await ref.read(authControllerProvider.notifier).signInWithEmailAndPassword(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
-
-      // Set the user in auth state
-      ref.read(authStateProvider.notifier).setUser(testUser);
 
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful! (Design Test Mode)'),
-          ),
-        );
+        // Navigation is handled by the router listening to authStateProvider
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
         );
       }
     }

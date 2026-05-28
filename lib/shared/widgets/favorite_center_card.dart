@@ -23,7 +23,7 @@ class FavoriteCenterCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 200,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           color: AppColors.darkCard,
           borderRadius: BorderRadius.circular(12),
@@ -36,7 +36,7 @@ class FavoriteCenterCard extends StatelessWidget {
             // Center Image Placeholder
             Container(
               width: double.infinity,
-              height: 50,
+              height: 40,
               decoration: BoxDecoration(
                 color: AppColors.darkSurface,
                 borderRadius: BorderRadius.circular(8),
@@ -44,11 +44,11 @@ class FavoriteCenterCard extends StatelessWidget {
               child: const Icon(
                 Icons.videogame_asset,
                 color: AppColors.green,
-                size: 20,
+                size: 18,
               ),
             ),
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
 
             // Center Name
             Text(
@@ -62,7 +62,7 @@ class FavoriteCenterCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
 
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
 
             // Rating and Distance
             Row(
@@ -78,10 +78,10 @@ class FavoriteCenterCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 2),
                     Text(
-                      rating.toString(),
+                      rating.toStringAsFixed(1),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -101,16 +101,16 @@ class FavoriteCenterCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
 
             // Open Status
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
               decoration: BoxDecoration(
                 color: isOpen
                     ? AppColors.green.withOpacity(0.2)
                     : AppColors.error.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(2),
                 border: Border.all(
                   color: isOpen ? AppColors.green : AppColors.error,
                   width: 0.5,

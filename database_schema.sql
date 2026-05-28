@@ -140,6 +140,17 @@ CREATE INDEX idx_reviews_booking_id ON reviews(booking_id);
 CREATE INDEX idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX idx_notifications_is_read ON notifications(is_read);
 
+-- Security Definer Function to check if user is admin/manager (avoids infinite recursion)
+CREATE OR REPLACE FUNCTION is_admin_or_manager()
+RETURNS BOOLEAN AS $$
+DECLARE
+  user_role TEXT;
+BEGIN
+  SELECT role INTO user_role FROM users WHERE id = auth.uid();
+  RETURN user_role IN ('admin', 'manager');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Row Level Security (RLS) Policies
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cybers ENABLE ROW LEVEL SECURITY;
@@ -150,6 +161,33 @@ ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
+-- Drop old policies to avoid conflicts
+DROP POLICY IF EXISTS "Users can view their own profile" ON users;
+DROP POLICY IF EXISTS "Users can update their own profile" ON users;
+DROP POLICY IF EXISTS "Admins can view all users" ON users;
+DROP POLICY IF EXISTS "Anyone can view active cybers" ON cybers;
+DROP POLICY IF EXISTS "Owners can manage their cybers" ON cybers;
+DROP POLICY IF EXISTS "Admins can manage all cybers" ON cybers;
+DROP POLICY IF EXISTS "Anyone can view active rooms" ON rooms;
+DROP POLICY IF EXISTS "Owners can manage their rooms" ON rooms;
+DROP POLICY IF EXISTS "Admins can manage all rooms" ON rooms;
+DROP POLICY IF EXISTS "Anyone can view stations" ON stations;
+DROP POLICY IF EXISTS "Owners can manage their stations" ON stations;
+DROP POLICY IF EXISTS "Admins can manage all stations" ON stations;
+DROP POLICY IF EXISTS "Users can view their own bookings" ON bookings;
+DROP POLICY IF EXISTS "Owners can view bookings for their cybers" ON bookings;
+DROP POLICY IF EXISTS "Users can create bookings" ON bookings;
+DROP POLICY IF EXISTS "Users can update their own bookings" ON bookings;
+DROP POLICY IF EXISTS "Owners can update booking status" ON bookings;
+DROP POLICY IF EXISTS "Users can view their own payments" ON payments;
+DROP POLICY IF EXISTS "Managers can view all payments" ON payments;
+DROP POLICY IF EXISTS "Users can create payments" ON payments;
+DROP POLICY IF EXISTS "Managers can update payment status" ON payments;
+DROP POLICY IF EXISTS "Anyone can view reviews" ON reviews;
+DROP POLICY IF EXISTS "Users can create reviews for their completed bookings" ON reviews;
+DROP POLICY IF EXISTS "Users can view their own notifications" ON notifications;
+DROP POLICY IF EXISTS "Users can update their own notifications" ON notifications;
+
 -- Users table policies
 CREATE POLICY "Users can view their own profile" ON users
   FOR SELECT USING (auth.uid() = id);
@@ -158,12 +196,7 @@ CREATE POLICY "Users can update their own profile" ON users
   FOR UPDATE USING (auth.uid() = id);
 
 CREATE POLICY "Admins can view all users" ON users
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR SELECT USING (is_admin_or_manager());
 
 -- Cybers table policies
 CREATE POLICY "Anyone can view active cybers" ON cybers
@@ -173,12 +206,7 @@ CREATE POLICY "Owners can manage their cybers" ON cybers
   FOR ALL USING (owner_id = auth.uid());
 
 CREATE POLICY "Admins can manage all cybers" ON cybers
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR ALL USING (is_admin_or_manager());
 
 -- Rooms table policies
 CREATE POLICY "Anyone can view active rooms" ON rooms
@@ -193,12 +221,7 @@ CREATE POLICY "Owners can manage their rooms" ON rooms
   );
 
 CREATE POLICY "Admins can manage all rooms" ON rooms
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR ALL USING (is_admin_or_manager());
 
 -- Stations table policies
 CREATE POLICY "Anyone can view stations" ON stations
@@ -214,12 +237,7 @@ CREATE POLICY "Owners can manage their stations" ON stations
   );
 
 CREATE POLICY "Admins can manage all stations" ON stations
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR ALL USING (is_admin_or_manager());
 
 -- Bookings table policies
 CREATE POLICY "Users can view their own bookings" ON bookings
@@ -256,23 +274,13 @@ CREATE POLICY "Users can view their own payments" ON payments
   FOR SELECT USING (user_id = auth.uid());
 
 CREATE POLICY "Managers can view all payments" ON payments
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role IN ('manager', 'admin')
-    )
-  );
+  FOR SELECT USING (is_admin_or_manager());
 
 CREATE POLICY "Users can create payments" ON payments
   FOR INSERT WITH CHECK (user_id = auth.uid());
 
 CREATE POLICY "Managers can update payment status" ON payments
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role IN ('manager', 'admin')
-    )
-  );
+  FOR UPDATE USING (is_admin_or_manager());
 
 -- Reviews table policies
 CREATE POLICY "Anyone can view reviews" ON reviews

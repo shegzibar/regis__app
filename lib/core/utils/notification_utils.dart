@@ -1,5 +1,4 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'currency_utils.dart';
 
@@ -20,16 +19,16 @@ class NotificationService {
     // iOS initialization
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
-        );
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
 
     const InitializationSettings initializationSettings =
         InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: initializationSettingsIOS,
-        );
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
 
     await _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
@@ -46,34 +45,6 @@ class NotificationService {
           description: 'Booking notifications',
           importance: Importance.high,
         ));
-
-    // Initialize Firebase messaging
-    await _initializeFirebaseMessaging();
-  }
-
-  // Initialize Firebase Cloud Messaging
-  Future<void> _initializeFirebaseMessaging() async {
-    final messaging = FirebaseMessaging.instance;
-
-    // Request permission
-    await messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-
-    // Get FCM token
-    final token = await messaging.getToken();
-    print('FCM Token: $token');
-
-    // Configure message handlers
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
-    FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
   }
 
   // Show local notification
@@ -117,27 +88,6 @@ class NotificationService {
   void _onNotificationTapped(NotificationResponse response) {
     // Handle navigation based on payload
     print('Notification tapped: ${response.payload}');
-  }
-
-  // Handle foreground message
-  void _handleForegroundMessage(RemoteMessage message) {
-    showNotification(
-      title: message.notification?.title ?? 'New Notification',
-      body: message.notification?.body ?? '',
-      payload: message.data['route'],
-    );
-  }
-
-  // Handle message when app is opened from notification
-  void _handleMessageOpenedApp(RemoteMessage message) {
-    // Handle navigation
-    print('App opened from notification: ${message.data}');
-  }
-
-  // Handle background message (static method)
-  static Future<void> _handleBackgroundMessage(RemoteMessage message) async {
-    // Handle background message
-    print('Background message: ${message.notification?.title}');
   }
 
   // Cancel notification
@@ -193,7 +143,8 @@ class NotificationTemplates {
   static Map<String, String> bookingRejected(String cyberName) {
     return {
       'title': 'Booking Rejected',
-      'body': 'Your booking at $cyberName was rejected. The slot has been released.',
+      'body':
+          'Your booking at $cyberName was rejected. The slot has been released.',
       'type': NotificationTypes.bookingRejected,
     };
   }
