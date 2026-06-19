@@ -29,7 +29,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
   String? _selectedCenterId;
   Position? _currentPosition;
   bool _isLoadingLocation = true;
-  List<String> _favorites = []; // Store favorite cyber IDs
 
   @override
   void initState() {

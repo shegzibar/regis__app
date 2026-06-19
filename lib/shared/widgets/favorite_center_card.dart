@@ -4,7 +4,7 @@ import '../../core/constants/app_colors.dart';
 class FavoriteCenterCard extends StatelessWidget {
   final String name;
   final double rating;
-  final double distance;
+  final double? distance;
   final bool isOpen;
   final VoidCallback onTap;
 
@@ -92,7 +92,7 @@ class FavoriteCenterCard extends StatelessWidget {
 
                 // Distance
                 Text(
-                  '${distance}km',
+                  distance != null ? '${distance!.toStringAsFixed(1)} km' : '—',
                   style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 10,

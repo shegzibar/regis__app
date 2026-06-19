@@ -4,6 +4,7 @@ class Room {
   final String name;
   final String type;
   final double pricePerHour;
+  final double? bookingFee;
   final String? description;
   final bool isActive;
 
@@ -13,6 +14,7 @@ class Room {
     required this.name,
     required this.type,
     required this.pricePerHour,
+    this.bookingFee,
     this.description,
     this.isActive = true,
   });
@@ -24,6 +26,7 @@ class Room {
       name: map['name'] as String,
       type: map['type'] as String,
       pricePerHour: (map['price_per_hour'] as num).toDouble(),
+      bookingFee: map['booking_fee'] != null ? (map['booking_fee'] as num).toDouble() : null,
       description: map['description'] as String?,
       isActive: map['is_active'] as bool? ?? true,
     );
@@ -36,6 +39,7 @@ class Room {
       'name': name,
       'type': type,
       'price_per_hour': pricePerHour,
+      'booking_fee': bookingFee,
       'description': description,
       'is_active': isActive,
     };
@@ -47,6 +51,7 @@ class Room {
     String? name,
     String? type,
     double? pricePerHour,
+    double? bookingFee,
     String? description,
     bool? isActive,
   }) {
@@ -56,6 +61,7 @@ class Room {
       name: name ?? this.name,
       type: type ?? this.type,
       pricePerHour: pricePerHour ?? this.pricePerHour,
+      bookingFee: bookingFee ?? this.bookingFee,
       description: description ?? this.description,
       isActive: isActive ?? this.isActive,
     );
@@ -72,6 +78,17 @@ class Room {
       default:
         return name;
     }
+  }
+
+  double get effectiveBookingFee {
+    if (bookingFee != null && bookingFee! > 0) {
+      return bookingFee!;
+    }
+    // Default fees based on room type
+    if (type.toLowerCase() == 'vip') {
+      return 8.0;
+    }
+    return 5.0; // Default for PS5, PC, etc.
   }
 
   String get typeIcon {

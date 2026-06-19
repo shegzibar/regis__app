@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/location_provider.dart';
 import '../../../core/providers/cyber_provider.dart';
+import '../../../core/providers/wallet_provider.dart';
 import '../../../shared/widgets/gaming_center_card.dart';
 import '../../../shared/widgets/category_chip.dart';
 
@@ -84,19 +85,63 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                     ],
                   ),
                   const Spacer(),
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.darkCard,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.darkBorder),
-                    ),
-                    child: const Icon(
-                      Icons.notifications_outlined,
-                      color: Colors.white,
-                      size: 24,
-                    ),
+                  // Wallet Card
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final walletAsync = ref.watch(userWalletProvider);
+                      
+                      return GestureDetector(
+                        onTap: () => context.push('/wallet'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.darkCard,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.green.withValues(alpha: 0.3)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.green.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.green.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.account_balance_wallet, color: AppColors.green, size: 16),
+                              ),
+                              const SizedBox(width: 8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('My Wallet', style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
+                                  walletAsync.when(
+                                    loading: () => const SizedBox(
+                                      width: 20, 
+                                      height: 14, 
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.green)
+                                    ),
+                                    error: (_, __) => const Text('Error', style: TextStyle(color: AppColors.error, fontSize: 14, fontWeight: FontWeight.bold)),
+                                    data: (wallet) => Text(
+                                      '${wallet?.balance ?? 0} pts',
+                                      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

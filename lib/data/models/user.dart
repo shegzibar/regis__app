@@ -7,6 +7,7 @@ class AppUser {
   final String? name;
   final String role;
   final String? avatarUrl;
+  final String? fcmToken;
   final DateTime createdAt;
 
   const AppUser({
@@ -16,6 +17,7 @@ class AppUser {
     this.name,
     required this.role,
     this.avatarUrl,
+    this.fcmToken,
     required this.createdAt,
   });
 
@@ -27,6 +29,7 @@ class AppUser {
       name: map['name'] as String?,
       role: map['role'] as String? ?? 'user',
       avatarUrl: map['avatar_url'] as String?,
+      fcmToken: map['fcm_token'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
     );
   }
@@ -39,6 +42,7 @@ class AppUser {
       name: user.userMetadata?['name'],
       role: user.userMetadata?['role'] ?? 'user',
       avatarUrl: user.userMetadata?['avatar_url'],
+      fcmToken: user.userMetadata?['fcm_token'],
       createdAt: DateTime.tryParse(user.createdAt.toString()) ?? DateTime.now(),
     );
   }
@@ -46,11 +50,11 @@ class AppUser {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'email': email,
       'phone': phone,
       'name': name,
       'role': role,
       'avatar_url': avatarUrl,
+      'fcm_token': fcmToken,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -62,6 +66,7 @@ class AppUser {
     String? name,
     String? role,
     String? avatarUrl,
+    String? fcmToken,
     DateTime? createdAt,
   }) {
     return AppUser(
@@ -71,6 +76,7 @@ class AppUser {
       name: name ?? this.name,
       role: role ?? this.role,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      fcmToken: fcmToken ?? this.fcmToken,
       createdAt: createdAt ?? this.createdAt,
     );
   }

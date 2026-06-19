@@ -8,6 +8,13 @@ class AppConstants {
   static const String appName = 'GamingHub';
   static const String appVersion = '1.0.0';
 
+  /// When true, any logged-in email account can open user / admin / cyber apps.
+  /// Set to false before production release.
+  static const bool bypassRoleChecksForTesting = true;
+
+  /// When true, sign-up shows a role picker (user, owner, manager, admin).
+  static const bool allowTestRoleSelection = true;
+
   // Booking Configuration
   static const double bookingFee = 5.0; // 5 EGP
   static const Duration bookingTimeout = Duration(minutes: 15);

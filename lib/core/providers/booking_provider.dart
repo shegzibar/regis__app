@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/booking.dart';
 import '../../data/repositories/booking_repository.dart';
 import 'auth_provider.dart';
+import 'profile_provider.dart';
 
 final bookingRepositoryProvider = Provider<BookingRepository>((ref) {
   return BookingRepository();
@@ -15,8 +16,8 @@ final userBookingsProvider = FutureProvider<List<Booking>>((ref) async {
 });
 
 // Bookings for the manager review queue
-final pendingReviewBookingsProvider = FutureProvider<List<Booking>>((ref) async {
-  final repo = ref.read(bookingRepositoryProvider);
+final pendingReviewBookingsProvider =
+    FutureProvider<List<Booking>>((ref) async {
   // Fetch both pending_payment and fee_under_review statuses for queue
   final response = await SupabaseBookingHelper.getAllPendingForManager();
   return response;
@@ -36,27 +37,31 @@ class BookingNotifier extends AsyncNotifier<void> {
     required DateTime endTime,
     required double durationHours,
     required double totalAmount,
+    double bookingFee = 5.0,
     String? notes,
   }) async {
     final user = ref.read(authStateProvider);
     if (user == null) throw Exception('Not authenticated');
 
-    return ref.read(bookingRepositoryProvider).createBooking(
+    final booking = await ref.read(bookingRepositoryProvider).createBooking(
           userId: user.id,
           stationId: stationId,
           startTime: startTime,
           endTime: endTime,
           durationHours: durationHours,
           totalAmount: totalAmount,
+          bookingFee: bookingFee,
           notes: notes,
         );
+    ref.invalidate(profileDataProvider);
+    return booking;
   }
 
   Future<Booking> cancelBooking(String bookingId) async {
-    final booking = await ref
-        .read(bookingRepositoryProvider)
-        .cancelBooking(bookingId);
+    final booking =
+        await ref.read(bookingRepositoryProvider).cancelBooking(bookingId);
     ref.invalidate(userBookingsProvider);
+    ref.invalidate(profileDataProvider);
     return booking;
   }
 
@@ -65,6 +70,7 @@ class BookingNotifier extends AsyncNotifier<void> {
         .read(bookingRepositoryProvider)
         .updateBookingStatus(bookingId, newStatus);
     ref.invalidate(userBookingsProvider);
+    ref.invalidate(profileDataProvider);
     return booking;
   }
 }

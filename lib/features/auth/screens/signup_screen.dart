@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../data/models/user.dart';
+import '../../../core/router/root_router.dart';
+import '../../../core/config/app_variant.dart';
+import '../widgets/test_mode_banner.dart';
+
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -13,8 +17,8 @@ class SignupScreen extends ConsumerStatefulWidget {
 
 class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -26,8 +30,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _phoneController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -46,12 +50,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(authControllerProvider.notifier).signUpWithEmailAndPassword(
-        _emailController.text.trim(),
-        _passwordController.text,
-        _nameController.text.trim(),
-        _phoneController.text.trim(),
-      );
+      final variant = ref.read(appVariantProvider);
+      final role = variant == AppVariant.owner ? 'owner' : 'user';
+
+      await ref
+          .read(authControllerProvider.notifier)
+          .signUpWithEmailAndPassword(
+            _emailController.text.trim(),
+            _passwordController.text,
+            _nameController.text.trim(),
+            _phoneController.text.trim(),
+            role: role,
+          );
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -132,7 +142,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 24),
+
+                  const TestModeBanner(),
+
+                  const SizedBox(height: 16),
 
                   // Name Field
                   const Text(
@@ -175,51 +189,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 20),
 
-                  // Phone Number Field
-                  const Text(
-                    'Phone Number',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'Enter your phone number',
-                      hintStyle: const TextStyle(color: Color(0xFF6A6A6A)),
-                      filled: true,
-                      fillColor: const Color(0xFF2A2A2A),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF3A3A3A)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF3A3A3A)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF4CAF50)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 16),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your phone number';
-                      }
-                      return null;
-                    },
-                  ),
-
-                  const SizedBox(height: 20),
 
                   // Email Field
                   const Text(
@@ -261,6 +231,50 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       }
                       if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                         return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Phone Field
+                  const Text(
+                    'Phone Number',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    decoration: InputDecoration(
+                      hintText: 'Enter your phone number',
+                      hintStyle: const TextStyle(color: Color(0xFF6A6A6A)),
+                      filled: true,
+                      fillColor: const Color(0xFF2A2A2A),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFF3A3A3A)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFF3A3A3A)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 16),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your phone number';
                       }
                       return null;
                     },
@@ -382,7 +396,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+
+
 
                   // Sign Up Button
                   SizedBox(
@@ -433,7 +449,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => context.go('/login'),
+                          onTap: () => context.go('/auth'),
                           child: const Text(
                             'Login',
                             style: TextStyle(

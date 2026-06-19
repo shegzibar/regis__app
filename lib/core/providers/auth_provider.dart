@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/user.dart';
 import '../../data/supabase/supabase_client.dart';
+import '../constants/app_constants.dart';
 
 // Auth state provider
 final authStateProvider =
@@ -46,22 +48,34 @@ class AuthStateNotifier extends StateNotifier<AppUser?> {
     });
   }
 
-  /// Fetches the full user row (including role) from the `users` table and
+  /// Fetches the full profile row (including role) from the `profiles` table and
   /// sets state. Falls back to a minimal AppUser built from Auth metadata if
   /// the DB fetch fails (e.g. no network on first launch).
   Future<void> _fetchAndSetUser(String userId) async {
     try {
       final response = await SupabaseService()
-          .from('users')
+          .from('profiles')
           .select()
           .eq('id', userId)
-          .single();
-      state = AppUser.fromMap(response);
+          .maybeSingle();
+
+      if (response != null) {
+        state = AppUser.fromMap(response);
+        return;
+      }
+
+      final authUser = SupabaseService().currentUser;
+      if (authUser != null && authUser.id == userId) {
+        state = await AuthService().ensureUserProfile(authUser);
+      }
     } catch (_) {
-      // Fallback: build from Supabase Auth metadata if DB unavailable
       final authUser = SupabaseService().currentUser;
       if (authUser != null) {
-        state = AppUser.fromSupabase(authUser);
+        try {
+          state = await AuthService().ensureUserProfile(authUser);
+        } catch (_) {
+          state = AppUser.fromSupabase(authUser);
+        }
       }
     }
   }
@@ -96,6 +110,49 @@ final authControllerProvider = AsyncNotifierProvider<AuthController, void>(() {
 class AuthService {
   final SupabaseService _supabase = SupabaseService();
 
+  /// Ensures a `profiles` row exists after Supabase Auth sign-in / sign-up.
+  Future<AppUser> ensureUserProfile(
+    User authUser, {
+    String? email,
+    String? name,
+    String? phone,
+    String role = 'user',
+  }) async {
+    try {
+      final existing = await _supabase
+          .from('profiles')
+          .select()
+          .eq('id', authUser.id)
+          .maybeSingle();
+
+      if (existing != null) {
+        return AppUser.fromMap(existing);
+      }
+
+      final profileData = {
+        'id': authUser.id,
+        'name': name ??
+            authUser.userMetadata?['name'] ??
+            (email ?? authUser.email ?? '').split('@').first,
+        'role': role,
+        'phone': phone ?? authUser.phone ?? '',
+      };
+
+      await _supabase.from('profiles').upsert(profileData);
+
+      final profileRow = await _supabase
+          .from('profiles')
+          .select()
+          .eq('id', authUser.id)
+          .single();
+
+      return AppUser.fromMap(profileRow);
+    } catch (e) {
+      debugPrint('ensureUserProfile failed: $e');
+      return AppUser.fromSupabase(authUser);
+    }
+  }
+
   // Send OTP
   Future<void> sendOTP(String phone) async {
     try {
@@ -108,7 +165,7 @@ class AuthService {
     }
   }
 
-  // Verify OTP — fetches the full DB user row so the role is correct
+  // Verify OTP — fetches the full profile row so the role is correct
   Future<AppUser> verifyOTP(String phone, String token) async {
     try {
       final response = await _supabase.auth.verifyOTP(
@@ -121,29 +178,11 @@ class AuthService {
         throw Exception('Verification failed');
       }
 
-      // Upsert user row in case this is a brand-new account
-      final existingUser = await _supabase
-          .from('users')
-          .select()
-          .eq('id', response.user!.id)
-          .maybeSingle();
-
-      if (existingUser == null) {
-        await _supabase.from('users').insert({
-          'id': response.user!.id,
-          'phone': phone,
-          'role': 'user',
-        });
-      }
-
-      // Always read the authoritative role from the DB table (not metadata)
-      final userRow = await _supabase
-          .from('users')
-          .select()
-          .eq('id', response.user!.id)
-          .single();
-
-      return AppUser.fromMap(userRow);
+      return ensureUserProfile(
+        response.user!,
+        phone: phone,
+        role: 'user',
+      );
     } catch (e) {
       throw Exception('Failed to verify OTP: $e');
     }
@@ -153,7 +192,7 @@ class AuthService {
   Future<AppUser> signInWithEmailAndPassword(String email, String password) async {
     try {
       final response = await _supabase.auth.signInWithPassword(
-        email: email,
+        email: email.trim(),
         password: password,
       );
 
@@ -161,49 +200,45 @@ class AuthService {
         throw Exception('Login failed');
       }
 
-      // Always read the authoritative role from the DB table
-      final userRow = await _supabase
-          .from('users')
-          .select()
-          .eq('id', response.user!.id)
-          .single();
-
-      return AppUser.fromMap(userRow);
+      return ensureUserProfile(
+        response.user!,
+        email: email.trim(),
+      );
     } catch (e) {
       throw Exception('Failed to sign in: $e');
     }
   }
 
   // Sign Up with Email & Password
-  Future<AppUser> signUpWithEmailAndPassword(String email, String password, String name, String phone) async {
+  Future<AppUser> signUpWithEmailAndPassword(
+    String email,
+    String password,
+    String name,
+    String phone, {
+    String role = 'user',
+  }) async {
     try {
+      if (!AppConstants.userRoles.contains(role)) {
+        throw Exception('Invalid role: $role');
+      }
+
       final response = await _supabase.auth.signUp(
-        email: email,
+        email: email.trim(),
         password: password,
+        data: {'name': name, 'role': role, 'phone': phone},
       );
 
       if (response.user == null) {
         throw Exception('Sign up failed');
       }
 
-      // Create user row
-      final userData = {
-        'id': response.user!.id,
-        'phone': phone,
-        'name': name,
-        'role': 'user',
-      };
-
-      await _supabase.from('users').upsert(userData);
-
-      // Read back to ensure we have the full object
-      final userRow = await _supabase
-          .from('users')
-          .select()
-          .eq('id', response.user!.id)
-          .single();
-
-      return AppUser.fromMap(userRow);
+      return ensureUserProfile(
+        response.user!,
+        email: email.trim(),
+        name: name,
+        phone: phone,
+        role: role,
+      );
     } catch (e) {
       throw Exception('Failed to sign up: $e');
     }
@@ -222,6 +257,7 @@ class AuthService {
   Future<void> updateProfile({
     String? name,
     String? avatarUrl,
+    String? phone,
   }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
@@ -230,26 +266,47 @@ class AuthService {
       final updates = <String, dynamic>{};
       if (name != null) updates['name'] = name;
       if (avatarUrl != null) updates['avatar_url'] = avatarUrl;
+      if (phone != null && phone.isNotEmpty) updates['phone'] = phone;
 
-      if (updates.isNotEmpty) {
-        await _supabase.from('users').update(updates).eq('id', userId);
+      if (updates.isEmpty) return;
+
+      await _supabase.from('profiles').update(updates).eq('id', userId).select();
+
+      if (name != null) {
+        await _supabase.auth.updateUser(
+          UserAttributes(data: {'name': name}),
+        );
       }
     } catch (e) {
       throw Exception('Failed to update profile: $e');
     }
   }
 
-  // Get current user from database (with correct role)
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      if (newPassword.length < 6) {
+        throw Exception('Password must be at least 6 characters');
+      }
+      await _supabase.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+    } catch (e) {
+      throw Exception('Failed to update password: $e');
+    }
+  }
+
+  // Get current user from profiles table (with correct role)
   Future<AppUser?> getCurrentUser() async {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) return null;
 
       final response =
-          await _supabase.from('users').select().eq('id', userId).single();
+          await _supabase.from('profiles').select().eq('id', userId).single();
 
       return AppUser.fromMap(response);
     } catch (e) {
+      debugPrint('getCurrentUser failed: $e');
       return null;
     }
   }
@@ -305,10 +362,22 @@ class AuthController extends AsyncNotifier<void> {
   }
 
   // Sign Up with Email & Password
-  Future<AppUser> signUpWithEmailAndPassword(String email, String password, String name, String phone) async {
+  Future<AppUser> signUpWithEmailAndPassword(
+    String email,
+    String password,
+    String name,
+    String phone, {
+    String role = 'user',
+  }) async {
     state = const AsyncValue.loading();
     final user = await AsyncValue.guard(() async {
-      return await _authService.signUpWithEmailAndPassword(email, password, name, phone);
+      return await _authService.signUpWithEmailAndPassword(
+        email,
+        password,
+        name,
+        phone,
+        role: role,
+      );
     });
 
     if (user.hasError) {
@@ -334,15 +403,37 @@ class AuthController extends AsyncNotifier<void> {
   Future<void> updateProfile({
     String? name,
     String? avatarUrl,
+    String? phone,
   }) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await _authService.updateProfile(name: name, avatarUrl: avatarUrl);
+    final result = await AsyncValue.guard(() async {
+      await _authService.updateProfile(
+        name: name,
+        avatarUrl: avatarUrl,
+        phone: phone,
+      );
     });
+    state = result;
+
+    if (result.hasError) {
+      throw result.error!;
+    }
 
     final updatedUser = await _authService.getCurrentUser();
     if (updatedUser != null) {
       ref.read(authStateProvider.notifier).setUser(updatedUser);
+    }
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    state = const AsyncValue.loading();
+    final result = await AsyncValue.guard(() async {
+      await _authService.updatePassword(newPassword);
+    });
+    state = result;
+
+    if (result.hasError) {
+      throw result.error!;
     }
   }
 }

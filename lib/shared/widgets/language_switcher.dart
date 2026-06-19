@@ -2,24 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../core/constants/app_colors.dart';
 
-class LanguageButton extends StatelessWidget {
+class LanguageButton extends StatefulWidget {
   const LanguageButton({super.key});
 
-  String _getCurrentLanguageFlag(BuildContext context) {
+  @override
+  State<LanguageButton> createState() => _LanguageButtonState();
+}
+
+class _LanguageButtonState extends State<LanguageButton> {
+  String _getCurrentLanguageFlag() {
     final currentLocale = context.locale.languageCode;
     return currentLocale == 'ar' ? '🇪🇬' : '🇺🇸';
+  }
+
+  void _changeLanguage(Locale locale) async {
+    await context.setLocale(locale);
   }
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<Locale>(
       position: PopupMenuPosition.under,
-      onSelected: (Locale locale) async {
-        await context.setLocale(locale);
-      },
+      onSelected: _changeLanguage,
       itemBuilder: (BuildContext context) => <PopupMenuEntry<Locale>>[
         PopupMenuItem<Locale>(
-          value: const Locale('en', 'US'),
+          value: const Locale('en'),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -52,7 +59,7 @@ class LanguageButton extends StatelessWidget {
           ),
         ),
         PopupMenuItem<Locale>(
-          value: const Locale('ar', 'EG'),
+          value: const Locale('ar'),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -96,7 +103,7 @@ class LanguageButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _getCurrentLanguageFlag(context),
+              _getCurrentLanguageFlag(),
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(width: 6),

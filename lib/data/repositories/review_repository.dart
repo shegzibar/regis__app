@@ -21,6 +21,22 @@ class ReviewRepository {
     }
   }
 
+  // User reviews with cyber name (for profile activity)
+  Future<List<Map<String, dynamic>>> getUserReviewsEnriched(
+      String userId) async {
+    try {
+      final response = await _supabase
+          .from('reviews')
+          .select('*, cybers(id, name)')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      return (response as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      throw Exception('Failed to fetch enriched reviews: $e');
+    }
+  }
+
   // Get user reviews
   Future<List<Review>> getUserReviews(String userId) async {
     try {

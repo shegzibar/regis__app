@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/config/app_variant.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/router/root_router.dart';
+import '../widgets/test_mode_banner.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -106,7 +109,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 24),
+
+                  const TestModeBanner(),
+
+                  const SizedBox(height: 16),
 
                   // Email Field
                   const Text(
@@ -265,65 +272,68 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 40),
+                  // Sign-up section — only shown for the consumer user variant
+                  if (ref.watch(appVariantProvider) == AppVariant.user) ...[
+                    const SizedBox(height: 40),
 
-                  // Divider with OR
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Divider(
-                          color: Color(0xFF3A3A3A),
-                          thickness: 1,
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'OR',
-                          style: TextStyle(
-                            color: Color(0xFF6A6A6A),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      const Expanded(
-                        child: Divider(
-                          color: Color(0xFF3A3A3A),
-                          thickness: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Sign Up Link
-                  Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    // Divider with OR
+                    Row(
                       children: [
-                        const Text(
-                          "Don't have an account? ",
-                          style: TextStyle(
-                            color: Color(0xFFB0B0B0),
-                            fontSize: 14,
+                        const Expanded(
+                          child: Divider(
+                            color: Color(0xFF3A3A3A),
+                            thickness: 1,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () => context.go('/signup'),
-                          child: const Text(
-                            'Sign Up',
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'OR',
                             style: TextStyle(
-                              color: Color(0xFF4CAF50),
+                              color: Color(0xFF6A6A6A),
                               fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
                             ),
+                          ),
+                        ),
+                        const Expanded(
+                          child: Divider(
+                            color: Color(0xFF3A3A3A),
+                            thickness: 1,
                           ),
                         ),
                       ],
                     ),
-                  ),
+
+                    const SizedBox(height: 24),
+
+                    // Sign Up Link
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Don't have an account? ",
+                            style: TextStyle(
+                              color: Color(0xFFB0B0B0),
+                              fontSize: 14,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => context.go('/signup'),
+                            child: const Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                color: Color(0xFF4CAF50),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 40),
                 ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/payment_provider.dart';
+import '../../../core/utils/role_utils.dart';
 import '../../../data/models/booking.dart';
 import '../../../data/repositories/booking_repository.dart';
 import '../../../data/supabase/supabase_client.dart';
@@ -40,6 +41,8 @@ class OwnerRequestsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider);
+    final canApprove = canApproveOnlineBookings(user);
     final requestsAsync = ref.watch(ownerPendingRequestsProvider);
 
     return Scaffold(
@@ -169,6 +172,7 @@ class OwnerRequestsScreen extends ConsumerWidget {
                       itemBuilder: (context, index) {
                         return _RequestCard(
                           booking: requests[index],
+                          showActions: canApprove,
                           onDecision: () =>
                               ref.invalidate(ownerPendingRequestsProvider),
                         );
@@ -187,9 +191,14 @@ class OwnerRequestsScreen extends ConsumerWidget {
 
 class _RequestCard extends ConsumerStatefulWidget {
   final Booking booking;
+  final bool showActions;
   final VoidCallback onDecision;
 
-  const _RequestCard({required this.booking, required this.onDecision});
+  const _RequestCard({
+    required this.booking,
+    required this.showActions,
+    required this.onDecision,
+  });
 
   @override
   ConsumerState<_RequestCard> createState() => _RequestCardState();
@@ -412,42 +421,51 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                   },
                 ),
 
-                // Action buttons
-                if (_isProcessing)
-                  const Center(
-                      child: CircularProgressIndicator(color: AppColors.green))
-                else
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => _handleDecision(context, 'rejected'),
-                          icon: const Icon(Icons.close, size: 16),
-                          label: const Text('Reject'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.error,
-                            side: BorderSide(color: AppColors.error.withOpacity(0.5)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                if (widget.showActions) ...[
+                  if (_isProcessing)
+                    const Center(
+                        child:
+                            CircularProgressIndicator(color: AppColors.green))
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () =>
+                                _handleDecision(context, 'rejected'),
+                            icon: const Icon(Icons.close, size: 16),
+                            label: const Text('Reject'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.error,
+                              side: BorderSide(
+                                  color: AppColors.error.withOpacity(0.5)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 12),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _handleDecision(context, 'confirmed'),
-                          icon: const Icon(Icons.check, size: 16),
-                          label: const Text('Confirm'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.green,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () =>
+                                _handleDecision(context, 'confirmed'),
+                            icon: const Icon(Icons.check, size: 16),
+                            label: const Text('Confirm'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.green,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 12),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                ],
               ],
             ),
           ),

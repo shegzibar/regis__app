@@ -5,14 +5,14 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/room_provider.dart';
 import '../../../core/providers/booking_provider.dart';
-import '../../../core/providers/cyber_provider.dart';
+import '../../../data/repositories/booking_repository.dart';
 import '../../../shared/widgets/date_card.dart';
 import '../../../shared/widgets/duration_button.dart';
 import '../../../shared/widgets/time_slot_card.dart';
 
 class BookingScreen extends ConsumerStatefulWidget {
   final String roomId;
-  
+
   const BookingScreen({super.key, required this.roomId});
 
   @override
@@ -25,9 +25,10 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   String? _selectedTimeSlot;
   bool _isFavorite = false;
   bool _isBookingLoading = false;
-  
+  Set<String> _bookedSlots = {};
+
   late final List<DateTime> _availableDates;
-  
+
   final List<String> _timeSlots = [
     '10:00 AM',
     '12:00 PM',
@@ -37,21 +38,66 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     '08:00 PM',
     '10:00 PM',
   ];
-  
+
   final List<int> _durations = [1, 2, 3, 4];
-  
+
   @override
   void initState() {
     super.initState();
     // Dynamic dates starting from today
-    _availableDates = List.generate(7, (index) => DateTime.now().add(Duration(days: index)));
+    _availableDates =
+        List.generate(7, (index) => DateTime.now().add(Duration(days: index)));
     _selectedDate = _availableDates[0];
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadBookedSlots());
+  }
+
+  DateTime? _parseSlotToDateTime(DateTime date, String slot) {
+    try {
+      final parts = slot.split(' ');
+      final timeParts = parts[0].split(':');
+      int hour = int.parse(timeParts[0]);
+      final int minute = int.parse(timeParts[1]);
+      final isPm = parts[1].toLowerCase() == 'pm';
+      if (isPm && hour < 12) hour += 12;
+      if (!isPm && hour == 12) hour = 0;
+      return DateTime(date.year, date.month, date.day, hour, minute);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _loadBookedSlots() async {
+    try {
+      final stations = await ref.read(roomStationsProvider(widget.roomId).future);
+      if (stations.isEmpty) return;
+      final stationId = stations.first.id;
+      final startOfDay = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+      final existing = await BookingRepository().getStationBookings(
+        stationId, startDate: startOfDay, endDate: endOfDay);
+      final booked = <String>{};
+      for (final b in existing) {
+        for (final slot in _timeSlots) {
+          final slotTime = _parseSlotToDateTime(_selectedDate, slot);
+          if (slotTime != null &&
+              slotTime.isBefore(b.endTime) &&
+              slotTime.add(Duration(hours: _selectedDuration)).isAfter(b.startTime)) {
+            booked.add(slot);
+          }
+        }
+      }
+      if (mounted) setState(() => _bookedSlots = booked);
+    } catch (e) {
+      debugPrint('Failed to load booked slots: $e');
+    }
   }
 
   void _selectDate(DateTime date) {
     setState(() {
       _selectedDate = date;
+      _selectedTimeSlot = null;
     });
+    _loadBookedSlots();
   }
 
   void _selectDuration(int duration) {
@@ -84,9 +130,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
     try {
       // Get stations
-      final stations = await ref.read(roomStationsProvider(widget.roomId).future);
+      final stations =
+          await ref.read(roomStationsProvider(widget.roomId).future);
       if (stations.isEmpty) {
-        throw Exception('No active stations found in this room. Please choose another room.');
+        throw Exception(
+            'No active stations found in this room. Please choose another room.');
       }
 
       // Pick first active/available station
@@ -98,17 +146,18 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       int hour = int.parse(timeParts[0]);
       final int minute = int.parse(timeParts[1]);
       final isPm = parts[1].toLowerCase() == 'pm';
-      
+
       if (isPm && hour < 12) hour += 12;
       if (!isPm && hour == 12) hour = 0;
 
+      // Store as UTC so the Cyber Dashboard (which compares UTC) shows the correct day
       final startTime = DateTime(
         _selectedDate.year,
         _selectedDate.month,
         _selectedDate.day,
         hour,
         minute,
-      );
+      ).toUtc();
       final endTime = startTime.add(Duration(hours: _selectedDuration));
 
       final room = await ref.read(roomByIdProvider(widget.roomId).future);
@@ -116,23 +165,27 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
       final basePrice = room.pricePerHour;
       final totalAmount = basePrice * _selectedDuration;
+      final bookingFee = room.effectiveBookingFee;
 
       // Create booking
-      final booking = await ref.read(bookingNotifierProvider.notifier).createBooking(
-            stationId: targetStation.id,
-            startTime: startTime,
-            endTime: endTime,
-            durationHours: _selectedDuration.toDouble(),
-            totalAmount: totalAmount,
-            notes: 'Booked via GamingHub mobile app',
-          );
+      final booking =
+          await ref.read(bookingNotifierProvider.notifier).createBooking(
+                stationId: targetStation.id,
+                startTime: startTime,
+                endTime: endTime,
+                durationHours: _selectedDuration.toDouble(),
+                totalAmount: totalAmount,
+                bookingFee: bookingFee,
+                notes: 'Booked via GamingHub mobile app',
+              );
 
       if (mounted) {
         setState(() => _isBookingLoading = false);
         // Refresh bookings lists
         ref.invalidate(userBookingsProvider);
         // Route to payment screen
-        context.push('/payment/${booking.id}?amount=${booking.totalAmount}');
+        // Route to payment screen, paying only the registration fee
+        context.push('/payment/${booking.id}?amount=$bookingFee');
       }
     } catch (e) {
       if (mounted) {
@@ -209,14 +262,20 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 ],
               ),
             ),
-            
+
             // Content
             Expanded(
               child: roomAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.green)),
-                error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
+                loading: () => const Center(
+                    child: CircularProgressIndicator(color: AppColors.green)),
+                error: (err, _) => Center(
+                    child: Text('Error: $err',
+                        style: const TextStyle(color: Colors.red))),
                 data: (room) {
-                  if (room == null) return const Center(child: Text('Room not found', style: TextStyle(color: Colors.white)));
+                  if (room == null)
+                    return const Center(
+                        child: Text('Room not found',
+                            style: TextStyle(color: Colors.white)));
 
                   return SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -236,7 +295,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             ),
                             const SizedBox(width: 12),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
                                 color: AppColors.green,
                                 borderRadius: BorderRadius.circular(4),
@@ -260,7 +320,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             fontSize: 14,
                           ),
                         ),
-                        
+
                         const SizedBox(height: 24),
 
                         // Date Selection
@@ -272,9 +332,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             color: Colors.white,
                           ),
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Date Cards
                         SizedBox(
                           height: 80,
@@ -283,8 +343,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             itemCount: _availableDates.length,
                             itemBuilder: (context, index) {
                               final date = _availableDates[index];
-                              final isSelected = _isSameDay(date, _selectedDate);
-                              
+                              final isSelected =
+                                  _isSameDay(date, _selectedDate);
+
                               return Padding(
                                 padding: const EdgeInsets.only(right: 12.0),
                                 child: DateCard(
@@ -297,9 +358,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             },
                           ),
                         ),
-                        
+
                         const SizedBox(height: 32),
-                        
+
                         // Duration Selection
                         const Text(
                           'Duration',
@@ -309,9 +370,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             color: Colors.white,
                           ),
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Duration Buttons
                         Row(
                           children: _durations.map((duration) {
@@ -325,9 +386,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             );
                           }).toList(),
                         ),
-                        
+
                         const SizedBox(height: 32),
-                        
+
                         // Available Slots
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -349,14 +410,15 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             ),
                           ],
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Time Slots Grid
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
@@ -366,18 +428,19 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                           itemBuilder: (context, index) {
                             final timeSlot = _timeSlots[index];
                             final isSelected = timeSlot == _selectedTimeSlot;
-                            
+                            final isBooked = _bookedSlots.contains(timeSlot);
+
                             return TimeSlotCard(
-                              time: timeSlot,
-                              isAvailable: true,
-                              isSelected: isSelected,
-                              onTap: () => _selectTimeSlot(timeSlot),
-                            );
+                               time: timeSlot,
+                               isAvailable: !isBooked,
+                               isSelected: isSelected,
+                               onTap: () => _selectTimeSlot(timeSlot),
+                             );
                           },
                         ),
-                        
+
                         const SizedBox(height: 32),
-                        
+
                         // Booking Summary
                         Container(
                           padding: const EdgeInsets.all(20),
@@ -389,27 +452,52 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Total Amount',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Registration Fee (Pay Now)',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${room.effectiveBookingFee.toInt()} EGP',
+                                    style: const TextStyle(
+                                      color: AppColors.green,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 12),
-                              Text(
-                                '${(room.pricePerHour * _selectedDuration).toInt()} EGP (${room.pricePerHour.toInt()} EGP/hr)',
-                                style: const TextStyle(
-                                  color: AppColors.green,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              const SizedBox(height: 8),
+                              const Divider(color: AppColors.darkBorder),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Total Session Price',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textMuted,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${(room.pricePerHour * _selectedDuration).toInt()} EGP',
+                                    style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                        
+
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -417,7 +505,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 },
               ),
             ),
-            
+
             // Bottom Confirm Button
             Container(
               padding: const EdgeInsets.all(24.0),
@@ -436,7 +524,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   minimumSize: const Size(double.infinity, 56),
                 ),
                 child: _isBookingLoading
@@ -455,10 +544,10 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       ),
     );
   }
-  
+
   bool _isSameDay(DateTime date1, DateTime date2) {
     return date1.year == date2.year &&
-           date1.month == date2.month &&
-           date1.day == date2.day;
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 }

@@ -4,7 +4,18 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Users table
+-- Profiles table (aligned with Supabase Auth)
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT,
+  phone TEXT UNIQUE,
+  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'owner', 'manager', 'admin')),
+  avatar_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Users table (for backward compatibility queries - view-only)
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   phone TEXT UNIQUE NOT NULL,
@@ -17,7 +28,7 @@ CREATE TABLE users (
 -- Cybers (gaming centers)
 CREATE TABLE cybers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  owner_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   description TEXT,
   address TEXT,
@@ -25,10 +36,12 @@ CREATE TABLE cybers (
   lat DOUBLE PRECISION,
   lng DOUBLE PRECISION,
   images TEXT[] DEFAULT '{}',
+  cover_image TEXT,
   rating NUMERIC(3,2) DEFAULT 0 CHECK (rating >= 0 AND rating <= 5),
   review_count INTEGER DEFAULT 0 CHECK (review_count >= 0),
   working_hours_from TIME DEFAULT '10:00',
   working_hours_to TIME DEFAULT '02:00',
+  is_featured BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -57,7 +70,7 @@ CREATE TABLE stations (
 -- Bookings
 CREATE TABLE bookings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   station_id UUID REFERENCES stations(id) ON DELETE CASCADE,
   start_time TIMESTAMPTZ NOT NULL,
   end_time TIMESTAMPTZ NOT NULL,
@@ -78,12 +91,12 @@ CREATE TABLE bookings (
 CREATE TABLE payments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   booking_id UUID REFERENCES bookings(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   amount NUMERIC(10,2) NOT NULL CHECK (amount > 0),
   method TEXT NOT NULL CHECK (method IN ('instapay', 'vodafone_cash', 'fawry')),
   screenshot_url TEXT,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
   reviewed_at TIMESTAMPTZ,
   rejection_reason TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -92,7 +105,7 @@ CREATE TABLE payments (
 -- Reviews
 CREATE TABLE reviews (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   cyber_id UUID REFERENCES cybers(id) ON DELETE CASCADE,
   booking_id UUID REFERENCES bookings(id) ON DELETE SET NULL,
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
@@ -106,7 +119,7 @@ CREATE TABLE reviews (
 -- Notifications
 CREATE TABLE notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   body TEXT NOT NULL,
   type TEXT,
@@ -146,12 +159,13 @@ RETURNS BOOLEAN AS $$
 DECLARE
   user_role TEXT;
 BEGIN
-  SELECT role INTO user_role FROM users WHERE id = auth.uid();
+  SELECT role INTO user_role FROM profiles WHERE id = auth.uid();
   RETURN user_role IN ('admin', 'manager');
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Row Level Security (RLS) Policies
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cybers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
@@ -162,6 +176,9 @@ ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- Drop old policies to avoid conflicts
+DROP POLICY IF EXISTS "Profiles - Users can view their own profile" ON profiles;
+DROP POLICY IF EXISTS "Profiles - Users can update their own profile" ON profiles;
+DROP POLICY IF EXISTS "Profiles - Admins can view all profiles" ON profiles;
 DROP POLICY IF EXISTS "Users can view their own profile" ON users;
 DROP POLICY IF EXISTS "Users can update their own profile" ON users;
 DROP POLICY IF EXISTS "Admins can view all users" ON users;
@@ -188,15 +205,19 @@ DROP POLICY IF EXISTS "Users can create reviews for their completed bookings" ON
 DROP POLICY IF EXISTS "Users can view their own notifications" ON notifications;
 DROP POLICY IF EXISTS "Users can update their own notifications" ON notifications;
 
--- Users table policies
-CREATE POLICY "Users can view their own profile" ON users
+-- Profiles table policies
+CREATE POLICY "Profiles - Users can view their own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY "Users can update their own profile" ON users
+CREATE POLICY "Profiles - Users can update their own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "Admins can view all users" ON users
+CREATE POLICY "Profiles - Admins can view all profiles" ON profiles
   FOR SELECT USING (is_admin_or_manager());
+
+-- Users table policies (read-only, for backward compatibility)
+CREATE POLICY "Users can view their own profile" ON users
+  FOR SELECT USING (true);
 
 -- Cybers table policies
 CREATE POLICY "Anyone can view active cybers" ON cybers

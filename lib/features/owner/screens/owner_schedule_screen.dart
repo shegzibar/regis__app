@@ -5,12 +5,13 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../data/models/booking.dart';
 import '../../../data/supabase/supabase_client.dart';
 
-final ownerScheduleBookingsProvider =
-    FutureProvider.autoDispose.family<List<Booking>, DateTime>((ref, date) async {
+final ownerScheduleBookingsProvider = FutureProvider.autoDispose
+    .family<List<Booking>, DateTime>((ref, date) async {
   final user = ref.watch(authStateProvider);
   if (user == null) return [];
 
-  final startOfDay = DateTime(date.year, date.month, date.day);
+  // Use UTC for database queries. Database stores TIMESTAMPTZ in UTC.
+  final startOfDay = DateTime.utc(date.year, date.month, date.day);
   final endOfDay = startOfDay.add(const Duration(days: 1));
 
   try {
@@ -28,7 +29,8 @@ final ownerScheduleBookingsProvider =
         ''')
         .gte('start_time', startOfDay.toIso8601String())
         .lt('start_time', endOfDay.toIso8601String())
-        .inFilter('status', ['confirmed', 'fee_under_review', 'pending_payment'])
+        .inFilter(
+            'status', ['confirmed', 'fee_under_review', 'pending_payment'])
         .eq('stations.rooms.cybers.owner_id', user.id)
         .order('start_time');
 
@@ -59,8 +61,8 @@ class _OwnerScheduleScreenState extends ConsumerState<OwnerScheduleScreen> {
 
   void _buildDateRange() {
     final today = DateTime.now();
-    _dateRange = List.generate(
-        14, (i) => today.subtract(const Duration(days: 3)).add(Duration(days: i)));
+    _dateRange = List.generate(14,
+        (i) => today.subtract(const Duration(days: 3)).add(Duration(days: i)));
   }
 
   @override
@@ -68,151 +70,147 @@ class _OwnerScheduleScreenState extends ConsumerState<OwnerScheduleScreen> {
     final bookingsAsync =
         ref.watch(ownerScheduleBookingsProvider(_selectedDate));
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 24, 24, 0),
-              child: Text(
-                'Schedule',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+    return ColoredBox(
+      color: const Color(0xFFF4F6F8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          const Padding(
+            padding: EdgeInsets.fromLTRB(24, 24, 24, 0),
+            child: Text(
+              'Schedule',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
+          ),
 
-            const SizedBox(height: 20),
+          const SizedBox(height: 20),
 
-            // Date Picker
-            SizedBox(
-              height: 76,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _dateRange.length,
-                itemBuilder: (context, index) {
-                  final date = _dateRange[index];
-                  final isSelected = _isSameDay(date, _selectedDate);
-                  final isToday = _isSameDay(date, DateTime.now());
+          // Date Picker
+          SizedBox(
+            height: 76,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: _dateRange.length,
+              itemBuilder: (context, index) {
+                final date = _dateRange[index];
+                final isSelected = _isSameDay(date, _selectedDate);
+                final isToday = _isSameDay(date, DateTime.now());
 
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedDate = date),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 52,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.teal : AppColors.lightGray,
-                        borderRadius: BorderRadius.circular(14),
-                        border: isToday && !isSelected
-                            ? Border.all(color: AppColors.teal, width: 1.5)
-                            : null,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _dayAbbr(date.weekday),
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white.withOpacity(0.8)
-                                  : AppColors.textSecondary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedDate = date),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 52,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.teal : AppColors.lightGray,
+                      borderRadius: BorderRadius.circular(14),
+                      border: isToday && !isSelected
+                          ? Border.all(color: AppColors.teal, width: 1.5)
+                          : null,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _dayAbbr(date.weekday),
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white.withOpacity(0.8)
+                                : AppColors.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${date.day}',
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : AppColors.textPrimary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${date.day}',
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Selected date label
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              _formatFullDate(_selectedDate),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+          const Divider(color: AppColors.lightGray, height: 1),
+
+          // Bookings list
+          Expanded(
+            child: bookingsAsync.when(
+              loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppColors.teal)),
+              error: (e, _) => Center(
+                  child: Text('Error loading schedule',
+                      style: const TextStyle(color: AppColors.error))),
+              data: (bookings) {
+                if (bookings.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.event_available,
+                            color: AppColors.gray, size: 56),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'No bookings on this day',
+                          style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _formatFullDate(_selectedDate),
+                          style: const TextStyle(
+                              color: AppColors.textSecondary, fontSize: 13),
+                        ),
+                      ],
                     ),
                   );
-                },
-              ),
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(24),
+                  itemCount: bookings.length,
+                  itemBuilder: (context, index) {
+                    final booking = bookings[index];
+                    return _ScheduleBookingCard(booking: booking);
+                  },
+                );
+              },
             ),
-
-            const SizedBox(height: 8),
-
-            // Selected date label
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
-                _formatFullDate(_selectedDate),
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-            const Divider(color: AppColors.lightGray, height: 1),
-
-            // Bookings list
-            Expanded(
-              child: bookingsAsync.when(
-                loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.teal)),
-                error: (e, _) => Center(
-                    child: Text('Error loading schedule',
-                        style:
-                            const TextStyle(color: AppColors.error))),
-                data: (bookings) {
-                  if (bookings.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.event_available,
-                              color: AppColors.gray, size: 56),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'No bookings on this day',
-                            style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _formatFullDate(_selectedDate),
-                            style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(24),
-                    itemCount: bookings.length,
-                    itemBuilder: (context, index) {
-                      final booking = bookings[index];
-                      return _ScheduleBookingCard(booking: booking);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -227,12 +225,27 @@ class _OwnerScheduleScreenState extends ConsumerState<OwnerScheduleScreen> {
 
   String _formatFullDate(DateTime dt) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     const days = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-      'Friday', 'Saturday', 'Sunday'
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
     ];
     return '${days[dt.weekday - 1]}, ${dt.day} ${months[dt.month - 1]}';
   }

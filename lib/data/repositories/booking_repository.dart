@@ -50,7 +50,7 @@ class BookingRepository {
           .from('bookings')
           .select()
           .eq('station_id', stationId)
-          .eq('status', 'confirmed');
+          .inFilter('status', ['confirmed', 'pending_payment', 'fee_under_review']);
 
       if (startDate != null) {
         query = query.gte('start_time', startDate.toIso8601String());
@@ -205,6 +205,30 @@ class BookingRepository {
           .toList();
     } catch (e) {
       throw Exception('Failed to fetch manager queue: $e');
+    }
+  }
+
+  // Bookings with station → room → cyber details (for profile / activity)
+  Future<List<Map<String, dynamic>>> getUserBookingsEnriched(
+      String userId) async {
+    try {
+      final response = await _supabase.from('bookings').select('''
+            *,
+            stations!inner(
+              id, name,
+              rooms!inner(
+                id, name, type,
+                cybers!inner(
+                  id, name, rating, lat, lng,
+                  working_hours_from, working_hours_to, is_active, city
+                )
+              )
+            )
+          ''').eq('user_id', userId).order('created_at', ascending: false);
+
+      return (response as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      throw Exception('Failed to fetch enriched bookings: $e');
     }
   }
 

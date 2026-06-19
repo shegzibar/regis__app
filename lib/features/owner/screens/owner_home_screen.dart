@@ -1,312 +1,81 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/providers/auth_provider.dart';
-import '../../../data/models/booking.dart';
-import '../../../data/repositories/booking_repository.dart';
-import '../../../data/repositories/cyber_repository.dart';
-
-final ownerCybersProvider = FutureProvider.autoDispose((ref) async {
-  final user = ref.watch(authStateProvider);
-  if (user == null) return [];
-  return CyberRepository().getCybersByOwner(user.id);
-});
-
-final ownerRecentBookingsProvider =
-    FutureProvider.autoDispose<List<Booking>>((ref) async {
-  final user = ref.watch(authStateProvider);
-  if (user == null) return [];
-  final response = await BookingRepository().getUserBookings(user.id);
-  return response.take(5).toList();
-});
+import '../../../core/providers/owner_dashboard_provider.dart';
+import '../../../data/models/owner_booking_item.dart';
+import '../utils/owner_format_utils.dart';
 
 class OwnerHomeScreen extends ConsumerWidget {
   const OwnerHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authStateProvider);
-    final cybersAsync = ref.watch(ownerCybersProvider);
+    final statsAsync = ref.watch(ownerDashboardStatsProvider);
+    final timelineAsync = ref.watch(ownerTimelineStreamProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.darkBg,
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: AppColors.green,
-          backgroundColor: AppColors.darkCard,
-          onRefresh: () async {
-            ref.invalidate(ownerCybersProvider);
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(Icons.store,
-                          color: AppColors.green, size: 26),
-                    ),
-                    const SizedBox(width: 14),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(ownerDashboardStatsProvider);
+        ref.invalidate(ownerTimelineStreamProvider);
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            statsAsync.when(
+              loading: () => const _MetricsShimmer(),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (stats) => _MetricsRow(stats: stats),
+            ),
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final wide = constraints.maxWidth > 720;
+                if (wide) {
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
-                          'Welcome back,',
-                          style: TextStyle(
-                              color: AppColors.textMuted, fontSize: 13),
+                        Expanded(
+                          flex: 5,
+                          child: _QuickActionsPanel(
+                            pendingReceipts: statsAsync.valueOrNull
+                                    ?.pendingReceipts ??
+                                0,
+                          ),
                         ),
-                        Text(
-                          user?.name ?? 'Owner',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 6,
+                          child: timelineAsync.when(
+                            loading: () => const _TimelineLoading(),
+                            error: (_, __) => _TimelinePanel(items: const []),
+                            data: (items) => _TimelinePanel(items: items),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-
-                const SizedBox(height: 28),
-
-                // Stats Cards
-                cybersAsync.when(
-                  loading: () => const _StatsShimmer(),
-                  error: (_, __) => const _StatsError(),
-                  data: (cybers) => _StatsRow(cyberCount: cybers.length),
-                ),
-
-                const SizedBox(height: 28),
-
-                // Quick Actions
-                const Text(
-                  'Quick Actions',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
+                  );
+                }
+                return Column(
                   children: [
-                    Expanded(
-                      child: _QuickActionCard(
-                        icon: Icons.calendar_view_day,
-                        label: 'Schedule',
-                        color: AppColors.green,
-                        onTap: () => context.push('/owner/schedule'),
-                      ),
+                    timelineAsync.when(
+                      loading: () => const _TimelineLoading(),
+                      error: (_, __) => _TimelinePanel(items: const []),
+                      data: (items) => _TimelinePanel(items: items),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _QuickActionCard(
-                        icon: Icons.pending_actions,
-                        label: 'Requests',
-                        color: AppColors.purple,
-                        onTap: () => context.push('/owner/requests'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _QuickActionCard(
-                        icon: Icons.computer,
-                        label: 'Stations',
-                        color: Colors.amber,
-                        onTap: () => context.push('/owner/stations'),
-                      ),
+                    const SizedBox(height: 12),
+                    _QuickActionsPanel(
+                      pendingReceipts:
+                          statsAsync.valueOrNull?.pendingReceipts ?? 0,
                     ),
                   ],
-                ),
-
-                const SizedBox(height: 28),
-
-                // My Cybers
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'My Gaming Centers',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                cybersAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator(color: AppColors.green)),
-                  error: (e, _) => Text('Error: $e',
-                      style: const TextStyle(color: AppColors.error)),
-                  data: (cybers) {
-                    if (cybers.isEmpty) {
-                      return const _EmptyCard(
-                        icon: Icons.store_mall_directory_outlined,
-                        message: 'No gaming centers yet',
-                        sub: 'Contact admin to register your center',
-                      );
-                    }
-                    return Column(
-                      children: cybers
-                          .map((cyber) => _CyberSummaryCard(
-                                name: cyber.name,
-                                city: cyber.city ?? 'Cairo',
-                                rating: cyber.rating,
-                                isActive: cyber.isActive,
-                              ))
-                          .toList(),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 32),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatsRow extends StatelessWidget {
-  final int cyberCount;
-  const _StatsRow({required this.cyberCount});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            label: 'Centers',
-            value: '$cyberCount',
-            icon: Icons.store,
-            color: AppColors.green,
-          ),
-        ),
-        const SizedBox(width: 12),
-        const Expanded(
-          child: _StatCard(
-            label: 'Today\'s Sessions',
-            value: '—',
-            icon: Icons.calendar_today,
-            color: AppColors.purple,
-          ),
-        ),
-        const SizedBox(width: 12),
-        const Expanded(
-          child: _StatCard(
-            label: 'Pending',
-            value: '—',
-            icon: Icons.pending_actions,
-            color: Colors.amber,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _StatCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 11,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickActionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _QuickActionCard({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        decoration: BoxDecoration(
-          color: AppColors.darkCard,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.darkBorder),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 26),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -315,107 +84,316 @@ class _QuickActionCard extends StatelessWidget {
   }
 }
 
-class _CyberSummaryCard extends StatelessWidget {
-  final String name;
-  final String city;
-  final double rating;
-  final bool isActive;
+class _MetricsRow extends StatelessWidget {
+  final OwnerDashboardStats stats;
+  const _MetricsRow({required this.stats});
 
-  const _CyberSummaryCard({
-    required this.name,
-    required this.city,
-    required this.rating,
-    required this.isActive,
+  @override
+  Widget build(BuildContext context) {
+    final egp = 'common.egp'.tr();
+    final changeSign = stats.revenueChangePercent >= 0 ? '+' : '';
+    final changeText =
+        '$changeSign${formatLocalizedNumber(stats.revenueChangePercent.abs(), context)}% '
+        '${'owner_dashboard.revenue_vs_yesterday'.tr()}';
+
+    return Row(
+      children: [
+        Expanded(
+          child: _MetricCard(
+            title: 'owner_dashboard.today_revenue'.tr(),
+            value:
+                '${formatLocalizedNumber(stats.todayRevenue.round(), context)} $egp',
+            subtitle: changeText,
+            subtitleColor: AppColors.green,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _MetricCard(
+            title: 'owner_dashboard.today_bookings'.tr(),
+            value: formatLocalizedNumber(stats.todayBookings, context),
+            subtitle:
+                '${formatLocalizedNumber(stats.confirmedToday, context)} ${'owner_dashboard.status_confirmed'.tr()} • '
+                '${formatLocalizedNumber(stats.pendingToday, context)} ${'owner_dashboard.status_pending_payment'.tr().split(' ').first}',
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _MetricCard(
+            title: 'owner_dashboard.active_now'.tr(),
+            value:
+                '${formatLocalizedNumber(stats.activeStations, context)}/${formatLocalizedNumber(stats.totalStations, context)}',
+            subtitle: 'owner_dashboard.station_busy'.tr(),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _MetricCard(
+            title: 'owner_dashboard.manual_today'.tr(),
+            value: formatLocalizedNumber(stats.manualBookingsToday, context),
+            subtitle: 'owner_dashboard.walk_in_label'.tr(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String subtitle;
+  final Color? subtitleColor;
+
+  const _MetricCard({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    this.subtitleColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.darkCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.darkBorder),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textMuted,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1A1D21),
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              color: subtitleColor ?? AppColors.textMuted,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelinePanel extends StatelessWidget {
+  final List<OwnerBookingItem> items;
+  const _TimelinePanel({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+            child: Text(
+              'owner_dashboard.today_schedule'.tr(),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Color(0xFF1A1D21),
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          if (items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'owner_dashboard.no_bookings_today'.tr(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(8),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              itemBuilder: (context, i) => _TimelineTile(item: items[i]),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineTile extends StatelessWidget {
+  final OwnerBookingItem item;
+  const _TimelineTile({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final badge = _statusBadge(context, item);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: AppColors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+          SizedBox(
+            width: 44,
+            child: Text(
+              formatHourLabel(item.startTime, context),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: AppColors.teal,
+              ),
             ),
-            child: const Icon(Icons.videogame_asset,
-                color: AppColors.green, size: 22),
           ),
-          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    )),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on,
-                        size: 12, color: AppColors.textMuted),
-                    const SizedBox(width: 3),
-                    Text(city,
-                        style: const TextStyle(
-                            color: AppColors.textMuted, fontSize: 12)),
-                  ],
+                Text(
+                  '${item.roomName} • ${item.stationName}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  item.cyberName,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.star_rounded,
-                      size: 14, color: Colors.amber),
-                  const SizedBox(width: 3),
-                  Text(
-                    rating.toStringAsFixed(1),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? AppColors.green.withOpacity(0.1)
-                      : AppColors.error.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isActive ? AppColors.green : AppColors.error,
-                  ),
-                ),
-                child: Text(
-                  isActive ? 'Active' : 'Inactive',
-                  style: TextStyle(
-                    color: isActive ? AppColors.green : AppColors.error,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+          badge,
+        ],
+      ),
+    );
+  }
+
+  Widget _statusBadge(BuildContext context, OwnerBookingItem item) {
+    late String label;
+    late Color bg;
+    late Color fg;
+
+    if (item.isManual) {
+      label = 'owner_dashboard.status_manual'.tr();
+      bg = const Color(0xFFFCE7F3);
+      fg = const Color(0xFFBE185D);
+    } else {
+      switch (item.status) {
+        case 'confirmed':
+        case 'completed':
+          label = 'owner_dashboard.status_confirmed'.tr();
+          bg = const Color(0xFFD1FAE5);
+          fg = const Color(0xFF047857);
+          break;
+        case 'fee_under_review':
+          label = 'owner_dashboard.status_fee_review'.tr();
+          bg = const Color(0xFFEDE9FE);
+          fg = const Color(0xFF6D28D9);
+          break;
+        default:
+          label = 'owner_dashboard.status_pending_payment'.tr();
+          bg = const Color(0xFFFFEDD5);
+          fg = const Color(0xFFC2410C);
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: fg),
+      ),
+    );
+  }
+}
+
+class _QuickActionsPanel extends StatelessWidget {
+  final int pendingReceipts;
+  const _QuickActionsPanel({required this.pendingReceipts});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'owner_dashboard.quick_actions'.tr(),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _ActionCard(
+            icon: Icons.person_add_alt_1,
+            color: AppColors.teal,
+            title: 'owner_dashboard.walk_in_card_title'.tr(),
+            subtitle: 'owner_dashboard.walk_in_card_sub'.tr(),
+            onTap: () => context.push('/owner/manual-booking'),
+          ),
+          const SizedBox(height: 8),
+          _ActionCard(
+            icon: Icons.block,
+            color: const Color(0xFFDC2626),
+            title: 'owner_dashboard.block_station'.tr(),
+            subtitle: 'owner_dashboard.block_station_sub'.tr(),
+            onTap: () => context.push('/owner/stations'),
+          ),
+          const SizedBox(height: 8),
+          _ActionCard(
+            icon: Icons.receipt_long,
+            color: const Color(0xFF2563EB),
+            title: 'owner_dashboard.review_receipts'.tr(),
+            subtitle:
+                '${formatLocalizedNumber(pendingReceipts, context)} ${'owner_dashboard.receipts_waiting'.tr()} • ${'owner_dashboard.view_only'.tr()}',
+            onTap: () => context.push('/owner/payments'),
           ),
         ],
       ),
@@ -423,86 +401,99 @@ class _CyberSummaryCard extends StatelessWidget {
   }
 }
 
-class _EmptyCard extends StatelessWidget {
+class _ActionCard extends StatelessWidget {
   final IconData icon;
-  final String message;
-  final String sub;
-  const _EmptyCard(
-      {required this.icon, required this.message, required this.sub});
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ActionCard({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: AppColors.darkCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.darkBorder),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 48, color: AppColors.textMuted),
-          const SizedBox(height: 12),
-          Text(message,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15)),
-          const SizedBox(height: 4),
-          Text(sub,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: AppColors.textMuted, fontSize: 13)),
-        ],
+    return Material(
+      color: color.withValues(alpha: 0.06),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_left, color: color, size: 20),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _StatsShimmer extends StatelessWidget {
-  const _StatsShimmer();
-
+class _MetricsShimmer extends StatelessWidget {
+  const _MetricsShimmer();
   @override
   Widget build(BuildContext context) {
     return Row(
       children: List.generate(
-          3,
-          (_) => Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(right: 12),
-                  height: 90,
-                  decoration: BoxDecoration(
-                    color: AppColors.darkCard,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.darkBorder),
-                  ),
-                ),
-              )),
+        4,
+        (_) => Expanded(
+          child: Container(
+            height: 72,
+            margin: const EdgeInsets.only(left: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _StatsError extends StatelessWidget {
-  const _StatsError();
-
+class _TimelineLoading extends StatelessWidget {
+  const _TimelineLoading();
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      height: 200,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: const Row(
-        children: [
-          Icon(Icons.error_outline, color: AppColors.error, size: 20),
-          SizedBox(width: 8),
-          Text('Could not load stats',
-              style: TextStyle(color: AppColors.error)),
-        ],
-      ),
+      child: const CircularProgressIndicator(color: AppColors.teal),
     );
   }
 }

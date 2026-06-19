@@ -8,6 +8,7 @@ class DepositReviewCard extends StatelessWidget {
   final String paymentMethod;
   final String gamingLounge;
   final String bookingTime;
+  final String bookingStatus;
   final VoidCallback onViewReceipt;
   final VoidCallback onApprove;
   final VoidCallback onReject;
@@ -20,6 +21,7 @@ class DepositReviewCard extends StatelessWidget {
     required this.paymentMethod,
     required this.gamingLounge,
     required this.bookingTime,
+    required this.bookingStatus,
     required this.onViewReceipt,
     required this.onApprove,
     required this.onReject,
@@ -143,6 +145,28 @@ class DepositReviewCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   bookingTime,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 6),
+
+          Row(
+            children: [
+              const Icon(
+                Icons.info_outline,
+                color: AppColors.textMuted,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  bookingStatus,
                   style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 12,

@@ -1,3 +1,5 @@
+import '../../core/utils/cyber_time_format.dart';
+
 class Cyber {
   final String id;
   final String? ownerId;
@@ -8,10 +10,12 @@ class Cyber {
   final double? lat;
   final double? lng;
   final List<String> images;
+  final String? coverImage;
   final double rating;
   final int reviewCount;
   final String workingHoursFrom;
   final String workingHoursTo;
+  final bool isFeatured;
   final bool isActive;
   final DateTime createdAt;
 
@@ -25,10 +29,12 @@ class Cyber {
     this.lat,
     this.lng,
     this.images = const [],
+    this.coverImage,
     this.rating = 0.0,
     this.reviewCount = 0,
     this.workingHoursFrom = '10:00',
     this.workingHoursTo = '02:00',
+    this.isFeatured = false,
     this.isActive = true,
     required this.createdAt,
   });
@@ -44,10 +50,13 @@ class Cyber {
       lat: (map['lat'] as num?)?.toDouble(),
       lng: (map['lng'] as num?)?.toDouble(),
       images: List<String>.from(map['images'] as List? ?? []),
+      coverImage: map['cover_image'] as String?,
       rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: map['review_count'] as int? ?? 0,
-      workingHoursFrom: map['working_hours_from'] as String? ?? '10:00',
-      workingHoursTo: map['working_hours_to'] as String? ?? '02:00',
+      workingHoursFrom:
+          CyberTimeFormat.toDisplay(map['working_hours_from']),
+      workingHoursTo: CyberTimeFormat.toDisplay(map['working_hours_to']),
+      isFeatured: map['is_featured'] as bool? ?? false,
       isActive: map['is_active'] as bool? ?? true,
       createdAt: DateTime.parse(map['created_at'] as String),
     );
@@ -64,10 +73,12 @@ class Cyber {
       'lat': lat,
       'lng': lng,
       'images': images,
+      'cover_image': coverImage,
       'rating': rating,
       'review_count': reviewCount,
       'working_hours_from': workingHoursFrom,
       'working_hours_to': workingHoursTo,
+      'is_featured': isFeatured,
       'is_active': isActive,
       'created_at': createdAt.toIso8601String(),
     };
@@ -83,10 +94,12 @@ class Cyber {
     double? lat,
     double? lng,
     List<String>? images,
+    String? coverImage,
     double? rating,
     int? reviewCount,
     String? workingHoursFrom,
     String? workingHoursTo,
+    bool? isFeatured,
     bool? isActive,
     DateTime? createdAt,
   }) {
@@ -100,10 +113,12 @@ class Cyber {
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
       images: images ?? this.images,
+      coverImage: coverImage ?? this.coverImage,
       rating: rating ?? this.rating,
       reviewCount: reviewCount ?? this.reviewCount,
       workingHoursFrom: workingHoursFrom ?? this.workingHoursFrom,
       workingHoursTo: workingHoursTo ?? this.workingHoursTo,
+      isFeatured: isFeatured ?? this.isFeatured,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -111,7 +126,7 @@ class Cyber {
 
   bool get hasLocation => lat != null && lng != null;
   bool get hasImages => images.isNotEmpty;
-  bool get isFeatured => rating >= 4.0;
+  bool get isHighlyRated => rating >= 4.0;
   bool get isOpenNow {
     final now = DateTime.now();
     final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';

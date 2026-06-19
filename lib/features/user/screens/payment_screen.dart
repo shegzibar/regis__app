@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/payment_provider.dart';
 import '../../../core/providers/booking_provider.dart';
+import '../../../core/providers/wallet_provider.dart';
 import '../../../shared/widgets/payment_method_card.dart';
 
 class PaymentScreen extends ConsumerStatefulWidget {
@@ -22,32 +23,16 @@ class PaymentScreen extends ConsumerStatefulWidget {
 
 class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   int _remainingSeconds = 892; // 14:52 in seconds
-  String _selectedPaymentMethod = 'instapay';
-  bool _isUploadingReceipt = false;
-  String? _receiptScreenshotUrl;
+  String _selectedPaymentMethod = 'wallet_points';
   bool _isSubmitting = false;
   
   final List<Map<String, dynamic>> _paymentMethods = [
     {
-      'id': 'instapay',
-      'name': 'InstaPay',
-      'description': 'Transfer to: gaminghub@instapay',
-      'icon': Icons.account_balance_wallet,
-      'color': Colors.blue,
-    },
-    {
-      'id': 'vodafone',
-      'name': 'Vodafone Cash',
-      'description': 'Send to: 01012345678',
-      'icon': Icons.phone_android,
-      'color': Colors.red,
-    },
-    {
-      'id': 'fawry',
-      'name': 'Fawry Pay',
-      'description': 'Reference code provided after',
-      'icon': Icons.receipt_long,
-      'color': Colors.orange,
+      'id': 'wallet_points',
+      'name': 'Wallet Points',
+      'description': 'Pay directly using your GamingHub wallet',
+      'icon': Icons.stars,
+      'color': AppColors.green,
     },
   ];
   
@@ -74,53 +59,74 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     });
   }
 
-  Future<void> _simulateReceiptUpload() async {
-    setState(() => _isUploadingReceipt = true);
-    // Simulate short network delay
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() {
-        _isUploadingReceipt = false;
-        _receiptScreenshotUrl = 'https://picsum.photos/seed/receipt/300/400';
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Receipt uploaded successfully!')),
-      );
-    }
-  }
-
   Future<void> _confirmPayment() async {
-    if (_selectedPaymentMethod != 'fawry' && _receiptScreenshotUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload a screenshot of your transaction receipt first.')),
-      );
-      return;
-    }
 
     setState(() => _isSubmitting = true);
 
     try {
+      // Check wallet balance first
+      final wallet = await ref.read(userWalletProvider.future);
+      if (wallet == null || wallet.balance < widget.amount) {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Insufficient Wallet Points. Please recharge your wallet.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+
       // Create payment row in Supabase
       await ref.read(paymentNotifierProvider.notifier).submitPayment(
             bookingId: widget.bookingId,
             amount: widget.amount,
             method: _selectedPaymentMethod,
-            screenshotUrl: _receiptScreenshotUrl,
+            screenshotUrl: null, // No screenshot needed for points
           );
 
-      // Update booking status to fee_under_review
-      await ref.read(bookingNotifierProvider.notifier).updateStatus(widget.bookingId, 'fee_under_review');
+      if (_selectedPaymentMethod == 'wallet_points') {
+        // Automatically deduct points and confirm booking
+        final shortId = await ref.read(userShortIdProvider.future);
+        if (shortId != null) {
+          await ref.read(walletRepositoryProvider).addWalletTransaction(
+            shortId: shortId,
+            type: 'redeemed',
+            amount: widget.amount.toInt(),
+            note: 'Automatic deduction for booking #${widget.bookingId.substring(0, 8)}',
+            cyberName: 'GamingHub System',
+          );
+        }
 
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Payment submitted! A manager will review your receipt shortly.'),
-            backgroundColor: AppColors.green,
-          ),
-        );
-        // Clear history and navigate to explore/bookings
-        context.go('/explore');
+        await ref.read(bookingNotifierProvider.notifier).updateStatus(widget.bookingId, 'confirmed');
+
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Payment successful! Your booking is confirmed.'),
+              backgroundColor: AppColors.green,
+            ),
+          );
+          context.go('/explore');
+        }
+      } else {
+        // Update booking status to fee_under_review for manual methods
+        await ref.read(bookingNotifierProvider.notifier).updateStatus(widget.bookingId, 'fee_under_review');
+
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Payment submitted! A manager will review your receipt shortly.'),
+              backgroundColor: AppColors.green,
+            ),
+          );
+          // Clear history and navigate to explore/bookings
+          context.go('/explore');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -368,48 +374,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     
                     const SizedBox(height: 24),
 
-                    // Receipt Upload Button (if not Fawry)
-                    if (_selectedPaymentMethod != 'fawry') ...[
-                      const Text(
-                        'Upload Transaction Receipt',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      InkWell(
-                        onTap: _isUploadingReceipt ? null : _simulateReceiptUpload,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          decoration: BoxDecoration(
-                            color: AppColors.darkCard,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.darkBorder, style: BorderStyle.values[1]), // Dashed effect simulator
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(
-                                _receiptScreenshotUrl != null ? Icons.check_circle : Icons.cloud_upload_outlined,
-                                color: _receiptScreenshotUrl != null ? AppColors.green : AppColors.textMuted,
-                                size: 36,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _receiptScreenshotUrl != null 
-                                    ? 'Receipt attached (Tap to change)' 
-                                    : 'Upload transaction screenshot',
-                                style: const TextStyle(color: Colors.white, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),

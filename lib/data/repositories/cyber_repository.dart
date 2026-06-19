@@ -97,6 +97,7 @@ class CyberRepository {
         'lat': lat,
         'lng': lng,
         'images': images ?? [],
+        'is_featured': false,
         'is_active': true,
         'created_at': DateTime.now().toIso8601String(),
       };
@@ -158,6 +159,120 @@ class CyberRepository {
       await _supabase.from('cybers').delete().eq('id', cyberId);
     } catch (e) {
       throw Exception('Failed to delete cyber: $e');
+    }
+  }
+
+  // Get featured cybers with pagination
+  Future<List<Cyber>> getFeaturedCybers(
+      {int limit = 10, int offset = 0}) async {
+    try {
+      final response = await _supabase
+          .from('cybers')
+          .select()
+          .eq('is_featured', true)
+          .eq('is_active', true)
+          .order('rating', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      return (response as List).map((cyber) => Cyber.fromMap(cyber)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch featured cybers: $e');
+    }
+  }
+
+  // Get cybers sorted by rating
+  Future<List<Cyber>> getTopRatedCybers({int limit = 10}) async {
+    try {
+      final response = await _supabase
+          .from('cybers')
+          .select()
+          .eq('is_active', true)
+          .order('rating', ascending: false)
+          .limit(limit);
+
+      return (response as List).map((cyber) => Cyber.fromMap(cyber)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch top rated cybers: $e');
+    }
+  }
+
+  // Get cybers by type (ps5, pc, vip)
+  Future<List<Cyber>> getCybersByType(String type) async {
+    try {
+      // Get all cybers first, then filter by room type
+      final cybers = await _supabase
+          .from('cybers')
+          .select()
+          .eq('is_active', true)
+          .order('rating', ascending: false);
+
+      final cyberIds = (cybers as List).map((c) => c['id']).toList();
+
+      if (cyberIds.isEmpty) return [];
+
+      final rooms = await _supabase
+          .from('rooms')
+          .select('cyber_id')
+          .eq('type', type)
+          .inFilter('cyber_id', cyberIds);
+
+      final cyberIdsWithType =
+          (rooms as List).map((r) => r['cyber_id']).toSet();
+
+      return (cybers as List)
+          .where((cyber) => cyberIdsWithType.contains(cyber['id']))
+          .map((cyber) => Cyber.fromMap(cyber as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch cybers by type: $e');
+    }
+  }
+
+  // Get recent cybers
+  Future<List<Cyber>> getRecentCybers({int limit = 10}) async {
+    try {
+      final response = await _supabase
+          .from('cybers')
+          .select()
+          .eq('is_active', true)
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      return (response as List).map((cyber) => Cyber.fromMap(cyber)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch recent cybers: $e');
+    }
+  }
+
+  // Update cyber rating (called after review submission)
+  Future<void> updateCyberRating(String cyberId, double newRating) async {
+    try {
+      await _supabase
+          .from('cybers')
+          .update({'rating': newRating}).eq('id', cyberId);
+    } catch (e) {
+      throw Exception('Failed to update cyber rating: $e');
+    }
+  }
+
+  // Increment review count
+  Future<void> incrementReviewCount(String cyberId) async {
+    try {
+      // First get current count
+      final cyber = await _supabase
+          .from('cybers')
+          .select('review_count')
+          .eq('id', cyberId)
+          .single();
+
+      final currentCount = (cyber['review_count'] as int?) ?? 0;
+
+      // Then update with incremented count
+      await _supabase
+          .from('cybers')
+          .update({'review_count': currentCount + 1}).eq('id', cyberId);
+    } catch (e) {
+      throw Exception('Failed to increment review count: $e');
     }
   }
 }

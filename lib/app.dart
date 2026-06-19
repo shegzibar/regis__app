@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/router/app_router.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'core/config/app_variant.dart';
+import 'core/router/root_router.dart';
 import 'core/theme/app_theme.dart';
 
 class GamingHubApp extends ConsumerWidget {
@@ -8,15 +10,19 @@ class GamingHubApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(appRouterProvider);
-    
+    final variant = ref.watch(appVariantProvider);
+    final router = ref.watch(rootRouterProvider);
+
     return MaterialApp.router(
-      title: 'GamingHub',
+      title: variant.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark, // Default to dark for user app
+      themeMode: variant.usesDarkTheme ? ThemeMode.dark : ThemeMode.light,
       routerConfig: router,
+      locale: context.locale,
+      supportedLocales: context.supportedLocales,
+      localizationsDelegates: context.localizationDelegates,
     );
   }
 }

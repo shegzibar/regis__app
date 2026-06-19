@@ -8,7 +8,12 @@ class Booking {
   final double totalAmount;
   final double bookingFee;
   final String status;
+  final String source;   // 'app' | 'manual'
   final String? notes;
+  final String? userName;    // joined from profiles table
+  final String? stationName; // joined from stations table
+  final String? roomName;    // joined from rooms table
+  final String? cyberId;     // joined from rooms table
   final DateTime createdAt;
   final DateTime? confirmedAt;
   final DateTime? expiresAt;
@@ -23,13 +28,20 @@ class Booking {
     required this.totalAmount,
     this.bookingFee = 5.0,
     this.status = 'pending_payment',
+    this.source = 'app',
     this.notes,
+    this.userName,
+    this.stationName,
+    this.roomName,
+    this.cyberId,
     required this.createdAt,
     this.confirmedAt,
     this.expiresAt,
   });
 
   factory Booking.fromMap(Map<String, dynamic> map) {
+    final stationMap = map['stations'] as Map<String, dynamic>?;
+    final roomMap = stationMap?['rooms'] as Map<String, dynamic>?;
     return Booking(
       id: map['id'] as String,
       userId: map['user_id'] as String,
@@ -40,7 +52,12 @@ class Booking {
       totalAmount: (map['total_amount'] as num).toDouble(),
       bookingFee: (map['booking_fee'] as num?)?.toDouble() ?? 5.0,
       status: map['status'] as String? ?? 'pending_payment',
+      source: map['source'] as String? ?? 'app',
       notes: map['notes'] as String?,
+      userName: (map['profiles']?['name'] ?? map['users']?['name']) as String?,
+      stationName: stationMap?['name'] as String?,
+      roomName: roomMap?['name'] as String?,
+      cyberId: roomMap?['cyber_id'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       confirmedAt: map['confirmed_at'] != null 
           ? DateTime.parse(map['confirmed_at'] as String)
@@ -79,7 +96,12 @@ class Booking {
     double? totalAmount,
     double? bookingFee,
     String? status,
+    String? source,
     String? notes,
+    String? userName,
+    String? stationName,
+    String? roomName,
+    String? cyberId,
     DateTime? createdAt,
     DateTime? confirmedAt,
     DateTime? expiresAt,
@@ -94,7 +116,12 @@ class Booking {
       totalAmount: totalAmount ?? this.totalAmount,
       bookingFee: bookingFee ?? this.bookingFee,
       status: status ?? this.status,
+      source: source ?? this.source,
       notes: notes ?? this.notes,
+      userName: userName ?? this.userName,
+      stationName: stationName ?? this.stationName,
+      roomName: roomName ?? this.roomName,
+      cyberId: cyberId ?? this.cyberId,
       createdAt: createdAt ?? this.createdAt,
       confirmedAt: confirmedAt ?? this.confirmedAt,
       expiresAt: expiresAt ?? this.expiresAt,

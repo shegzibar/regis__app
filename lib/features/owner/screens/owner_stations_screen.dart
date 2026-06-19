@@ -38,10 +38,9 @@ class OwnerStationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stationsAsync = ref.watch(ownerStationsProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Column(
+    return ColoredBox(
+      color: const Color(0xFFF4F6F8),
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
@@ -174,7 +173,6 @@ class OwnerStationsScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }
