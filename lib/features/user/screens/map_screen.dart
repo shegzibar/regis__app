@@ -105,7 +105,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       });
 
       if (_isMapReady) {
-        _mapController.move(center, 13.0);
+        _mapController.move(center, 16.0);
       } else {
         // Map not ready yet — store and move once onMapReady fires
         _pendingCenter = center;
@@ -145,7 +145,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (_currentPosition != null && _isMapReady) {
       _mapController.move(
           LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          14.0);
+          16.0);
     } else if (_currentPosition == null) {
       _getCurrentLocation();
     }
@@ -161,6 +161,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     return Scaffold(
       backgroundColor: AppColors.darkBg,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Stack(
           children: [
@@ -211,7 +212,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           setState(() => _isMapReady = true);
                           // If location arrived before the map was ready, move now
                           if (_pendingCenter != null) {
-                            _mapController.move(_pendingCenter!, 13.0);
+                            _mapController.move(_pendingCenter!, 16.0);
                             _pendingCenter = null;
                           }
                         },

@@ -60,7 +60,15 @@ class AuthStateNotifier extends StateNotifier<AppUser?> {
           .maybeSingle();
 
       if (response != null) {
-        state = AppUser.fromMap(response);
+        final mutableResponse = Map<String, dynamic>.from(response);
+        final authUser = SupabaseService().currentUser;
+        if (authUser != null) {
+          mutableResponse['email'] = authUser.email;
+          if (mutableResponse['phone'] == null || mutableResponse['phone'] == '') {
+            mutableResponse['phone'] = authUser.phone;
+          }
+        }
+        state = AppUser.fromMap(mutableResponse);
         return;
       }
 
@@ -117,6 +125,7 @@ class AuthService {
     String? name,
     String? phone,
     String role = 'user',
+    bool isSignUp = false,
   }) async {
     try {
       final existing = await _supabase
@@ -125,28 +134,48 @@ class AuthService {
           .eq('id', authUser.id)
           .maybeSingle();
 
+      Map<String, dynamic> profileData = {};
+      bool needsUpdate = false;
+
       if (existing != null) {
-        return AppUser.fromMap(existing);
+        profileData = Map<String, dynamic>.from(existing);
+        
+        if (isSignUp) {
+          if (name != null) profileData['name'] = name;
+          if (phone != null) profileData['phone'] = phone;
+          if (role != 'user') profileData['role'] = role;
+          needsUpdate = true;
+        } else {
+          // Just login: update if missing
+          if (name != null && (profileData['name'] == null || profileData['name'] == '')) {
+            profileData['name'] = name;
+            needsUpdate = true;
+          }
+          if (phone != null && (profileData['phone'] == null || profileData['phone'] == '')) {
+            profileData['phone'] = phone;
+            needsUpdate = true;
+          }
+        }
+      } else {
+        needsUpdate = true;
+        profileData = {
+          'id': authUser.id,
+          'name': name ??
+              authUser.userMetadata?['name'] ??
+              (email ?? authUser.email ?? '').split('@').first,
+          'role': role,
+          'phone': phone ?? authUser.phone ?? '',
+        };
       }
 
-      final profileData = {
-        'id': authUser.id,
-        'name': name ??
-            authUser.userMetadata?['name'] ??
-            (email ?? authUser.email ?? '').split('@').first,
-        'role': role,
-        'phone': phone ?? authUser.phone ?? '',
-      };
+      if (needsUpdate) {
+        await _supabase.from('profiles').upsert(profileData);
+      }
 
-      await _supabase.from('profiles').upsert(profileData);
-
-      final profileRow = await _supabase
-          .from('profiles')
-          .select()
-          .eq('id', authUser.id)
-          .single();
-
-      return AppUser.fromMap(profileRow);
+      // Inject email since it's not stored in the profiles table
+      profileData['email'] = email ?? authUser.email;
+      
+      return AppUser.fromMap(profileData);
     } catch (e) {
       debugPrint('ensureUserProfile failed: $e');
       return AppUser.fromSupabase(authUser);
@@ -238,6 +267,7 @@ class AuthService {
         name: name,
         phone: phone,
         role: role,
+        isSignUp: true,
       );
     } catch (e) {
       throw Exception('Failed to sign up: $e');
