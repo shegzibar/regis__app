@@ -324,27 +324,35 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 child: Column(
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Explore',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
+                        const Expanded(
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                'Explore',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Gaming Centers',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w300,
+                                  color: AppColors.green,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Gaming Centers',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w300,
-                            color: AppColors.green,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const Spacer(),
+                        const SizedBox(width: 16),
                         GestureDetector(
                           onTap: _onFilterTap,
                           child: Container(

@@ -23,6 +23,13 @@ class _OwnerManualBookingScreenState
   Station? _station;
   int _hours = 2;
   bool _saving = false;
+  final TextEditingController _guestNameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _guestNameController.dispose();
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     final user = ref.read(authStateProvider);
@@ -38,6 +45,7 @@ class _OwnerManualBookingScreenState
         startTime: DateTime.now(),
         durationHours: _hours.toDouble(),
         totalAmount: total,
+        guestName: _guestNameController.text.trim(),
       );
       ref.invalidate(ownerDashboardStatsProvider);
       ref.invalidate(ownerTimelineStreamProvider);
@@ -150,6 +158,7 @@ class _OwnerManualBookingScreenState
                           onChanged: (h) => setState(() => _hours = h),
                           onConfirm: _saving ? null : _submit,
                           saving: _saving,
+                          nameController: _guestNameController,
                         ),
             ),
           ),
@@ -206,6 +215,7 @@ class _DurationStep extends StatelessWidget {
   final ValueChanged<int> onChanged;
   final VoidCallback? onConfirm;
   final bool saving;
+  final TextEditingController nameController;
 
   const _DurationStep({
     required this.hours,
@@ -213,6 +223,7 @@ class _DurationStep extends StatelessWidget {
     required this.onChanged,
     required this.onConfirm,
     required this.saving,
+    required this.nameController,
   });
 
   @override
@@ -234,6 +245,27 @@ class _DurationStep extends StatelessWidget {
               selectedColor: AppColors.teal.withValues(alpha: 0.2),
             );
           }).toList(),
+        ),
+        const SizedBox(height: 24),
+        Text('Guest Name (Optional)',
+            style: const TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        TextField(
+          controller: nameController,
+          decoration: InputDecoration(
+            hintText: 'Enter walk-in guest name',
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          ),
         ),
         const Spacer(),
         Text(

@@ -10,6 +10,7 @@ class OwnerBookingItem {
   final String roomName;
   final String roomType;
   final String cyberName;
+  final String? guestName;
 
   const OwnerBookingItem({
     required this.id,
@@ -23,6 +24,7 @@ class OwnerBookingItem {
     required this.roomName,
     required this.roomType,
     required this.cyberName,
+    this.guestName,
   });
 
   bool get isManual =>
@@ -46,6 +48,7 @@ class OwnerBookingItem {
       roomName: rooms?['name'] as String? ?? '—',
       roomType: rooms?['type'] as String? ?? '',
       cyberName: cybers?['name'] as String? ?? '—',
+      guestName: map['guest_name'] as String?,
     );
   }
 }

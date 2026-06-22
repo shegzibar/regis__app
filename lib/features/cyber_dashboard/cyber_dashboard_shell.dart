@@ -12,6 +12,7 @@ import 'pages/stations_page.dart';
 import 'pages/cyber_profile_page.dart';
 import 'pages/workers_page.dart';
 import 'pages/wallet_points_page.dart';
+import '../../owner/screens/owner_inventory_screen.dart';
 import 'widgets/cd_top_bar.dart';
 import 'widgets/cd_sidebar.dart';
 
@@ -143,6 +144,7 @@ class _CyberDashboardShellState
       'profile' => const CyberProfilePage(),
       'workers' => const WorkersPage(),
       'wallet_points' => const WalletPointsPage(),
+      'inventory' => const OwnerInventoryScreen(),
       _ => const HomePage(),
     };
   }

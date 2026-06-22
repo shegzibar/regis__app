@@ -4,6 +4,7 @@ import '../models/booking.dart';
 import '../models/cyber.dart';
 import '../models/cyber_profile_input.dart';
 import '../models/cyber_room_profile.dart';
+import '../models/inventory_item.dart';
 import '../models/owner_booking_item.dart';
 import '../models/room.dart';
 import '../models/station.dart';
@@ -144,6 +145,7 @@ class OwnerRepository {
     required DateTime startTime,
     required double durationHours,
     required double totalAmount,
+    String? guestName,
   }) async {
     final endTime = startTime.add(Duration(hours: durationHours.round()));
 
@@ -156,7 +158,10 @@ class OwnerRepository {
       'total_amount': totalAmount,
       'booking_fee': 0,
       'status': 'confirmed',
+      'source': 'manual',
       'notes': 'manual_walk_in',
+      if (guestName != null && guestName.trim().isNotEmpty)
+        'guest_name': guestName.trim(),
       'confirmed_at': DateTime.now().toIso8601String(),
     };
 
@@ -368,5 +373,71 @@ class OwnerRepository {
 
   Future<void> deleteStation(String stationId) async {
     await _supabase.from('stations').delete().eq('id', stationId);
+  }
+
+  // --- Inventory Management ---
+  
+  Future<List<CyberInventoryItem>> getInventoryItems(String cyberId) async {
+    final response = await _supabase
+        .from('cyber_inventory_items')
+        .select()
+        .eq('cyber_id', cyberId)
+        .order('created_at');
+    return (response as List).map((i) => CyberInventoryItem.fromMap(i)).toList();
+  }
+
+  Future<CyberInventoryItem> addInventoryItem(CyberInventoryItem item) async {
+    final row = await _supabase
+        .from('cyber_inventory_items')
+        .insert(item.toInsertMap())
+        .select()
+        .single();
+    return CyberInventoryItem.fromMap(row);
+  }
+
+  Future<void> toggleInventoryItemStatus(String itemId, bool isActive) async {
+    await _supabase
+        .from('cyber_inventory_items')
+        .update({'is_active': isActive})
+        .eq('id', itemId);
+  }
+
+  // --- Booking Items Management ---
+  
+  Future<List<BookingItem>> getBookingItems(String bookingId) async {
+    final response = await _supabase
+        .from('booking_items')
+        .select('*, cyber_inventory_items(*)')
+        .eq('booking_id', bookingId);
+    return (response as List).map((i) => BookingItem.fromMap(i)).toList();
+  }
+
+  Future<BookingItem> addBookingItem({
+    required String bookingId,
+    required CyberInventoryItem item,
+    required int quantity,
+  }) async {
+    final totalPrice = item.price * quantity;
+    final row = await _supabase.from('booking_items').insert({
+      'booking_id': bookingId,
+      'item_id': item.id,
+      'quantity': quantity,
+      'price_at_time': item.price,
+      'total_price': totalPrice,
+    }).select('*, cyber_inventory_items(*)').single();
+
+    // Automatically update the parent booking total amount
+    await _supabase.rpc('increment_booking_total', params: {
+      'b_id': bookingId,
+      'amount_to_add': totalPrice,
+    });
+    // Fallback if rpc is not there:
+    // This is a naive implementation if postgres function doesn't exist.
+    // It's safer to fetch the booking, add, and update.
+    final bookingRaw = await _supabase.from('bookings').select('total_amount').eq('id', bookingId).single();
+    final currentTotal = (bookingRaw['total_amount'] as num).toDouble();
+    await _supabase.from('bookings').update({'total_amount': currentTotal + totalPrice}).eq('id', bookingId);
+
+    return BookingItem.fromMap(row);
   }
 }

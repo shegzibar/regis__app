@@ -43,6 +43,12 @@ const _navItems = [
     labelEn: 'Schedule',
   ),
   _NavItem(
+    key: 'inventory',
+    icon: Icons.inventory_2_outlined,
+    labelAr: 'المخزون والمنتجات',
+    labelEn: 'Inventory & Snacks',
+  ),
+  _NavItem(
     key: 'stations',
     icon: Icons.computer_outlined,
     labelAr: 'المحطات',

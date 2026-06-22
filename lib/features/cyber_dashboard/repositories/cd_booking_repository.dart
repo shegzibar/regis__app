@@ -154,7 +154,10 @@ class CdBookingRepository {
           'total_amount': totalAmount,
           'booking_fee': 0,
           'status': 'confirmed',
+          'source': 'manual',
           'notes': '$clientNote | Payment: $paymentMethod',
+          if (clientName != null && clientName.trim().isNotEmpty)
+            'guest_name': clientName.trim(),
           'confirmed_at': DateTime.now().toIso8601String(),
         })
         .select()
