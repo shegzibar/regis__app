@@ -11,6 +11,7 @@ import '../../features/user/screens/payment_screen.dart';
 import '../../features/user/screens/my_bookings_screen.dart';
 import '../../features/user/screens/map_screen.dart';
 import '../../features/user/screens/profile_screen.dart';
+import '../../features/user/screens/personal_info_screen.dart';
 import '../../features/wallet/screens/wallet_screen.dart';
 
 import '../providers/auth_provider.dart';
@@ -112,6 +113,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/profile',
             name: 'profile',
             builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: '/personal-info',
+            name: 'personal_info',
+            builder: (context, state) => const PersonalInfoScreen(),
           ),
           GoRoute(
             path: '/wallet',

@@ -4,6 +4,7 @@ import '../../../data/models/cyber.dart';
 import '../../../data/models/room.dart';
 import '../constants/cd_colors.dart';
 import '../providers/cd_providers.dart';
+import '../../../core/providers/owner_dashboard_provider.dart';
 
 class CyberProfilePage extends ConsumerStatefulWidget {
   const CyberProfilePage({super.key});
@@ -252,13 +253,19 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                                             ],
                                           ),
                                         ),
-                                        IconButton(
-                                          icon: const Icon(Icons.edit,
-                                              size: 16, color: kGray),
-                                          onPressed: () => _showEditPriceDialog(
-                                              context, ref, r, isAr),
-                                        ),
-                                      ],
+                                          IconButton(
+                                            icon: const Icon(Icons.edit,
+                                                size: 16, color: kGray),
+                                            onPressed: () => _showEditPriceDialog(
+                                                context, ref, r, isAr),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete,
+                                                size: 16, color: kRed),
+                                            onPressed: () => _showDeleteRoomDialog(
+                                                context, ref, r, isAr),
+                                          ),
+                                        ],
                                     ),
                                   );
                                 },
@@ -429,6 +436,45 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showDeleteRoomDialog(
+      BuildContext context, WidgetRef ref, Room r, bool isAr) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isAr ? 'حذف الغرفة' : 'Delete Room'),
+        content: Text(isAr ? 'هل أنت متأكد من حذف الغرفة "${r.name}" وجميع الأجهزة التابعة لها؟' : 'Are you sure you want to delete "${r.name}" and all its stations?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(isAr ? 'إلغاء' : 'Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: kRed, foregroundColor: Colors.white),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await ref.read(ownerRepositoryProvider).deleteRoomCascade(r.id);
+                ref.invalidate(cyberRoomsProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(isAr ? 'تم الحذف بنجاح' : 'Deleted successfully')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              }
+            },
+            child: Text(isAr ? 'حذف' : 'Delete'),
+          ),
+        ],
       ),
     );
   }

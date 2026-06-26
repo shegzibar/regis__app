@@ -43,6 +43,15 @@ class BookingNotifier extends AsyncNotifier<void> {
     final user = ref.read(authStateProvider);
     if (user == null) throw Exception('Not authenticated');
 
+    // Resolve the best display name for this user
+    final String? displayName = (user.name != null && user.name!.trim().isNotEmpty)
+        ? user.name!.trim()
+        : (user.phone != null && user.phone!.trim().isNotEmpty)
+            ? user.phone!.trim()
+            : (user.email != null && user.email!.trim().isNotEmpty)
+                ? user.email!.split('@').first
+                : null;
+
     final booking = await ref.read(bookingRepositoryProvider).createBooking(
           userId: user.id,
           stationId: stationId,
@@ -52,6 +61,7 @@ class BookingNotifier extends AsyncNotifier<void> {
           totalAmount: totalAmount,
           bookingFee: bookingFee,
           notes: notes,
+          guestName: displayName,
         );
     ref.invalidate(profileDataProvider);
     return booking;

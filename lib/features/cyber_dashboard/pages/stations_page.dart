@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/cd_colors.dart';
 import '../providers/cd_providers.dart';
 import '../models/station_live.dart';
 import '../../../data/models/room.dart';
+import '../../../core/providers/owner_dashboard_provider.dart';
+import '../widgets/session_details_sheet.dart';
 
 class StationsPage extends ConsumerWidget {
   const StationsPage({super.key});
@@ -123,7 +126,7 @@ class _RoomSection extends ConsumerWidget {
                     crossAxisCount: 4,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 1.5,
+                    childAspectRatio: 1.1,
                   ),
                   itemCount: stations.length,
                   itemBuilder: (context, i) {
@@ -140,12 +143,75 @@ class _RoomSection extends ConsumerWidget {
   }
 }
 
-class _StationCard extends StatelessWidget {
+class _StationCard extends StatefulWidget {
   final StationLive s;
   final bool isAr;
   final WidgetRef ref;
 
   const _StationCard({required this.s, required this.isAr, required this.ref});
+
+  @override
+  State<_StationCard> createState() => _StationCardState();
+}
+
+class _StationCardState extends State<_StationCard> {
+  Timer? _timer;
+  Duration _remaining = Duration.zero;
+
+  StationLive get s => widget.s;
+  bool get isAr => widget.isAr;
+  WidgetRef get ref => widget.ref;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
+
+  @override
+  void didUpdateWidget(covariant _StationCard old) {
+    super.didUpdateWidget(old);
+    if (old.s.busyUntil != widget.s.busyUntil ||
+        old.s.isBusy != widget.s.isBusy) {
+      _timer?.cancel();
+      _startCountdown();
+    }
+  }
+
+  void _startCountdown() {
+    if (!s.isBusy || s.busyUntil == null) {
+      _remaining = Duration.zero;
+      return;
+    }
+    _updateRemaining();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      _updateRemaining();
+    });
+  }
+
+  void _updateRemaining() {
+    final now = DateTime.now();
+    final end = s.busyUntil!.toLocal();
+    final diff = end.difference(now);
+    setState(() {
+      _remaining = diff.isNegative ? Duration.zero : diff;
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _formatDuration(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final sec = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (h > 0) return '$h:$m:$sec';
+    return '$m:$sec';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,16 +220,25 @@ class _StationCard extends StatelessWidget {
     IconData icon = Icons.computer;
     Color iconColor = kGray;
 
+    final bool isOvertime = s.isBusy && s.busyUntil != null && _remaining == Duration.zero;
+
     if (s.isMaintenance) {
       bgColor = const Color(0xFFFDECEE);
       borderColor = kRed.withValues(alpha: 0.5);
       iconColor = kRed;
       icon = Icons.build;
     } else if (s.isBusy) {
-      bgColor = kPurpleLight;
-      borderColor = kPurple;
-      iconColor = kPurple;
-      icon = Icons.person;
+      if (isOvertime) {
+        bgColor = const Color(0xFFFFF3E0);
+        borderColor = const Color(0xFFFF9800);
+        iconColor = const Color(0xFFFF9800);
+        icon = Icons.timer_off;
+      } else {
+        bgColor = kPurpleLight;
+        borderColor = kPurple;
+        iconColor = kPurple;
+        icon = Icons.person;
+      }
     } else if (s.isActive) {
       bgColor = const Color(0xFFE8F5E8);
       borderColor = kGreen.withValues(alpha: 0.5);
@@ -171,8 +246,38 @@ class _StationCard extends StatelessWidget {
     }
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        if (s.isBusy && s.currentBookingId != null) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => const Center(child: CircularProgressIndicator()),
+          );
+          try {
+            final booking = await ref.read(ownerRepositoryProvider).getBookingById(s.currentBookingId!);
+            if (context.mounted) {
+              Navigator.pop(context);
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (ctx) => SessionDetailsSheet(
+                  booking: booking,
+                  isAr: isAr,
+                  onAdded: () => ref.invalidate(stationStatusProvider(s.roomId)),
+                ),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading session')));
+            }
+          }
+        }
+      },
       onLongPress: () {
-        // Toggle maintenance
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
@@ -202,7 +307,7 @@ class _StationCard extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(kRadiusSm),
@@ -211,26 +316,61 @@ class _StationCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: iconColor, size: 24),
-            const SizedBox(height: 8),
+            Icon(icon, color: iconColor, size: 22),
+            const SizedBox(height: 6),
             Text(
               s.name,
               style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: s.isBusy ? kPurple : kSidebarText),
             ),
             const SizedBox(height: 2),
             Text(
               s.statusLabel(arabic: isAr),
-              style: TextStyle(fontSize: 10, color: iconColor),
+              style: TextStyle(fontSize: 9, color: iconColor),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+            if (s.isBusy && s.busyUntil != null) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isOvertime
+                      ? const Color(0xFFFF9800)
+                      : kPurple,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isOvertime ? Icons.warning_amber : Icons.timer,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isOvertime
+                          ? (isAr ? 'انتهى!' : 'Over!')
+                          : _formatDuration(_remaining),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 }
+

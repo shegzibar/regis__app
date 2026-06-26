@@ -194,7 +194,7 @@ class _InventoryItemCardState extends ConsumerState<_InventoryItemCard> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.teal.withOpacity(0.1),
+              color: AppColors.teal.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.inventory_2_outlined, color: AppColors.teal),
@@ -219,7 +219,7 @@ class _InventoryItemCardState extends ConsumerState<_InventoryItemCard> {
             Switch(
               value: _isActive,
               onChanged: _toggleStatus,
-              activeColor: AppColors.teal,
+              activeThumbColor: AppColors.teal,
             ),
         ],
       ),

@@ -122,7 +122,7 @@ class _OwnerScheduleScreenState extends ConsumerState<OwnerScheduleScreen> {
                           _dayAbbr(date.weekday),
                           style: TextStyle(
                             color: isSelected
-                                ? Colors.white.withOpacity(0.8)
+                                ? Colors.white.withValues(alpha: 0.8)
                                 : AppColors.textSecondary,
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
@@ -272,7 +272,7 @@ class _ScheduleBookingCard extends StatelessWidget {
         border: Border.all(color: AppColors.lightGray),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2))
         ],
@@ -293,7 +293,7 @@ class _ScheduleBookingCard extends StatelessWidget {
                   width: 2,
                   height: 28,
                   margin: const EdgeInsets.symmetric(vertical: 4),
-                  color: AppColors.teal.withOpacity(0.3)),
+                  color: AppColors.teal.withValues(alpha: 0.3)),
               Text(
                 _formatTime(booking.endTime),
                 style: const TextStyle(
@@ -328,7 +328,7 @@ class _ScheduleBookingCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

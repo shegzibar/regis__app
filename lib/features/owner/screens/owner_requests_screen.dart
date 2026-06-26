@@ -30,7 +30,67 @@ final ownerPendingRequestsProvider =
         .eq('stations.rooms.cybers.owner_id', user.id)
         .order('created_at', ascending: false);
 
-    return (response as List).map((b) => Booking.fromMap(b)).toList();
+    final bookings = (response as List).map((b) => Booking.fromMap(b)).toList();
+
+    // Manually fetch user profiles for all bookings
+    if (bookings.isNotEmpty) {
+      final userIds = bookings.map((b) => b.userId).toSet().toList();
+      final profileMap = <String, String>{};
+
+      // Try profiles table first
+      try {
+        final profiles = await SupabaseService()
+            .from('profiles')
+            .select('id, name, phone')
+            .inFilter('id', userIds);
+        for (final p in profiles as List) {
+          final id = p['id'] as String;
+          final name = p['name'] as String?;
+          final phone = p['phone'] as String?;
+          if (name != null && name.trim().isNotEmpty) {
+            profileMap[id] = name.trim();
+          } else if (phone != null && phone.trim().isNotEmpty) {
+            profileMap[id] = phone.trim();
+          }
+        }
+      } catch (e) {
+        debugPrint('Owner requests: profiles fetch failed: $e');
+      }
+
+      // Fallback to users table for any missing
+      final missingIds = userIds.where((id) => !profileMap.containsKey(id)).toList();
+      if (missingIds.isNotEmpty) {
+        try {
+          final users = await SupabaseService()
+              .from('users')
+              .select('id, name, phone')
+              .inFilter('id', missingIds);
+          for (final p in users as List) {
+            final id = p['id'] as String;
+            final name = p['name'] as String?;
+            final phone = p['phone'] as String?;
+            if (name != null && name.trim().isNotEmpty) {
+              profileMap[id] = name.trim();
+            } else if (phone != null && phone.trim().isNotEmpty) {
+              profileMap[id] = phone.trim();
+            }
+          }
+        } catch (e) {
+          debugPrint('Owner requests: users table fetch failed: $e');
+        }
+      }
+
+      // Apply resolved names to bookings
+      return bookings.map((b) {
+        final resolved = profileMap[b.userId];
+        if (resolved != null && b.userName == null) {
+          return b.copyWith(userName: resolved);
+        }
+        return b;
+      }).toList();
+    }
+
+    return bookings;
   } catch (_) {
     return [];
   }
@@ -71,9 +131,9 @@ class OwnerRequestsScreen extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.purple.withOpacity(0.2),
+                              color: AppColors.purple.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: AppColors.purple.withOpacity(0.4)),
+                              border: Border.all(color: AppColors.purple.withValues(alpha: 0.4)),
                             ),
                             child: Text(
                               '${list.length} pending',
@@ -137,7 +197,7 @@ class OwnerRequestsScreen extends ConsumerWidget {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: AppColors.green.withOpacity(0.1),
+                              color: AppColors.green.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.check_circle_outline,
@@ -313,7 +373,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: AppColors.green.withOpacity(0.1),
+                        color: AppColors.green.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.person_outline,
@@ -325,7 +385,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Booking #${booking.id.substring(0, 8).toUpperCase()}',
+                            booking.userName ?? 'User #${booking.userId.substring(0, 8).toUpperCase()}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
@@ -372,11 +432,6 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                       child: _InfoRow(
                           icon: Icons.payments_outlined,
                           label: 'EGP ${booking.totalAmount.toStringAsFixed(0)} total'),
-                    ),
-                    Expanded(
-                      child: _InfoRow(
-                          icon: Icons.confirmation_number_outlined,
-                          label: 'Fee: EGP ${booking.bookingFee.toStringAsFixed(0)}'),
                     ),
                   ],
                 ),
@@ -438,7 +493,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.error,
                               side: BorderSide(
-                                  color: AppColors.error.withOpacity(0.5)),
+                                  color: AppColors.error.withValues(alpha: 0.5)),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10)),
                               padding:

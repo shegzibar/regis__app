@@ -216,9 +216,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF8B4513).withOpacity(0.2),
+                        color: const Color(0xFF8B4513).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF8B4513).withOpacity(0.3)),
+                        border: Border.all(color: const Color(0xFF8B4513).withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -226,7 +226,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.2),
+                              color: Colors.orange.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Icon(

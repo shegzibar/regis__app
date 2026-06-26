@@ -272,10 +272,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                     child: Text('Error: $err',
                         style: const TextStyle(color: Colors.red))),
                 data: (room) {
-                  if (room == null)
+                  if (room == null) {
                     return const Center(
                         child: Text('Room not found',
                             style: TextStyle(color: Colors.white)));
+                  }
 
                   return SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),

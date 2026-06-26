@@ -47,7 +47,7 @@ class DepositReviewCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.green.withOpacity(0.2),
+                  color: AppColors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Center(
@@ -210,9 +210,9 @@ class DepositReviewCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                   ),
                   child: const Icon(
                     Icons.close,
@@ -231,9 +231,9 @@ class DepositReviewCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.green.withOpacity(0.1),
+                    color: AppColors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.green.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.green.withValues(alpha: 0.3)),
                   ),
                   child: const Icon(
                     Icons.check,

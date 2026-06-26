@@ -6,6 +6,7 @@ class StationLive {
   final String status; // 'active' | 'maintenance' | 'blocked'
   final bool isBusy;
   final String? currentUser; // name of customer currently using it
+  final String? currentBookingId;
   final DateTime? busyUntil;
   final String? source; // 'app' | 'manual'
 
@@ -16,6 +17,7 @@ class StationLive {
     required this.status,
     this.isBusy = false,
     this.currentUser,
+    this.currentBookingId,
     this.busyUntil,
     this.source,
   });
@@ -28,6 +30,7 @@ class StationLive {
       status: map['status'] as String? ?? 'active',
       isBusy: map['is_busy'] as bool? ?? false,
       currentUser: map['current_user'] as String?,
+      currentBookingId: map['current_booking_id'] as String?,
       busyUntil: map['busy_until'] != null
           ? DateTime.tryParse(map['busy_until'] as String)
           : null,

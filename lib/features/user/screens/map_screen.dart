@@ -19,6 +19,7 @@ class MapScreen extends ConsumerStatefulWidget {
 class _MapScreenState extends ConsumerState<MapScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   final MapController _mapController = MapController();
   late AnimationController _animationController;
 
@@ -47,11 +48,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _searchController.addListener(() {
       setState(() {}); // Rebuild to filter cybers when searching
     });
+    _searchFocusNode.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -131,7 +136,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   void _onCenterTap() {
     if (_selectedCenterId != null) {
-      context.push('/cyber-details/$_selectedCenterId');
+      context.push('/cyber/$_selectedCenterId');
     }
   }
 
@@ -154,6 +159,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
   @override
   Widget build(BuildContext context) {
     final cybersAsync = ref.watch(cybersProvider);
+    final allCybers = cybersAsync.valueOrNull ?? [];
+    final query = _searchController.text.toLowerCase();
+    final cybers = allCybers.where((cyber) {
+      return cyber.name.toLowerCase().contains(query) ||
+          (cyber.address?.toLowerCase().contains(query) ?? false);
+    }).toList();
 
     final initialCenter = _currentPosition != null
         ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
@@ -173,12 +184,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   child: Text('Error: $err',
                       style: const TextStyle(color: Colors.red))),
               data: (allCybers) {
-                // Filter based on search query
-                final query = _searchController.text.toLowerCase();
-                final cybers = allCybers.where((cyber) {
-                  return cyber.name.toLowerCase().contains(query) ||
-                      (cyber.address?.toLowerCase().contains(query) ?? false);
-                }).toList();
+                // Filter based on search query is handled at the top of build
 
                 // Find currently selected cyber mapping for bottom sheet
                 Map<String, dynamic>? selectedMap;
@@ -231,6 +237,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
                           subdomains: const ['a', 'b', 'c', 'd'],
                           userAgentPackageName: 'com.example.gaming_hub',
+                          tileBuilder: (context, widget, tile) {
+                            return ColorFiltered(
+                              colorFilter: const ColorFilter.matrix([
+                                1, 0, 0, 0, 20, // Slightly brighten Red
+                                0, 1, 0, 0, 25, // Slightly brighten Green
+                                0, 0, 1, 0, 35, // Brighten Blue slightly more for that Uber texture
+                                0, 0, 0, 1,  0,
+                              ]),
+                              child: widget,
+                            );
+                          },
                         ),
                         MarkerLayer(
                           markers: [
@@ -242,8 +259,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               final lng = cyber.lng!;
                               return Marker(
                                 point: LatLng(lat, lng),
-                                width: 120,
-                                height: 50,
+                                width: 160,
+                                height: 100,
                                 child: MapMarker(
                                   name: cyber.name,
                                   isOpen: true,
@@ -268,7 +285,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                         color: Colors.white, width: 3),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.blue.withOpacity(0.5),
+                                        color: Colors.blue.withValues(alpha: 0.5),
                                         blurRadius: 10,
                                         spreadRadius: 2,
                                       ),
@@ -315,8 +332,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      AppColors.darkBg.withOpacity(0.98),
-                      AppColors.darkBg.withOpacity(0.85),
+                      AppColors.darkBg.withValues(alpha: 0.98),
+                      AppColors.darkBg.withValues(alpha: 0.85),
                       Colors.transparent,
                     ],
                   ),
@@ -364,7 +381,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               border: Border.all(color: AppColors.darkBorder),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.green.withOpacity(0.1),
+                                  color: AppColors.green.withValues(alpha: 0.1),
                                   blurRadius: 8,
                                   spreadRadius: 0,
                                 ),
@@ -393,7 +410,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.green.withOpacity(0.15),
+                            color: AppColors.green.withValues(alpha: 0.15),
                             blurRadius: 12,
                             spreadRadius: 0,
                             offset: const Offset(0, 4),
@@ -402,6 +419,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                       child: TextField(
                         controller: _searchController,
+                        focusNode: _searchFocusNode,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -425,6 +443,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ? GestureDetector(
                                   onTap: () {
                                     _searchController.clear();
+                                    _searchFocusNode.unfocus();
                                     setState(() {});
                                   },
                                   child: const Padding(
@@ -446,26 +465,50 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 14),
-
-                    // Category Filter Chips
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildCategoryChip(
-                              'All', Icons.grid_view_rounded, true),
-                          const SizedBox(width: 8),
-                          _buildCategoryChip(
-                              'PS5', Icons.videogame_asset, false),
-                          const SizedBox(width: 8),
-                          _buildCategoryChip(
-                              'PC', Icons.computer_rounded, false),
-                          const SizedBox(width: 8),
-                          _buildCategoryChip('VIP', Icons.star_rounded, false),
-                        ],
+                    if (_searchController.text.isNotEmpty && _searchFocusNode.hasFocus)
+                      Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        constraints: const BoxConstraints(maxHeight: 250),
+                        decoration: BoxDecoration(
+                          color: AppColors.darkCard,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.darkBorder, width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: cybers.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Text('No centers found', style: TextStyle(color: AppColors.textMuted)),
+                              )
+                            : ListView.builder(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                itemCount: cybers.length,
+                                itemBuilder: (context, index) {
+                                  final cyber = cybers[index];
+                                  return ListTile(
+                                    leading: const Icon(Icons.location_on, color: AppColors.green),
+                                    title: Text(cyber.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                    subtitle: Text(cyber.address ?? 'Unknown Location', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                    onTap: () {
+                                      _searchController.clear();
+                                      _searchFocusNode.unfocus();
+                                      if (cyber.lat != null && cyber.lng != null) {
+                                        _onMarkerTap(cyber.id, cyber.lat!, cyber.lng!);
+                                      }
+                                    },
+                                  );
+                                },
+                              ),
                       ),
-                    ),
+
+
                   ],
                 ),
               ),
@@ -546,53 +589,4 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
-  Widget _buildCategoryChip(String label, IconData icon, bool isSelected) {
-    return GestureDetector(
-      onTap: () {
-        // Filter logic can be added here
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Filter by $label coming soon!')),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.green : AppColors.darkCard,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? AppColors.green : AppColors.darkBorder,
-            width: 1.5,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.green.withOpacity(0.3),
-                    blurRadius: 8,
-                    spreadRadius: 0,
-                  ),
-                ]
-              : [],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isSelected ? Colors.white : AppColors.green,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : AppColors.textMuted,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

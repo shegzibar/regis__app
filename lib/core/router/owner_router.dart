@@ -44,7 +44,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         isInitializing: isInitializing,
         location: location,
         homeRoute: '/cyber',
-        canAccess: (user) => user.isOwner || user.isAdmin,
+        canAccess: (user) => user.isStaff,
       );
     },
     routes: [
@@ -85,7 +85,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: '/access-denied',
         name: 'access_denied',
         builder: (context, state) => const AccessDeniedScreen(
-          requiredRoleLabel: 'cyber café owner',
+          requiredRoleLabel: 'cyber café staff',
         ),
       ),
       GoRoute(

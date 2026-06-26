@@ -323,9 +323,9 @@ class _StationTileState extends State<_StationTile> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: _statusColor.withOpacity(0.08),
+          color: _statusColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _statusColor.withOpacity(0.35)),
+          border: Border.all(color: _statusColor.withValues(alpha: 0.35)),
         ),
         child: _loading
             ? Center(
@@ -359,7 +359,7 @@ class _StationTileState extends State<_StationTile> {
                   Text(
                     widget.station.statusDisplay,
                     style: TextStyle(
-                      color: _statusColor.withOpacity(0.7),
+                      color: _statusColor.withValues(alpha: 0.7),
                       fontSize: 10,
                     ),
                   ),

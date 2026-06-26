@@ -100,7 +100,7 @@ class _WalletPointsPageState extends ConsumerState<WalletPointsPage> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               )
@@ -229,10 +229,10 @@ class _TypeButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? color : AppColors.gray.withOpacity(0.3),
+            color: isSelected ? color : AppColors.gray.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
         ),

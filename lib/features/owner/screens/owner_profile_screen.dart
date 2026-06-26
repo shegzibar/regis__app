@@ -10,6 +10,8 @@ import '../../../data/models/user.dart';
 import '../../../core/utils/supabase_error_message.dart';
 import '../../../data/supabase/supabase_client.dart';
 import '../widgets/cyber_center_editor.dart';
+import '../widgets/profile_section_card.dart';
+import '../widgets/profile_labeled_field.dart';
 
 /// Owner dashboard profile: account settings + cyber center setup.
 class OwnerProfileScreen extends ConsumerStatefulWidget {

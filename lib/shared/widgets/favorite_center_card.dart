@@ -108,8 +108,8 @@ class FavoriteCenterCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
               decoration: BoxDecoration(
                 color: isOpen
-                    ? AppColors.green.withOpacity(0.2)
-                    : AppColors.error.withOpacity(0.2),
+                    ? AppColors.green.withValues(alpha: 0.2)
+                    : AppColors.error.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
                 border: Border.all(
                   color: isOpen ? AppColors.green : AppColors.error,

@@ -28,7 +28,7 @@ class AdminTopBar extends ConsumerWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.green.withOpacity(0.15),
+              color: AppColors.green.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(

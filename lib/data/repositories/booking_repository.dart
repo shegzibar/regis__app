@@ -80,9 +80,10 @@ class BookingRepository {
     required double totalAmount,
     double bookingFee = 5.0,
     String? notes,
+    String? guestName,
   }) async {
     try {
-      final bookingData = {
+      final bookingData = <String, dynamic>{
         'user_id': userId,
         'station_id': stationId,
         'start_time': startTime.toIso8601String(),
@@ -93,6 +94,7 @@ class BookingRepository {
         'status': 'pending_payment',
         'notes': notes,
         'created_at': DateTime.now().toIso8601String(),
+        if (guestName != null && guestName.isNotEmpty) 'guest_name': guestName,
       };
 
       final response = await _supabase

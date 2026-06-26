@@ -427,7 +427,7 @@ class OwnerRepository {
     }).select('*, cyber_inventory_items(*)').single();
 
     // Automatically update the parent booking total amount
-    await _supabase.rpc('increment_booking_total', params: {
+    await _supabase.client.rpc('increment_booking_total', params: {
       'b_id': bookingId,
       'amount_to_add': totalPrice,
     });
@@ -439,5 +439,28 @@ class OwnerRepository {
     await _supabase.from('bookings').update({'total_amount': currentTotal + totalPrice}).eq('id', bookingId);
 
     return BookingItem.fromMap(row);
+  }
+
+  Future<void> cancelBooking(String bookingId) async {
+    await _supabase
+        .from('bookings')
+        .update({'status': 'cancelled'})
+        .eq('id', bookingId);
+  }
+
+  Future<Booking> getBookingById(String bookingId) async {
+    final response = await _supabase
+        .from('bookings')
+        .select(_bookingSelect)
+        .eq('id', bookingId)
+        .single();
+    return Booking.fromMap(response);
+  }
+
+  Future<void> completeBooking(String bookingId) async {
+    await _supabase
+        .from('bookings')
+        .update({'status': 'completed'})
+        .eq('id', bookingId);
   }
 }

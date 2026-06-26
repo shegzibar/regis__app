@@ -22,7 +22,6 @@ class CdBookingRepository {
         *,
         stations ( id, name, rooms ( id, name, type, cyber_id ) )
       ''')
-          .eq('status', 'confirmed')
           .gte('start_time', windowStart.toIso8601String())
           .lt('start_time', windowEnd.toIso8601String())
           .order('start_time');
@@ -42,26 +41,61 @@ class CdBookingRepository {
       if (filteredBookings.isNotEmpty) {
         final userIds = filteredBookings.map((b) => b.userId).toSet().toList();
         try {
-          final profiles = await _db.from('profiles').select('id, name, phone').inFilter('id', userIds);
           final profileMap = <String, String>{};
-          for (final p in profiles as List) {
-            final name = p['name'] as String?;
-            final phone = p['phone'] as String?;
-            // Use name if available, otherwise use phone, otherwise 'Guest'
-            if (name != null && name.trim().isNotEmpty) {
-              profileMap[p['id'] as String] = name;
-            } else if (phone != null && phone.trim().isNotEmpty) {
-              profileMap[p['id'] as String] = phone;
-            } else {
-              profileMap[p['id'] as String] = 'Guest';
+
+          try {
+            final profiles = await _db.from('profiles').select('id, name, phone').inFilter('id', userIds);
+            for (final p in profiles as List) {
+              final name = p['name'] as String?;
+              final phone = p['phone'] as String?;
+              final id = p['id'] as String;
+              if (name != null && name.trim().isNotEmpty) {
+                profileMap[id] = name.trim();
+              } else if (phone != null && phone.trim().isNotEmpty) {
+                profileMap[id] = phone.trim();
+              }
+            }
+          } catch (e) {
+            debugPrint('Profiles table fetch failed: $e');
+          }
+
+          try {
+            final legacyUsers = await _db.from('users').select('id, name, phone').inFilter('id', userIds);
+            for (final p in legacyUsers as List) {
+              final id = p['id'] as String;
+              if (profileMap.containsKey(id)) continue; // already found in profiles
+              
+              final name = p['name'] as String?;
+              final phone = p['phone'] as String?;
+              if (name != null && name.trim().isNotEmpty) {
+                profileMap[id] = name.trim();
+              } else if (phone != null && phone.trim().isNotEmpty) {
+                profileMap[id] = phone.trim();
+              }
+            }
+          } catch (e) {
+            debugPrint('Legacy users table fetch failed: $e');
+          }
+
+          for (final id in userIds) {
+            if (!profileMap.containsKey(id)) {
+              // Show partial UUID so the owner can still identify the user
+              profileMap[id] = 'User #${id.substring(0, 8).toUpperCase()}';
             }
           }
+
           for (var i = 0; i < filteredBookings.length; i++) {
-            filteredBookings[i] = filteredBookings[i].copyWith(
-              userName: profileMap[filteredBookings[i].userId]
-            );
+            final b = filteredBookings[i];
+            if (b.source == 'app') {
+              final resolved = profileMap[b.userId];
+              if (resolved != null) {
+                filteredBookings[i] = b.copyWith(userName: resolved);
+              }
+            }
           }
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('Profile fetch failed: $e');
+        }
       }
 
       return filteredBookings;
@@ -197,7 +231,7 @@ class CdBookingRepository {
     // Fetch active bookings
     final activeBookings = await _db
         .from('bookings')
-        .select('station_id, end_time, user_id')
+        .select('id, station_id, end_time, user_id')
         .inFilter('station_id', stationIds)
         .eq('status', 'confirmed')
         .lte('start_time', now.toIso8601String())
@@ -212,6 +246,7 @@ class CdBookingRepository {
           status: s['status'] as String? ?? 'active',
           isBusy: false,
           currentUser: null,
+          currentBookingId: null,
           busyUntil: null,
           source: null,
         );
@@ -224,13 +259,35 @@ class CdBookingRepository {
         .toSet()
         .toList();
 
-    final profiles =
-        await _db.from('profiles').select('id, name').inFilter('id', userIds);
-
-    // Create map of user profiles
     final profileMap = <String, String>{};
-    for (final p in profiles as List) {
-      profileMap[p['id'] as String] = p['name'] as String? ?? 'Unknown';
+    
+    try {
+      final profiles = await _db.from('profiles').select('id, name').inFilter('id', userIds);
+      for (final p in profiles as List) {
+        final name = p['name'] as String?;
+        if (name != null && name.trim().isNotEmpty) {
+          profileMap[p['id'] as String] = name.trim();
+        }
+      }
+    } catch (_) {}
+
+    try {
+      final legacyUsers = await _db.from('users').select('id, name').inFilter('id', userIds);
+      for (final p in legacyUsers as List) {
+        final id = p['id'] as String;
+        if (!profileMap.containsKey(id)) {
+          final name = p['name'] as String?;
+          if (name != null && name.trim().isNotEmpty) {
+            profileMap[id] = name.trim();
+          }
+        }
+      }
+    } catch (_) {}
+
+    for (final id in userIds) {
+      if (!profileMap.containsKey(id)) {
+        profileMap[id] = 'User #${id.substring(0, 8).toUpperCase()}';
+      }
     }
 
     // Merge booking data with profiles
@@ -251,6 +308,7 @@ class CdBookingRepository {
         status: s['status'] as String? ?? 'active',
         isBusy: booking != null,
         currentUser: booking != null ? (booking['userName'] as String?) : null,
+        currentBookingId: booking != null ? (booking['id'] as String?) : null,
         busyUntil: booking != null
             ? DateTime.tryParse(booking['end_time'] as String)
             : null,

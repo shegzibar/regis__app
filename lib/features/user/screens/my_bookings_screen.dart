@@ -292,7 +292,7 @@ class _BookingCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.green.withOpacity(0.15),
+                  color: AppColors.green.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -328,9 +328,9 @@ class _BookingCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _statusColor.withOpacity(0.15),
+                  color: _statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _statusColor.withOpacity(0.4)),
+                  border: Border.all(color: _statusColor.withValues(alpha: 0.4)),
                 ),
                 child: Text(
                   booking.statusDisplay,
@@ -382,7 +382,7 @@ class _BookingCard extends StatelessWidget {
                       onPressed: () => _cancelBooking(context),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
-                            color: AppColors.error.withOpacity(0.6)),
+                            color: AppColors.error.withValues(alpha: 0.6)),
                         foregroundColor: AppColors.error,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
@@ -398,7 +398,7 @@ class _BookingCard extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () =>
-                          context.push('/payment/${booking.id}?amount=${booking.totalAmount}'),
+                          context.push('/payment/${booking.id}?amount=${booking.bookingFee}'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.green,
                         foregroundColor: Colors.white,

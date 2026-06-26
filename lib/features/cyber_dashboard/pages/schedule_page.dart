@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../data/models/booking.dart';
 import '../constants/cd_colors.dart';
 import '../providers/cd_providers.dart';
+import '../widgets/session_details_sheet.dart';
 
 class SchedulePage extends ConsumerWidget {
   const SchedulePage({super.key});
@@ -130,7 +131,7 @@ class SchedulePage extends ConsumerWidget {
                                   color: kPurple),
                             ),
                           ),
-                          ...hourBookings.map((b) => _buildBookingCard(b, isAr)),
+                          ...hourBookings.map((b) => _buildBookingCard(context, ref, b, isAr)),
                           if (i < sortedHours.length - 1)
                             const Divider(height: 0.5, thickness: 0.5),
                         ],
@@ -146,7 +147,7 @@ class SchedulePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildBookingCard(Booking b, bool isAr) {
+  Widget _buildBookingCard(BuildContext context, WidgetRef ref, Booking b, bool isAr) {
     final statusColor = b.isConfirmed
         ? kTeal
         : b.isPendingPayment || b.isFeeUnderReview
@@ -155,8 +156,23 @@ class SchedulePage extends ConsumerWidget {
                 ? kRed
                 : kGray;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    return InkWell(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => SessionDetailsSheet(
+            booking: b, 
+            isAr: isAr,
+            onAdded: () {
+              ref.invalidate(todayBookingsProvider);
+            },
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -253,6 +269,6 @@ class SchedulePage extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }

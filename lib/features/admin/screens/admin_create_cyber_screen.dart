@@ -141,10 +141,10 @@ class _AdminCreateCyberScreenState
                     margin: const EdgeInsets.only(bottom: 20),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.green.withOpacity(0.1),
+                      color: AppColors.green.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: AppColors.green.withOpacity(0.4)),
+                          color: AppColors.green.withValues(alpha: 0.4)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,7 +297,7 @@ class _AdminCreateCyberScreenState
                       backgroundColor: AppColors.green,
                       foregroundColor: Colors.white,
                       disabledBackgroundColor:
-                          AppColors.green.withOpacity(0.5),
+                          AppColors.green.withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -464,7 +464,7 @@ class _SectionHeader extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: AppColors.green.withOpacity(0.12),
+            color: AppColors.green.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: AppColors.green, size: 18),

@@ -29,7 +29,7 @@ class RoomCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected 
-              ? AppColors.green.withOpacity(0.1) 
+              ? AppColors.green.withValues(alpha: 0.1) 
               : AppColors.darkCard,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
@@ -45,7 +45,7 @@ class RoomCard extends StatelessWidget {
               height: 56,
               decoration: BoxDecoration(
                 color: isSelected 
-                    ? AppColors.green.withOpacity(0.2) 
+                    ? AppColors.green.withValues(alpha: 0.2) 
                     : AppColors.darkSurface,
                 borderRadius: BorderRadius.circular(14),
               ),

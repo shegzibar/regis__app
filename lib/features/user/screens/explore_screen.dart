@@ -17,10 +17,7 @@ class ExploreScreen extends ConsumerStatefulWidget {
 
 class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   final TextEditingController _searchController = TextEditingController();
-  String _selectedCategory = 'All';
   String _searchQuery = '';
-
-  final List<String> _categories = ['All', 'PS5', 'PC Gaming', 'VIP Rooms'];
 
   @override
   void initState() {
@@ -189,37 +186,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
 
-            // Categories
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: SizedBox(
-                height: 40,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) {
-                    final category = _categories[index];
-                    final isSelected = category == _selectedCategory;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 12.0),
-                      child: CategoryChip(
-                        label: category,
-                        isSelected: isSelected,
-                        onTap: () {
-                          setState(() {
-                            _selectedCategory = category;
-                          });
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
 
             const SizedBox(height: 24),
 

@@ -12,7 +12,7 @@ import 'pages/stations_page.dart';
 import 'pages/cyber_profile_page.dart';
 import 'pages/workers_page.dart';
 import 'pages/wallet_points_page.dart';
-import '../../owner/screens/owner_inventory_screen.dart';
+import '../owner/screens/owner_inventory_screen.dart';
 import 'widgets/cd_top_bar.dart';
 import 'widgets/cd_sidebar.dart';
 
@@ -137,8 +137,8 @@ class _CyberDashboardShellState
   Widget _currentPage(String page) {
     return switch (page) {
       'home' => const HomePage(),
-      'manual' => const ManualBookingPage(),
-      'payments' => const PaymentsPage(),
+
+
       'schedule' => const SchedulePage(),
       'stations' => const StationsPage(),
       'profile' => const CyberProfilePage(),

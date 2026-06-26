@@ -118,8 +118,8 @@ class GamingCenterBottomSheet extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: center['isOpen'] 
-                            ? AppColors.green.withOpacity(0.2) 
-                            : AppColors.error.withOpacity(0.2),
+                            ? AppColors.green.withValues(alpha: 0.2) 
+                            : AppColors.error.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                           color: center['isOpen'] 

@@ -71,7 +71,7 @@ class _SidebarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fgColor = isActive ? AppColors.green : AppColors.textMuted;
-    final bgColor = isActive ? AppColors.green.withOpacity(0.1) : Colors.transparent;
+    final bgColor = isActive ? AppColors.green.withValues(alpha: 0.1) : Colors.transparent;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

@@ -24,18 +24,8 @@ const _navItems = [
     labelAr: 'الرئيسية',
     labelEn: 'Home',
   ),
-  _NavItem(
-    key: 'manual',
-    icon: Icons.add_circle_outline,
-    labelAr: 'حجز يدوي',
-    labelEn: 'Manual Booking',
-  ),
-  _NavItem(
-    key: 'payments',
-    icon: Icons.payments_outlined,
-    labelAr: 'المدفوعات',
-    labelEn: 'Payments',
-  ),
+
+
   _NavItem(
     key: 'schedule',
     icon: Icons.calendar_month_outlined,
@@ -81,7 +71,6 @@ class CdSidebar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(cdLangProvider);
     final currentPage = ref.watch(cdSelectedPageProvider);
-    final pendingCount = ref.watch(pendingPaymentsCountProvider);
     final isAr = lang == 'ar';
 
     return Container(
@@ -108,14 +97,13 @@ class CdSidebar extends ConsumerWidget {
               itemBuilder: (_, i) {
                 final item = _navItems[i];
                 final isSelected = currentPage == item.key;
-                final hasBadge =
-                    item.key == 'payments' && pendingCount > 0;
+                final hasBadge = false;
 
                 return _SidebarTile(
                   item: item,
                   isSelected: isSelected,
                   isAr: isAr,
-                  badge: hasBadge ? pendingCount : null,
+                  badge: null,
                   onTap: () {
                     ref
                         .read(cdSelectedPageProvider.notifier)

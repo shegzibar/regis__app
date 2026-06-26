@@ -13,7 +13,7 @@ class AppConstants {
   static const bool bypassRoleChecksForTesting = true;
 
   /// When true, sign-up shows a role picker (user, owner, manager, admin).
-  static const bool allowTestRoleSelection = true;
+  static const bool allowTestRoleSelection = false;
 
   // Booking Configuration
   static const double bookingFee = 5.0; // 5 EGP

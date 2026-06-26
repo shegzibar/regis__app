@@ -272,7 +272,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                       onSelected: (_) =>
                           setState(() => _filterStatus = f.$1),
                       backgroundColor: AppColors.darkCard,
-                      selectedColor: AppColors.green.withOpacity(0.2),
+                      selectedColor: AppColors.green.withValues(alpha: 0.2),
                       checkmarkColor: AppColors.green,
                       labelStyle: TextStyle(
                         color: selected ? AppColors.green : AppColors.textMuted,
@@ -283,7 +283,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                       ),
                       side: BorderSide(
                         color: selected
-                            ? AppColors.green.withOpacity(0.5)
+                            ? AppColors.green.withValues(alpha: 0.5)
                             : AppColors.darkBorder,
                       ),
                       showCheckmark: false,
@@ -330,7 +330,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.receipt_long_outlined,
-                              color: AppColors.textMuted.withOpacity(0.5),
+                              color: AppColors.textMuted.withValues(alpha: 0.5),
                               size: 64),
                           const SizedBox(height: 16),
                           const Text(
@@ -539,7 +539,7 @@ class _OrderCard extends StatelessWidget {
                 // Avatar
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: AppColors.green.withOpacity(0.15),
+                  backgroundColor: AppColors.green.withValues(alpha: 0.15),
                   child: Text(
                     (user?['name'] ?? '?').toString().isNotEmpty
                         ? (user!['name'] as String)[0].toUpperCase()
@@ -634,9 +634,9 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         _statusLabel(status),

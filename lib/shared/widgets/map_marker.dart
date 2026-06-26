@@ -81,14 +81,14 @@ class _MapMarkerState extends State<MapMarker>
                             : (widget.isOpen
                                 ? AppColors.green
                                 : AppColors.error))
-                        .withOpacity(widget.isSelected ? 0.5 : 0.3),
+                        .withValues(alpha: widget.isSelected ? 0.5 : 0.3),
                     blurRadius: widget.isSelected ? 16 : 8,
                     spreadRadius: widget.isSelected ? 2 : 0,
                     offset: const Offset(0, 4),
                   ),
                   if (widget.isSelected)
                     BoxShadow(
-                      color: AppColors.green.withOpacity(0.2),
+                      color: AppColors.green.withValues(alpha: 0.2),
                       blurRadius: 24,
                       spreadRadius: 4,
                     ),
@@ -123,7 +123,7 @@ class _MapMarkerState extends State<MapMarker>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.darkCard.withOpacity(0.95),
+                color: AppColors.darkCard.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: widget.isSelected
@@ -133,7 +133,7 @@ class _MapMarkerState extends State<MapMarker>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha: 0.4),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),

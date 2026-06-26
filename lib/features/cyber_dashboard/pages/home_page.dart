@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../data/models/booking.dart';
 import '../../owner/screens/owner_inventory_screen.dart'; // We can use the inventory provider here
 import '../constants/cd_colors.dart';
 import '../providers/cd_providers.dart';
+import '../widgets/session_details_sheet.dart';
+import '../../../core/providers/owner_dashboard_provider.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -288,7 +289,6 @@ class HomePage extends ConsumerWidget {
           ),
         ],
       ),
-      ),
     );
   }
 
@@ -297,177 +297,18 @@ class HomePage extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _SessionDetailsSheet(booking: booking, isAr: isAr),
-    );
-  }
-}
-
-class _SessionDetailsSheet extends ConsumerStatefulWidget {
-  final Booking booking;
-  final bool isAr;
-
-  const _SessionDetailsSheet({required this.booking, required this.isAr});
-
-  @override
-  ConsumerState<_SessionDetailsSheet> createState() => _SessionDetailsSheetState();
-}
-
-class _SessionDetailsSheetState extends ConsumerState<_SessionDetailsSheet> {
-  bool _isAddingItem = false;
-  
-  @override
-  Widget build(BuildContext context) {
-    final b = widget.booking;
-    final isAr = widget.isAr;
-    
-    return Container(
-      decoration: const BoxDecoration(
-        color: kBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-        top: 24,
-        left: 24,
-        right: 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                isAr ? 'تفاصيل الجلسة' : 'Session Details',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-              )
-            ],
-          ),
-          const Divider(),
-          Text('User: ${b.userName ?? (isAr ? 'عميل حضوري' : 'Walk-in')}'),
-          Text('Station: ${b.stationName} (${b.roomName})'),
-          Text('Start: ${DateFormat('HH:mm').format(b.startTime)}'),
-          Text('End: ${DateFormat('HH:mm').format(b.endTime)}'),
-          Text('Total: ${b.totalAmount} EGP', style: const TextStyle(fontWeight: FontWeight.bold, color: kTeal)),
-          
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                isAr ? 'الطلبات الإضافية' : 'Additional Items',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              TextButton.icon(
-                icon: const Icon(Icons.add, size: 16),
-                label: Text(isAr ? 'إضافة' : 'Add Item'),
-                onPressed: () => setState(() => _isAddingItem = !_isAddingItem),
-              )
-            ],
-          ),
-          if (_isAddingItem) _AddItemForm(bookingId: b.id, isAr: isAr, onAdded: () {
-            setState(() => _isAddingItem = false);
-            Navigator.pop(context); // Close the sheet to refresh data, or let Riverpod handle it.
-          }),
-        ],
+      builder: (context) => SessionDetailsSheet(
+        booking: booking, 
+        isAr: isAr,
+        onAdded: () {
+          ref.invalidate(todayBookingsProvider);
+          ref.invalidate(todayRevenueProvider);
+        },
       ),
     );
   }
 }
 
-class _AddItemForm extends ConsumerStatefulWidget {
-  final String bookingId;
-  final bool isAr;
-  final VoidCallback onAdded;
-
-  const _AddItemForm({required this.bookingId, required this.isAr, required this.onAdded});
-
-  @override
-  ConsumerState<_AddItemForm> createState() => _AddItemFormState();
-}
-
-class _AddItemFormState extends ConsumerState<_AddItemForm> {
-  String? _selectedItemId;
-  int _quantity = 1;
-  bool _saving = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final inventoryAsync = ref.watch(ownerInventoryProvider);
-    
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: kWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kBorder),
-      ),
-      child: inventoryAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => const Text('Error loading inventory'),
-        data: (items) {
-          final activeItems = items.where((i) => i.isActive).toList();
-          if (activeItems.isEmpty) return const Text('No active inventory items available.');
-          
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DropdownButtonFormField<String>(
-                value: _selectedItemId,
-                decoration: const InputDecoration(labelText: 'Select Item', border: OutlineInputBorder()),
-                items: activeItems.map((item) => DropdownMenuItem(
-                  value: item.id,
-                  child: Text('${item.name} - ${item.price} EGP'),
-                )).toList(),
-                onChanged: (val) => setState(() => _selectedItemId = val),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Text('Quantity:'),
-                  IconButton(icon: const Icon(Icons.remove), onPressed: () => setState(() { if (_quantity > 1) _quantity--; })),
-                  Text('$_quantity', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  IconButton(icon: const Icon(Icons.add), onPressed: () => setState(() => _quantity++)),
-                  const Spacer(),
-                  ElevatedButton(
-                    onPressed: _saving || _selectedItemId == null ? null : _add,
-                    style: ElevatedButton.styleFrom(backgroundColor: kTeal, foregroundColor: Colors.white),
-                    child: _saving ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Add'),
-                  )
-                ],
-              )
-            ],
-          );
-        }
-      ),
-    );
-  }
-
-  Future<void> _add() async {
-    setState(() => _saving = true);
-    try {
-      final items = ref.read(ownerInventoryProvider).valueOrNull ?? [];
-      final item = items.firstWhere((i) => i.id == _selectedItemId);
-      await ref.read(ownerRepositoryProvider).addBookingItem(
-        bookingId: widget.bookingId,
-        item: item,
-        quantity: _quantity,
-      );
-      ref.invalidate(todayBookingsProvider);
-      ref.invalidate(todayRevenueProvider);
-      widget.onAdded();
-    } catch(e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-    } finally {
-      if(mounted) setState(() => _saving = false);
-    }
-  }
-}
 
 class _StatCard extends StatelessWidget {
   final IconData icon;
