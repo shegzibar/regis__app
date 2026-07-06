@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/auth/screens/auth_screen.dart';
+import '../../features/auth/screens/cyber_auth_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/cyber_dashboard/cyber_dashboard_shell.dart';
 import '../../shared/screens/access_denied_screen.dart';
@@ -56,7 +56,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth',
         name: 'auth',
-        builder: (context, state) => const AuthScreen(),
+        builder: (context, state) => const CyberAuthScreen(),
       ),
       GoRoute(
         path: '/signup',

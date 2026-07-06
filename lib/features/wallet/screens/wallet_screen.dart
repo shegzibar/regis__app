@@ -289,19 +289,17 @@ class _TransactionsList extends ConsumerWidget {
                         Text(
                           tx.note ?? (isEarned ? 'Points Earned' : 'Points Redeemed'),
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            if (tx.cyberName != null) ...[
-                              Text(tx.cyberName!, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                              const Text(' • ', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                            ],
-                            Text(
-                              DateFormat('MMM d, yyyy').format(tx.createdAt),
-                              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                            ),
-                          ],
+                        Text(
+                          tx.cyberName != null 
+                              ? '${tx.cyberName} • ${DateFormat('MMM d, yyyy').format(tx.createdAt)}'
+                              : DateFormat('MMM d, yyyy').format(tx.createdAt),
+                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

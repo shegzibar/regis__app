@@ -14,11 +14,11 @@ extension AppVariantX on AppVariant {
   String get appTitle {
     switch (this) {
       case AppVariant.user:
-        return 'GamingHub';
+        return 'Forya';
       case AppVariant.admin:
-        return 'GamingHub Admin';
+        return 'Forya Admin';
       case AppVariant.owner:
-        return 'GamingHub Cyber';
+        return 'Forya Cyber';
     }
   }
 

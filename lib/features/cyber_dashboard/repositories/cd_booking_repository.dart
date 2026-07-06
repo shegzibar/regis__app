@@ -105,6 +105,74 @@ class CdBookingRepository {
     }
   }
 
+  /// All bookings for this cyber, regardless of date, used for Weekly/Monthly views.
+  Future<List<Booking>> getAllBookings(String cyberId) async {
+    try {
+      final now = DateTime.now();
+      // Fetch from 1 month ago up to 3 months in the future to cover all tabs
+      final windowStart = now.subtract(const Duration(days: 30));
+      final windowEnd = now.add(const Duration(days: 90));
+
+      final data = await _db.from('bookings').select('''
+        *,
+        stations ( id, name, rooms ( id, name, type, cyber_id ) )
+      ''')
+          .gte('start_time', windowStart.toIso8601String())
+          .lt('start_time', windowEnd.toIso8601String())
+          .order('start_time');
+
+      final allBookings = (data as List).map((b) => Booking.fromMap(b)).toList();
+
+      final filteredBookings = allBookings.where((b) => b.cyberId == cyberId).toList();
+
+      if (filteredBookings.isNotEmpty) {
+        final userIds = filteredBookings.map((b) => b.userId).toSet().toList();
+        try {
+          final profileMap = <String, String>{};
+
+          try {
+            final profiles = await _db.from('profiles').select('id, name, phone').inFilter('id', userIds);
+            for (final p in profiles as List) {
+              final name = p['name'] as String?;
+              final phone = p['phone'] as String?;
+              final id = p['id'] as String;
+              if (name != null && name.trim().isNotEmpty) {
+                profileMap[id] = name.trim();
+              } else if (phone != null && phone.trim().isNotEmpty) {
+                profileMap[id] = phone.trim();
+              }
+            }
+          } catch (e) {
+            debugPrint('Profiles table fetch failed: $e');
+          }
+
+          for (final id in userIds) {
+            if (!profileMap.containsKey(id)) {
+              profileMap[id] = 'User #${id.substring(0, 8).toUpperCase()}';
+            }
+          }
+
+          for (var i = 0; i < filteredBookings.length; i++) {
+            final b = filteredBookings[i];
+            if (b.source == 'app') {
+              final resolved = profileMap[b.userId];
+              if (resolved != null) {
+                filteredBookings[i] = b.copyWith(userName: resolved);
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('Profile fetch failed: $e');
+        }
+      }
+
+      return filteredBookings;
+    } catch (e) {
+      debugPrint('getAllBookings failed: $e');
+      return [];
+    }
+  }
+
   /// Sum of confirmed booking amounts for today for this cyber.
   /// Uses start_time (not created_at) so we count sessions happening today.
   Future<double> getTodayRevenue(String cyberId) async {
@@ -234,8 +302,8 @@ class CdBookingRepository {
         .select('id, station_id, end_time, user_id')
         .inFilter('station_id', stationIds)
         .eq('status', 'confirmed')
-        .lte('start_time', now.toIso8601String())
-        .gte('end_time', now.toIso8601String());
+        .lte('start_time', now.toUtc().toIso8601String())
+        .gte('end_time', now.toUtc().toIso8601String());
 
     if ((activeBookings as List).isEmpty) {
       return stations.map<StationLive>((s) {

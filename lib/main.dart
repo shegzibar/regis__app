@@ -4,6 +4,6 @@ import 'core/config/app_variant.dart';
 
 /// Consumer app — discover and book gaming centers.
 void main() async {
-  await initializeGamingHub();
-  runApp(buildGamingHubRoot(variant: AppVariant.user));
+  await initializeForya();
+  runApp(buildForyaRoot(variant: AppVariant.user));
 }

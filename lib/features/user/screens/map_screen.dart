@@ -100,24 +100,41 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   Future<void> _getCurrentLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      if (!mounted) return;
-      final center = LatLng(position.latitude, position.longitude);
-      setState(() {
-        _currentPosition = position;
-        _isLoadingLocation = false;
-      });
+      // 1. First attempt to get the last known position for a quick initial load
+      Position? position = await Geolocator.getLastKnownPosition();
+      if (position != null && mounted) {
+        _updateLocationState(position);
+        return; // Return immediately to prevent any lag!
+      }
 
-      if (_isMapReady) {
-        _mapController.move(center, 16.0);
-      } else {
-        // Map not ready yet — store and move once onMapReady fires
-        _pendingCenter = center;
+      // 2. Fallback to a fast, low-accuracy fetch
+      position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.low,
+        timeLimit: const Duration(seconds: 5),
+      );
+      
+      if (mounted) {
+        _updateLocationState(position);
       }
     } catch (e) {
       debugPrint("Error fetching location: $e");
       if (mounted) setState(() => _isLoadingLocation = false);
+    }
+  }
+
+  void _updateLocationState(Position position) {
+    if (!mounted) return;
+    final center = LatLng(position.latitude, position.longitude);
+    setState(() {
+      _currentPosition = position;
+      _isLoadingLocation = false;
+    });
+
+    if (_isMapReady) {
+      _mapController.move(center, 16.0);
+    } else {
+      // Map not ready yet — store and move once onMapReady fires
+      _pendingCenter = center;
     }
   }
 
@@ -260,11 +277,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               return Marker(
                                 point: LatLng(lat, lng),
                                 width: 160,
-                                height: 100,
+                                height: 130,
                                 child: MapMarker(
                                   name: cyber.name,
-                                  isOpen: true,
+                                  isOpen: cyber.isOpenNow,
                                   isSelected: cyber.id == _selectedCenterId,
+                                  rating: cyber.rating,
                                   onTap: () => _onMarkerTap(cyber.id, lat, lng),
                                 ),
                               );

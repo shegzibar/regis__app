@@ -40,8 +40,8 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(const AndroidNotificationChannel(
-          'gaminghub_bookings',
-          'GamingHub Bookings',
+          'Forya_bookings',
+          'Forya Bookings',
           description: 'Booking notifications',
           importance: Importance.high,
         ));
@@ -55,8 +55,8 @@ class NotificationService {
   }) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'gaminghub_bookings',
-      'GamingHub Bookings',
+      'Forya_bookings',
+      'Forya Bookings',
       channelDescription: 'Booking notifications',
       importance: Importance.high,
       priority: Priority.high,

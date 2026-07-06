@@ -9,7 +9,7 @@ class BookingRepository {
     try {
       final response = await _supabase
           .from('bookings')
-          .select()
+          .select('*, stations(name, rooms(name, cyber_id))')
           .eq('user_id', userId)
           .order('created_at', ascending: false);
 
@@ -26,7 +26,7 @@ class BookingRepository {
     try {
       final response = await _supabase
           .from('bookings')
-          .select()
+          .select('*, stations(name, rooms(name, cyber_id))')
           .eq('id', bookingId)
           .maybeSingle();
 

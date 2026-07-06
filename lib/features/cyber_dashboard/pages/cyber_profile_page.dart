@@ -4,7 +4,10 @@ import '../../../data/models/cyber.dart';
 import '../../../data/models/room.dart';
 import '../constants/cd_colors.dart';
 import '../providers/cd_providers.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/providers/owner_dashboard_provider.dart';
+import '../providers/photo_providers.dart';
 
 class CyberProfilePage extends ConsumerStatefulWidget {
   const CyberProfilePage({super.key});
@@ -221,8 +224,14 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                                     ),
                                     child: Row(
                                       children: [
-                                        Text(r.typeIcon,
-                                            style: const TextStyle(fontSize: 20)),
+                                        if (r.imageUrl != null && r.imageUrl!.isNotEmpty)
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(kRadiusSm),
+                                            child: Image.network(r.imageUrl!, width: 40, height: 40, fit: BoxFit.cover),
+                                          )
+                                        else
+                                          Text(r.typeIcon,
+                                              style: const TextStyle(fontSize: 20)),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
@@ -254,6 +263,24 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                                           ),
                                         ),
                                           IconButton(
+                                            icon: const Icon(Icons.image, size: 16, color: kPurple),
+                                            onPressed: () async {
+                                              final picker = ImagePicker();
+                                              final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                                              if (image != null) {
+                                                try {
+                                                  await ref.read(uploadRoomImageProvider({'roomId': r.id, 'file': image}).future);
+                                                  ref.invalidate(cyberRoomsProvider);
+                                                  if (context.mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isAr ? 'تم رفع الصورة' : 'Image uploaded')));
+                                                  }
+                                                } catch (e) {
+                                                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+                                                }
+                                              }
+                                            },
+                                          ),
+                                          IconButton(
                                             icon: const Icon(Icons.edit,
                                                 size: 16, color: kGray),
                                             onPressed: () => _showEditPriceDialog(
@@ -277,6 +304,164 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 20),
+
+              // Photos Section
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: kWhite,
+                  borderRadius: BorderRadius.circular(kRadius),
+                  border: Border.all(color: kBorder, width: 0.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isAr ? 'الصور' : 'Photos',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const Divider(height: 24, thickness: 0.5),
+                    const SizedBox(height: 8),
+
+                    // Cover Photo
+                    Text(isAr ? 'صورة الغلاف' : 'Cover Photo', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () async {
+                        final picker = ImagePicker();
+                        final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                        if (image != null) {
+                          try {
+                            await ref.read(uploadCoverImageProvider({'cyberId': cyber.id, 'file': image}).future);
+                            ref.invalidate(currentCyberProvider);
+                          } catch (e) {
+                            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+                          }
+                        }
+                      },
+                      child: Container(
+                        height: 150,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: kBg,
+                          borderRadius: BorderRadius.circular(kRadiusSm),
+                          border: Border.all(color: kBorder, width: 1, style: BorderStyle.solid),
+                          image: cyber.coverImage != null
+                              ? DecorationImage(image: NetworkImage(cyber.coverImage!), fit: BoxFit.cover)
+                              : null,
+                        ),
+                        child: cyber.coverImage == null
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.add_a_photo, color: kGray, size: 40),
+                                  const SizedBox(height: 8),
+                                  Text(isAr ? 'اضغط لإضافة صورة غلاف' : 'Tap to add cover photo', style: const TextStyle(color: kGray)),
+                                ],
+                              )
+                            : null,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Gallery
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(isAr ? 'معرض الصور' : 'Gallery', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        TextButton.icon(
+                          icon: const Icon(Icons.add_photo_alternate, size: 16),
+                          label: Text(isAr ? 'إضافة صور' : 'Add photos'),
+                          onPressed: () async {
+                            final picker = ImagePicker();
+                            final List<XFile> images = await picker.pickMultiImage();
+                            if (images.isNotEmpty) {
+                              try {
+                                await ref.read(addGalleryImageProvider({'cyberId': cyber.id, 'files': images}).future);
+                                ref.invalidate(currentCyberProvider);
+                              } catch (e) {
+                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    if (cyber.images.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        width: double.infinity,
+                        decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(kRadiusSm)),
+                        child: Text(isAr ? 'لا توجد صور في المعرض' : 'No photos in gallery', textAlign: TextAlign.center, style: const TextStyle(color: kGray)),
+                      )
+                    else
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                        itemCount: cyber.images.length,
+                        itemBuilder: (context, index) {
+                          final url = cyber.images[index];
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(kRadiusSm),
+                                child: Image.network(url, fit: BoxFit.cover),
+                              ),
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: Text(isAr ? 'حذف الصورة' : 'Delete Photo'),
+                                        content: Text(isAr ? 'هل أنت متأكد من حذف هذه الصورة؟' : 'Are you sure you want to delete this photo?'),
+                                        actions: [
+                                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(isAr ? 'إلغاء' : 'Cancel')),
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(backgroundColor: kRed, foregroundColor: Colors.white),
+                                            onPressed: () => Navigator.pop(ctx, true),
+                                            child: Text(isAr ? 'حذف' : 'Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm == true) {
+                                      try {
+                                        await ref.read(removeGalleryImageProvider({'cyberId': cyber.id, 'url': url}).future);
+                                        ref.invalidate(currentCyberProvider);
+                                      } catch (e) {
+                                        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+                                      }
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.delete, color: Colors.white, size: 16),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                  ],
+                ),
               ),
             ],
           );

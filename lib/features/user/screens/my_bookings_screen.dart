@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/review_provider.dart';
 import '../../../data/models/booking.dart';
 import '../../../data/repositories/booking_repository.dart';
+import '../../../data/repositories/review_repository.dart';
 
 // Provider for user bookings
 final userBookingsProvider = FutureProvider.autoDispose<List<Booking>>((ref) async {
@@ -240,7 +242,7 @@ class _BookingList extends ConsumerWidget {
   }
 }
 
-class _BookingCard extends StatelessWidget {
+class _BookingCard extends ConsumerStatefulWidget {
   final Booking booking;
   final bool showCancelButton;
   final bool showPayButton;
@@ -255,8 +257,37 @@ class _BookingCard extends StatelessWidget {
     required this.onActionDone,
   });
 
+  @override
+  ConsumerState<_BookingCard> createState() => _BookingCardState();
+}
+
+class _BookingCardState extends ConsumerState<_BookingCard> {
+  bool _hasReviewed = false;
+  bool _checkingReview = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkReviewStatus();
+  }
+
+  Future<void> _checkReviewStatus() async {
+    if (!widget.showReviewButton) {
+      if (mounted) setState(() => _checkingReview = false);
+      return;
+    }
+    
+    final hasReviewed = await ref.read(reviewRepositoryProvider).hasReviewedBooking(widget.booking.id);
+    if (mounted) {
+      setState(() {
+        _hasReviewed = hasReviewed;
+        _checkingReview = false;
+      });
+    }
+  }
+
   Color get _statusColor {
-    switch (booking.status) {
+    switch (widget.booking.status) {
       case 'confirmed':
         return AppColors.statusConfirmed;
       case 'pending_payment':
@@ -307,7 +338,7 @@ class _BookingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Booking #${booking.id.substring(0, 8).toUpperCase()}',
+                      'Booking #${widget.booking.id.substring(0, 8).toUpperCase()}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -316,7 +347,7 @@ class _BookingCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _formatDate(booking.startTime),
+                      _formatDate(widget.booking.startTime),
                       style: const TextStyle(
                           color: AppColors.textMuted, fontSize: 12),
                     ),
@@ -333,7 +364,7 @@ class _BookingCard extends StatelessWidget {
                   border: Border.all(color: _statusColor.withValues(alpha: 0.4)),
                 ),
                 child: Text(
-                  booking.statusDisplay,
+                  widget.booking.statusDisplay,
                   style: TextStyle(
                     color: _statusColor,
                     fontSize: 11,
@@ -354,29 +385,29 @@ class _BookingCard extends StatelessWidget {
               _InfoItem(
                 icon: Icons.access_time,
                 label: 'Duration',
-                value: '${booking.durationHours.toInt()}h',
+                value: '${widget.booking.durationHours.toInt()}h',
               ),
               const SizedBox(width: 24),
               _InfoItem(
                 icon: Icons.schedule,
                 label: 'Time',
-                value: _formatTime(booking.startTime),
+                value: _formatTime(widget.booking.startTime),
               ),
               const SizedBox(width: 24),
               _InfoItem(
                 icon: Icons.payments_outlined,
                 label: 'Fee',
-                value: 'EGP ${booking.bookingFee.toStringAsFixed(0)}',
+                value: 'EGP ${widget.booking.bookingFee.toStringAsFixed(0)}',
               ),
             ],
           ),
 
           // Action buttons
-          if (showPayButton || showCancelButton || showReviewButton) ...[
+          if (widget.showPayButton || widget.showCancelButton || (widget.showReviewButton && !_checkingReview)) ...[
             const SizedBox(height: 16),
             Row(
               children: [
-                if (showCancelButton)
+                if (widget.showCancelButton)
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => _cancelBooking(context),
@@ -392,13 +423,13 @@ class _BookingCard extends StatelessWidget {
                           style: TextStyle(fontSize: 13)),
                     ),
                   ),
-                if (showCancelButton && showPayButton)
+                if (widget.showCancelButton && widget.showPayButton)
                   const SizedBox(width: 12),
-                if (showPayButton)
+                if (widget.showPayButton)
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () =>
-                          context.push('/payment/${booking.id}?amount=${booking.bookingFee}'),
+                          context.push('/payment/${widget.booking.id}?amount=${widget.booking.bookingFee}'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.green,
                         foregroundColor: Colors.white,
@@ -410,16 +441,18 @@ class _BookingCard extends StatelessWidget {
                           style: TextStyle(fontSize: 13)),
                     ),
                   ),
-                if (showReviewButton)
+                if (widget.showReviewButton && !_checkingReview)
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.star_outline, size: 16),
-                      label: const Text('Leave Review',
-                          style: TextStyle(fontSize: 13)),
+                      onPressed: _hasReviewed ? null : () => _showReviewSheet(context),
+                      icon: Icon(_hasReviewed ? Icons.check : Icons.star_outline, size: 16),
+                      label: Text(_hasReviewed ? 'Reviewed' : 'Leave Review',
+                          style: const TextStyle(fontSize: 13)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.purple,
+                        backgroundColor: _hasReviewed ? AppColors.darkBorder : AppColors.purple,
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor: AppColors.darkBg,
+                        disabledForegroundColor: AppColors.textMuted,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -430,6 +463,20 @@ class _BookingCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  void _showReviewSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _ReviewSheet(
+        booking: widget.booking,
+        onSubmitted: () {
+          setState(() => _hasReviewed = true);
+        },
       ),
     );
   }
@@ -463,8 +510,8 @@ class _BookingCard extends StatelessWidget {
 
     if (confirmed == true) {
       try {
-        await BookingRepository().cancelBooking(booking.id);
-        onActionDone();
+        await BookingRepository().cancelBooking(widget.booking.id);
+        widget.onActionDone();
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -529,3 +576,188 @@ class _InfoItem extends StatelessWidget {
     );
   }
 }
+
+class _ReviewSheet extends ConsumerStatefulWidget {
+  final Booking booking;
+  final VoidCallback onSubmitted;
+
+  const _ReviewSheet({
+    required this.booking,
+    required this.onSubmitted,
+  });
+
+  @override
+  ConsumerState<_ReviewSheet> createState() => _ReviewSheetState();
+}
+
+class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
+  int _rating = 0;
+  final _commentController = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_rating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a rating')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    try {
+      // Assuming cyber_id can be derived from station's room. 
+      // If booking.cyberId is null, we might need to query it. But booking model has cyberId!
+      final cyberId = widget.booking.cyberId;
+      if (cyberId == null) throw Exception('Cyber ID not found for this booking');
+
+      await ref.read(reviewNotifierProvider.notifier).submitReview(
+        cyberId: cyberId,
+        bookingId: widget.booking.id,
+        rating: _rating,
+        comment: _commentController.text.trim(),
+      );
+
+      widget.onSubmitted();
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Review submitted successfully!'),
+            backgroundColor: AppColors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.darkBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        top: 24,
+        left: 24,
+        right: 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Rate your experience',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, color: AppColors.textMuted),
+                onPressed: () => Navigator.pop(context),
+              )
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Star Rating
+          Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(5, (index) {
+                return IconButton(
+                  onPressed: () => setState(() => _rating = index + 1),
+                  icon: Icon(
+                    index < _rating ? Icons.star : Icons.star_border,
+                    color: index < _rating ? Colors.amber : AppColors.textMuted,
+                    size: 40,
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Comment
+          const Text(
+            'Comment (Optional)',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Tell us about your experience...',
+              hintStyle: const TextStyle(color: AppColors.textMuted),
+              filled: true,
+              fillColor: AppColors.darkCard,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.darkBorder),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.darkBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.purple),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Submit Button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: _isSubmitting ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.purple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2))
+                  : const Text(
+                      'Submit Review',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

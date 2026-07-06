@@ -41,7 +41,20 @@ class LocationNotifier extends AsyncNotifier<Position?> {
       throw Exception('Location permissions are permanently denied.');
     }
 
-    return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+    // Instantly return last known position if available
+    Position? position = await Geolocator.getLastKnownPosition();
+    if (position != null) {
+      return position;
+    }
+
+    // If absolutely necessary, fetch with low accuracy for speed (never high)
+    try {
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.low,
+        timeLimit: const Duration(seconds: 5),
+      );
+    } catch (e) {
+      return null;
+    }
   }
 }

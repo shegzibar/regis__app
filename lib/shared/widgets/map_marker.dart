@@ -6,6 +6,7 @@ class MapMarker extends StatefulWidget {
   final bool isOpen;
   final bool isSelected;
   final VoidCallback onTap;
+  final double rating;
 
   const MapMarker({
     super.key,
@@ -13,6 +14,7 @@ class MapMarker extends StatefulWidget {
     required this.isOpen,
     required this.isSelected,
     required this.onTap,
+    this.rating = 0.0,
   });
 
   @override
@@ -60,7 +62,42 @@ class _MapMarkerState extends State<MapMarker>
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
+            // Rating Badge (above icon)
+            if (widget.rating > 0)
+              Container(
+                margin: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.darkCard.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.darkBorder, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star_rounded, color: Colors.amber, size: 12),
+                    const SizedBox(width: 2),
+                    Text(
+                      widget.rating.toStringAsFixed(1),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Animated Marker Pin with glow effect
             Container(
               width: 44,
@@ -117,11 +154,11 @@ class _MapMarkerState extends State<MapMarker>
               ),
             ),
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 3),
 
             // Name Label with backdrop
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.darkCard.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(8),

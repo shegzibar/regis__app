@@ -5,7 +5,7 @@ class AppConstants {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuYWpoeWxldHhmenZodWdkc3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2Njc3MzMsImV4cCI6MjA5NTI0MzczM30.AeZbuqF1HIGDiVXxCxlQLuyyQY0YlRB8BzAy4ZC4dUQ';
 
   // App Configuration
-  static const String appName = 'GamingHub';
+  static const String appName = 'Forya';
   static const String appVersion = '1.0.0';
 
   /// When true, any logged-in email account can open user / admin / cyber apps.

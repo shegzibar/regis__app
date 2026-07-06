@@ -12,13 +12,43 @@ final authStateProvider =
   return AuthStateNotifier();
 });
 
-// Exposes whether the app is still restoring a session on cold start
-final authInitializingProvider = Provider<bool>((ref) {
-  // Check if a Supabase session exists but AppUser hasn't been hydrated yet
-  final user = ref.watch(authStateProvider);
-  final supabaseUser = SupabaseService().currentUser;
-  return user == null && supabaseUser != null;
+// Exposes whether the app is still initializing (showing splash screen)
+final authInitializingProvider = StateNotifierProvider<AuthInitNotifier, bool>((ref) {
+  return AuthInitNotifier(ref);
 });
+
+class AuthInitNotifier extends StateNotifier<bool> {
+  final Ref ref;
+  bool _minDelayPassed = false;
+
+  AuthInitNotifier(this.ref) : super(true) {
+    ref.listen<AppUser?>(authStateProvider, (previous, next) {
+      _checkState();
+    });
+    _init();
+  }
+
+  Future<void> _init() async {
+    // Force minimum 2 second delay to show splash screen animation
+    await Future.delayed(const Duration(milliseconds: 2000));
+    if (!mounted) return;
+    _minDelayPassed = true;
+    _checkState();
+  }
+
+  void _checkState() {
+    if (!_minDelayPassed) return;
+
+    final user = ref.read(authStateProvider);
+    final supabaseUser = SupabaseService().currentUser;
+    
+    if (user == null && supabaseUser != null) {
+      state = true; // still hydrating
+    } else {
+      state = false; // done hydrating and min delay passed
+    }
+  }
+}
 
 class AuthStateNotifier extends StateNotifier<AppUser?> {
   StreamSubscription? _authSubscription;
@@ -166,6 +196,9 @@ class AuthService {
           'role': role,
           'phone': phone ?? authUser.phone ?? '',
         };
+        if (role == 'owner') {
+          profileData['short_id'] = 'CYB${(10000 + DateTime.now().millisecondsSinceEpoch % 90000)}';
+        }
       }
 
       if (needsUpdate) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -41,7 +42,7 @@ class CdTopBar extends ConsumerWidget {
               const SizedBox(width: 10),
               cyberAsync.when(
                 data: (cyber) => Text(
-                  cyber?.name ?? 'GamingHub Cyber',
+                  cyber?.name ?? 'Forya Cyber',
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -53,12 +54,17 @@ class CdTopBar extends ConsumerWidget {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                error: (_, __) => const Text('GamingHub Cyber'),
+                error: (_, __) => const Text('Forya Cyber'),
               ),
             ],
           ),
 
           const Spacer(),
+
+          // Live Clock
+          const _LiveClock(),
+          
+          const SizedBox(width: 16),
 
           // Language toggle
           GestureDetector(
@@ -149,6 +155,68 @@ class CdTopBar extends ConsumerWidget {
                 const Icon(Icons.keyboard_arrow_down,
                     size: 18, color: kGray),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LiveClock extends StatefulWidget {
+  const _LiveClock();
+
+  @override
+  State<_LiveClock> createState() => _LiveClockState();
+}
+
+class _LiveClockState extends State<_LiveClock> {
+  late Timer _timer;
+  late DateTime _now;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {
+          _now = DateTime.now();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final h = _now.hour > 12 ? _now.hour - 12 : (_now.hour == 0 ? 12 : _now.hour);
+    final m = _now.minute.toString().padLeft(2, '0');
+    final p = _now.hour >= 12 ? 'PM' : 'AM';
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: kPurple.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kPurple.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.schedule, size: 14, color: kPurple),
+          const SizedBox(width: 6),
+          Text(
+            '$h:$m $p',
+            style: const TextStyle(
+              color: kSidebarText,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],

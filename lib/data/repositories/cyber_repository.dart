@@ -86,6 +86,8 @@ class CyberRepository {
     double? lat,
     double? lng,
     List<String>? images,
+    String? workingHoursFrom,
+    String? workingHoursTo,
   }) async {
     try {
       final cyberData = {
@@ -99,6 +101,8 @@ class CyberRepository {
         'images': images ?? [],
         'is_featured': false,
         'is_active': true,
+        if (workingHoursFrom != null) 'working_hours_from': workingHoursFrom,
+        if (workingHoursTo != null) 'working_hours_to': workingHoursTo,
         'created_at': DateTime.now().toIso8601String(),
       };
 
@@ -108,6 +112,56 @@ class CyberRepository {
       return Cyber.fromMap(response);
     } catch (e) {
       throw Exception('Failed to create cyber: $e');
+    }
+  }
+
+  // Update cover image
+  Future<void> updateCoverImage(String cyberId, String coverImageUrl) async {
+    try {
+      await _supabase
+          .from('cybers')
+          .update({'cover_image': coverImageUrl})
+          .eq('id', cyberId);
+    } catch (e) {
+      throw Exception('Failed to update cover image: $e');
+    }
+  }
+
+  // Update gallery images
+  Future<void> updateGalleryImages(String cyberId, List<String> galleryImages) async {
+    try {
+      await _supabase
+          .from('cybers')
+          .update({'images': galleryImages})
+          .eq('id', cyberId);
+    } catch (e) {
+      throw Exception('Failed to update gallery images: $e');
+    }
+  }
+
+  // Add gallery image
+  Future<void> addGalleryImage(String cyberId, String imageUrl) async {
+    try {
+      final cyber = await getCyberById(cyberId);
+      if (cyber == null) throw Exception('Cyber not found');
+
+      final updatedImages = List<String>.from(cyber.images)..add(imageUrl);
+      await updateGalleryImages(cyberId, updatedImages);
+    } catch (e) {
+      throw Exception('Failed to add gallery image: $e');
+    }
+  }
+
+  // Remove gallery image
+  Future<void> removeGalleryImage(String cyberId, String imageUrl) async {
+    try {
+      final cyber = await getCyberById(cyberId);
+      if (cyber == null) throw Exception('Cyber not found');
+
+      final updatedImages = List<String>.from(cyber.images)..remove(imageUrl);
+      await updateGalleryImages(cyberId, updatedImages);
+    } catch (e) {
+      throw Exception('Failed to remove gallery image: $e');
     }
   }
 

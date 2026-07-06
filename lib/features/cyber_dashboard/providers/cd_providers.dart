@@ -68,6 +68,21 @@ final todayBookingsProvider =
   return ref.read(cdBookingRepoProvider).getTodayBookings(cyber.id);
 });
 
+/// All bookings for this cyber (used for weekly/monthly tabs)
+final allBookingsProvider =
+    FutureProvider.autoDispose<List<Booking>>((ref) async {
+  final cyber = await ref.watch(currentCyberProvider.future);
+  if (cyber == null) return [];
+
+  // Reusing the same channel invalidation approach
+  final channel = ref
+      .read(cdBookingRepoProvider)
+      .subscribeToBookings(cyber.id, () => ref.invalidateSelf());
+  ref.onDispose(() => Supabase.instance.client.removeChannel(channel));
+
+  return ref.read(cdBookingRepoProvider).getAllBookings(cyber.id);
+});
+
 /// Total confirmed revenue for today.
 final todayRevenueProvider = FutureProvider.autoDispose<double>((ref) async {
   // Watch bookings so revenue auto-updates when bookings change

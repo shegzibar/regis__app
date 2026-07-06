@@ -5,6 +5,7 @@ class TimeSlotCard extends StatelessWidget {
   final String time;
   final bool isAvailable;
   final bool isSelected;
+  final bool isPast;
   final VoidCallback onTap;
 
   const TimeSlotCard({
@@ -12,19 +13,21 @@ class TimeSlotCard extends StatelessWidget {
     required this.time,
     required this.isAvailable,
     required this.isSelected,
+    this.isPast = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bool canSelect = isAvailable && !isPast;
     return GestureDetector(
-      onTap: isAvailable ? onTap : null,
+      onTap: canSelect ? onTap : null,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isSelected 
               ? AppColors.green 
-              : (isAvailable ? AppColors.darkCard : AppColors.darkSurface),
+              : (canSelect ? AppColors.darkCard : AppColors.darkSurface),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.green : AppColors.darkBorder,
@@ -39,18 +42,18 @@ class TimeSlotCard extends StatelessWidget {
               style: TextStyle(
                 color: isSelected 
                     ? Colors.white 
-                    : (isAvailable ? Colors.white : AppColors.textMuted),
+                    : (canSelect ? Colors.white : AppColors.textMuted),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              isAvailable ? 'Available' : 'Occupied',
+              isPast ? 'Past' : (isAvailable ? 'Available' : 'Occupied'),
               style: TextStyle(
                 color: isSelected 
                     ? Colors.white 
-                    : (isAvailable ? AppColors.green : AppColors.textMuted),
+                    : (canSelect ? AppColors.green : AppColors.textMuted),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),

@@ -12,6 +12,7 @@ import '../../features/user/screens/my_bookings_screen.dart';
 import '../../features/user/screens/map_screen.dart';
 import '../../features/user/screens/profile_screen.dart';
 import '../../features/user/screens/personal_info_screen.dart';
+import '../../features/user/screens/help_support_screen.dart';
 import '../../features/wallet/screens/wallet_screen.dart';
 
 import '../providers/auth_provider.dart';
@@ -123,6 +124,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/wallet',
             name: 'wallet',
             builder: (context, state) => const WalletScreen(),
+          ),
+          GoRoute(
+            path: '/help-support',
+            name: 'help_support',
+            builder: (context, state) => const HelpSupportScreen(),
           ),
 
         ],

@@ -61,14 +61,40 @@ class StationsPage extends ConsumerWidget {
   }
 }
 
-class _RoomSection extends ConsumerWidget {
+class _RoomSection extends ConsumerStatefulWidget {
   final Room room;
   final bool isAr;
 
   const _RoomSection({required this.room, required this.isAr});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_RoomSection> createState() => _RoomSectionState();
+}
+
+class _RoomSectionState extends ConsumerState<_RoomSection> {
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-refresh the station status every 30 seconds to catch booking starts/ends
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        ref.invalidate(stationStatusProvider(widget.room.id));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final room = widget.room;
+    final isAr = widget.isAr;
     final stationsAsync = ref.watch(stationStatusProvider(room.id));
 
     return Container(
@@ -126,7 +152,7 @@ class _RoomSection extends ConsumerWidget {
                     crossAxisCount: 4,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 1.1,
+                    childAspectRatio: 0.85, // More vertical space for buttons
                   ),
                   itemCount: stations.length,
                   itemBuilder: (context, i) {
@@ -333,41 +359,116 @@ class _StationCardState extends State<_StationCard> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            if (s.isBusy && s.busyUntil != null) ...[
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isOvertime
-                      ? const Color(0xFFFF9800)
-                      : kPurple,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isOvertime ? Icons.warning_amber : Icons.timer,
-                      color: Colors.white,
-                      size: 12,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      isOvertime
-                          ? (isAr ? 'انتهى!' : 'Over!')
-                          : _formatDuration(_remaining),
-                      style: const TextStyle(
+              if (s.isBusy && s.busyUntil != null) ...[
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isOvertime
+                        ? const Color(0xFFFF9800)
+                        : kPurple,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isOvertime ? Icons.warning_amber : Icons.timer,
                         color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isOvertime
+                            ? (isAr ? 'انتهى!' : 'Over!')
+                            : _formatDuration(_remaining),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14, // Made clock larger
+                          fontWeight: FontWeight.bold,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Stop Button
+                    GestureDetector(
+                      onTap: () async {
+                        if (s.currentBookingId == null) return;
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) => const Center(child: CircularProgressIndicator()),
+                        );
+                        try {
+                          await ref.read(ownerRepositoryProvider).completeBooking(s.currentBookingId!);
+                          if (context.mounted) {
+                            Navigator.pop(context); // close loading
+                            ref.invalidate(stationStatusProvider(s.roomId));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(isAr ? 'تم إنهاء الجلسة' : 'Session completed')),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                          }
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: kRed, borderRadius: BorderRadius.circular(4)),
+                        child: const Icon(Icons.stop, color: Colors.white, size: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Add Item Button
+                    GestureDetector(
+                      onTap: () async {
+                        if (s.currentBookingId == null) return;
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) => const Center(child: CircularProgressIndicator()),
+                        );
+                        try {
+                          final booking = await ref.read(ownerRepositoryProvider).getBookingById(s.currentBookingId!);
+                          if (context.mounted) {
+                            Navigator.pop(context); // close loading
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (ctx) => SessionDetailsSheet(
+                                booking: booking,
+                                isAr: isAr,
+                                onAdded: () => ref.invalidate(stationStatusProvider(s.roomId)),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                          }
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: kTeal, borderRadius: BorderRadius.circular(4)),
+                        child: const Icon(Icons.add_shopping_cart, color: Colors.white, size: 16),
                       ),
                     ),
                   ],
                 ),
-              ),
+              ],
             ],
-          ],
         ),
       ),
     );

@@ -116,7 +116,7 @@ class ProfileMenuSection extends StatelessWidget {
           context,
           icon: Icons.help_outline,
           title: 'Help & Support',
-          onTap: () {},
+          onTap: () => context.push('/help-support'),
         ),
         SizedBox(
             height: _getResponsiveSpacing(context,

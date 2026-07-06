@@ -136,10 +136,16 @@ class _CyberCenterEditorSectionState
     }
 
     try {
-      Position position = await Geolocator.getCurrentPosition();
+      Position? position = await Geolocator.getLastKnownPosition();
+      position ??= await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 5),
+      );
+      if (position == null) return;
+      final pos = position; // non-nullable local for safe closure access
       setState(() {
-        _latController.text = position.latitude.toString();
-        _lngController.text = position.longitude.toString();
+        _latController.text = pos.latitude.toString();
+        _lngController.text = pos.longitude.toString();
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Location updated! Don't forget to save.")));

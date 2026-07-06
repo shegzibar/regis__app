@@ -52,6 +52,14 @@ class CdCyberRepository {
         .eq('id', roomId);
   }
 
+  /// Update the image of a room.
+  Future<void> updateRoomImage(String roomId, String imageUrl) async {
+    await _db
+        .from('rooms')
+        .update({'image_url': imageUrl})
+        .eq('id', roomId);
+  }
+
   /// Add a new room to a cyber, and automatically create its single station.
   Future<void> addRoom({
     required String cyberId,

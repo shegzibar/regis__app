@@ -185,4 +185,19 @@ class ReviewRepository {
       throw Exception('Failed to check user review: $e');
     }
   }
+
+  // Check if user has reviewed a specific booking
+  Future<bool> hasReviewedBooking(String bookingId) async {
+    try {
+      final response = await _supabase
+          .from('reviews')
+          .select()
+          .eq('booking_id', bookingId)
+          .maybeSingle();
+
+      return response != null;
+    } catch (e) {
+      return false; // Silently fail if reviews table doesn't exist yet or other error
+    }
+  }
 }

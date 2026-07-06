@@ -39,7 +39,7 @@ class AdminTopBar extends ConsumerWidget {
           ),
           const SizedBox(width: 16),
           const Text(
-            'GamingHub Admin',
+            'Forya Admin',
             style: TextStyle(
               color: Colors.white,
               fontSize: 18,

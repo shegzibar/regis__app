@@ -30,7 +30,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     {
       'id': 'wallet_points',
       'name': 'Wallet Points',
-      'description': 'Pay directly using your GamingHub wallet',
+      'description': 'Pay directly using your Forya wallet',
       'icon': Icons.stars,
       'color': AppColors.green,
     },
@@ -96,7 +96,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             type: 'redeemed',
             amount: widget.amount.toInt(),
             note: 'Automatic deduction for booking #${widget.bookingId.substring(0, 8)}',
-            cyberName: 'GamingHub System',
+            cyberName: 'Forya System',
           );
         }
 
@@ -295,7 +295,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Gaming Hub Station',
+                                      'Forya Station',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 18,

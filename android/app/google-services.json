@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "257435547697",
+    "project_id": "cxsupportforya",
+    "storage_bucket": "cxsupportforya.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:257435547697:android:4f377031bc237fa1f8bd10",
+        "android_client_info": {
+          "package_name": "com.example.gaming_hub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAq5riROZhUuyFy1JRVWdAs_mq7o3TfbmY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -4,6 +4,6 @@ import 'core/config/app_variant.dart';
 
 /// Cyber café owner dashboard — stations, schedule, and booking requests.
 void main() async {
-  await initializeGamingHub();
-  runApp(buildGamingHubRoot(variant: AppVariant.owner));
+  await initializeForya();
+  runApp(buildForyaRoot(variant: AppVariant.owner));
 }

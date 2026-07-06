@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/location_provider.dart';
@@ -15,14 +17,15 @@ class ExploreScreen extends ConsumerStatefulWidget {
   ConsumerState<ExploreScreen> createState() => _ExploreScreenState();
 }
 
-class _ExploreScreenState extends ConsumerState<ExploreScreen> {
+class _ExploreScreenState extends ConsumerState<ExploreScreen> with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    // Request location on startup
+    WidgetsBinding.instance.addObserver(this);
+    // Request location immediately on startup
     Future.microtask(() => ref.read(locationProvider.notifier).requestAndGetLocation());
     
     _searchController.addListener(() {
@@ -33,7 +36,16 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Re-fetch location when app comes back to foreground
+    if (state == AppLifecycleState.resumed) {
+      ref.read(locationProvider.notifier).requestAndGetLocation();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     super.dispose();
   }
@@ -54,7 +66,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'GamingHub',
+                        'Forya',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -207,7 +219,21 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                         style: const TextStyle(color: Colors.red),
                       ),
                     ),
-                    data: (cybers) {
+                    data: (unfilteredCybers) {
+                      final location = ref.watch(locationProvider).value;
+                      final cybers = unfilteredCybers.where((cyber) {
+                        if (location == null) return true; // Show all if location not available
+                        if (cyber.lat == null || cyber.lng == null) return false; // Hide if cyber has no location
+                        
+                        final distance = Geolocator.distanceBetween(
+                          location.latitude,
+                          location.longitude,
+                          cyber.lat!,
+                          cyber.lng!,
+                        );
+                        return distance <= 10000; // 10 km in meters
+                      }).toList();
+
                       if (cybers.isEmpty) {
                         return const Center(
                           child: Text(
@@ -221,75 +247,68 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Featured Centers Header (only if not searching)
+                            // All Centers Horizontal List (only if not searching)
                             if (_searchQuery.isEmpty) ...[
-                              featuredAsync.when(
-                                data: (featured) {
-                                  if (featured.isEmpty) return const SizedBox.shrink();
-                                  return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            const Text(
-                                              'Featured Centers',
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {},
-                                              child: const Text(
-                                                'See All',
-                                                style: TextStyle(
-                                                  color: AppColors.green,
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'All Gaming Centers',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      SizedBox(
-                                        height: 200,
-                                        child: ListView.builder(
-                                          scrollDirection: Axis.horizontal,
-                                          physics: const AlwaysScrollableScrollPhysics(),
-                                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                                          itemCount: featured.length,
-                                          itemBuilder: (context, index) {
-                                            final cyber = featured[index];
-                                            return Padding(
-                                              padding: const EdgeInsets.only(right: 16.0),
-                                              child: GamingCenterCard(
-                                                isFeatured: true,
-                                                name: cyber.name,
-                                                rating: cyber.rating,
-                                                location: cyber.address ?? cyber.city ?? '',
-                                                price: 'From EGP 15/hr', // Default room pricing
-                                                imageUrl: cyber.images.isNotEmpty 
-                                                    ? cyber.images[0] 
-                                                    : 'https://picsum.photos/seed/${cyber.id}/300/150',
-                                                isAvailable: cyber.isActive,
-                                                onTap: () => context.push('/cyber/${cyber.id}'),
-                                              ),
-                                            );
-                                          },
+                                        TextButton(
+                                          onPressed: () {},
+                                          child: const Text(
+                                            'See All',
+                                            style: TextStyle(
+                                              color: AppColors.green,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 32),
-                                    ],
-                                  );
-                                },
-                                loading: () => const SizedBox.shrink(),
-                                error: (e, s) => const SizedBox.shrink(),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  SizedBox(
+                                    height: 200,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      physics: const AlwaysScrollableScrollPhysics(),
+                                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                      itemCount: unfilteredCybers.length,
+                                      itemBuilder: (context, index) {
+                                        final cyber = unfilteredCybers[index];
+                                        return Padding(
+                                          padding: const EdgeInsets.only(right: 16.0),
+                                          child: GamingCenterCard(
+                                            isFeatured: true,
+                                            name: cyber.name,
+                                            rating: cyber.rating,
+                                            location: cyber.address ?? cyber.city ?? '',
+                                            price: 'From EGP 15/hr', // Default room pricing
+                                            imageUrl: cyber.coverImage ?? (cyber.images.isNotEmpty 
+                                                ? cyber.images[0] 
+                                                : 'https://picsum.photos/seed/${cyber.id}/300/150'),
+                                            isAvailable: cyber.isActive,
+                                            onTap: () => context.push('/cyber/${cyber.id}'),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 32),
+                                ],
                               ),
                             ],
 
@@ -322,9 +341,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                       reviewCount: cyber.reviewCount,
                                       location: cyber.address ?? cyber.city ?? '',
                                       price: 'EGP 15 per hour',
-                                      imageUrl: cyber.images.isNotEmpty 
+                                      imageUrl: cyber.coverImage ?? (cyber.images.isNotEmpty 
                                           ? cyber.images[0] 
-                                          : 'https://picsum.photos/seed/${cyber.id}/80/80',
+                                          : 'https://picsum.photos/seed/${cyber.id}/80/80'),
                                       consoles: const ['PS5', 'PC'], // Mock capabilities
                                       onTap: () => context.push('/cyber/${cyber.id}'),
                                     ),

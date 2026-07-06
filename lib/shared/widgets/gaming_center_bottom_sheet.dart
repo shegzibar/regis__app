@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 
 class GamingCenterBottomSheet extends StatelessWidget {
@@ -236,31 +237,73 @@ class GamingCenterBottomSheet extends StatelessWidget {
                 ),
                 
                 const SizedBox(height: 24),
-                
-                // Action Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: onTap,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.green,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+
+                // Action Buttons Row
+                Row(
+                  children: [
+                    // Open in Google Maps button
+                    if (center['latitude'] != null && center['longitude'] != null)
+                      Expanded(
+                        flex: 1,
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            final lat = center['latitude'];
+                            final lng = center['longitude'];
+                            final name = Uri.encodeComponent(center['name']);
+                            // Try native maps app first
+                            final geoUrl = Uri.parse('geo:$lat,$lng?q=$lat,$lng($name)');
+                            if (await canLaunchUrl(geoUrl)) {
+                              await launchUrl(geoUrl);
+                            } else {
+                              // Fallback to web browser
+                              final webUrl = Uri.parse(
+                                'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
+                              );
+                              if (await canLaunchUrl(webUrl)) {
+                                await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+                              }
+                            }
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.green,
+                            side: const BorderSide(color: AppColors.green),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          icon: const Icon(Icons.map_outlined, size: 18),
+                          label: const Text('Maps', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text(
-                      'View Details',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                    if (center['latitude'] != null && center['longitude'] != null)
+                      const SizedBox(width: 12),
+                    // View Details button
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: onTap,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.green,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: const Text(
+                          'View Details',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-                
+
                 const SizedBox(height: 24),
               ],
             ),

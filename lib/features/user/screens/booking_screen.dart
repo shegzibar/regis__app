@@ -107,9 +107,17 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   }
 
   void _selectTimeSlot(String timeSlot) {
+    if (_isSlotInPast(timeSlot)) return;
     setState(() {
       _selectedTimeSlot = timeSlot;
     });
+  }
+
+  bool _isSlotInPast(String slot) {
+    if (!_isSameDay(_selectedDate, DateTime.now())) return false;
+    final slotTime = _parseSlotToDateTime(_selectedDate, slot);
+    if (slotTime == null) return false;
+    return slotTime.isBefore(DateTime.now());
   }
 
   void _toggleFavorite() {
@@ -123,6 +131,15 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a time slot')),
       );
+      return;
+    }
+
+    // Prevent booking a past time slot
+    if (_isSlotInPast(_selectedTimeSlot!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This time slot has already passed. Please pick a future slot.')),
+      );
+      setState(() => _selectedTimeSlot = null);
       return;
     }
 
@@ -176,7 +193,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 durationHours: _selectedDuration.toDouble(),
                 totalAmount: totalAmount,
                 bookingFee: bookingFee,
-                notes: 'Booked via GamingHub mobile app',
+                notes: 'Booked via Forya mobile app',
               );
 
       if (mounted) {
@@ -279,50 +296,140 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   }
 
                   return SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: EdgeInsets.zero,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Room name & status
-                        Row(
-                          children: [
-                            Text(
-                              room.name,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                        // Airbnb-style: full-width image fading into dark background
+                        if (room.imageUrl != null && room.imageUrl!.isNotEmpty)
+                          Stack(
+                            children: [
+                              // Full-width image
+                              Image.network(
+                                room.imageUrl!,
+                                width: double.infinity,
+                                height: 260,
+                                fit: BoxFit.cover,
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.green,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'OPEN',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                              // Gradient fade: transparent → dark at bottom
+                              Container(
+                                height: 260,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      AppColors.darkBg.withOpacity(0.6),
+                                      AppColors.darkBg,
+                                    ],
+                                    stops: const [0.3, 0.7, 1.0],
+                                  ),
                                 ),
                               ),
+                              // Room name + description overlaid at bottom of image
+                              Positioned(
+                                bottom: 16,
+                                left: 24,
+                                right: 24,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            room.name,
+                                            style: const TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                              shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.green,
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: const Text(
+                                            'OPEN',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (room.description != null && room.description!.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        room.description!,
+                                        style: const TextStyle(
+                                          color: AppColors.textMuted,
+                                          fontSize: 13,
+                                          height: 1.4,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          // No image — compact title row
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.darkCard,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Center(
+                                    child: Text(room.typeIcon, style: const TextStyle(fontSize: 28)),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(room.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        room.description != null && room.description!.isNotEmpty
+                                            ? room.description!
+                                            : 'Category: ${room.displayName}',
+                                        style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Category: ${room.displayName}',
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 14,
                           ),
-                        ),
 
                         const SizedBox(height: 24),
+
+                        // Rest of content padded
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
 
                         // Date Selection
                         const Text(
@@ -430,11 +537,13 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             final timeSlot = _timeSlots[index];
                             final isSelected = timeSlot == _selectedTimeSlot;
                             final isBooked = _bookedSlots.contains(timeSlot);
+                            final isPast = _isSlotInPast(timeSlot);
 
                             return TimeSlotCard(
                                time: timeSlot,
                                isAvailable: !isBooked,
                                isSelected: isSelected,
+                               isPast: isPast,
                                onTap: () => _selectTimeSlot(timeSlot),
                              );
                           },
@@ -500,6 +609,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                         ),
 
                         const SizedBox(height: 32),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   );

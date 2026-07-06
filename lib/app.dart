@@ -5,8 +5,8 @@ import 'core/config/app_variant.dart';
 import 'core/router/root_router.dart';
 import 'core/theme/app_theme.dart';
 
-class GamingHubApp extends ConsumerWidget {
-  const GamingHubApp({super.key});
+class ForyaApp extends ConsumerWidget {
+  const ForyaApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
