@@ -80,7 +80,7 @@
     "select_date": "اختر التاريخ",
     "duration": "المدة",
     "available_slots": "الأوقات المتاحة",
-    "hour_intervals": "فترات 2 ساعة",
+    "hour_intervals": "فترات 1 ساعة",
     "confirm_pay_fee": "تأكيد ودفع الرسوم",
     "please_select_room": "يرجى اختيار غرفة أولاً",
     "please_select_time": "يرجى اختيار وقت الحجز",
@@ -194,7 +194,16 @@
     "transfer_to": "تحويل إلى",
     "send_to": "إرسال إلى",
     "reference_code_provided": "سيتم توفير رمز المرجع لاحقاً",
-    "processing_payment": "جاري معالجة الدفع..."
+    "processing_payment": "جاري معالجة الدفع...",
+    "wallet_points": "نقاط المحفظة",
+    "pay_with_wallet": "ادفع مباشرة باستخدام محفظة فوريا الخاصة بك",
+    "insufficient_points": "نقاط المحفظة غير كافية. يرجى شحن محفظتك.",
+    "payment_successful": "تم الدفع بنجاح! تم تأكيد حجزك.",
+    "payment_submitted": "تم تقديم الدفع! سيقوم المدير بمراجعة إيصالك قريباً.",
+    "payment_failed": "فشل في تقديم الدفع: ",
+    "forya_station": "محطة فوريا",
+    "reserved_slot": "وقت محجوز",
+    "session_fee": "رسوم الجلسة"
   },
   "profile": {
     "personal_information": "المعلومات الشخصية",
@@ -521,8 +530,59 @@
       "no_chats": "لا توجد محادثات دعم نشطة.",
       "select_chat": "اختر محادثة لعرض الرسائل",
       "type_message": "اكتب رسالتك...",
-      "resolve_chat": "إنهاء المحادثة",
       "unread": "غير مقروء"
     }
+  },
+  "cyber_details": {
+    "gallery": "الصور",
+    "available_rooms": "الغرف المتاحة",
+    "share_coming_soon": "سيتم إضافة ميزة المشاركة قريباً!",
+    "user_reviews": "تقييمات المستخدمين",
+    "see_all": "عرض الكل",
+    "starting_from": "بدءاً من",
+    "egp_hr": "جنيه/ساعة",
+    "book_station": "احجز محطة",
+    "no_rooms": "لا توجد غرف نشطة في هذا المركز.",
+    "no_reviews": "لا توجد تقييمات بعد. كن أول من يقيّم!"
+  },
+  "bottom_nav": {
+    "explore": "استكشف",
+    "map": "الخريطة",
+    "bookings": "الحجوزات",
+    "profile": "حسابي"
+  },
+  "map_bottom_sheet": {
+    "available_consoles": "أجهزة الكونسول المتاحة",
+    "price_range": "نطاق السعر",
+    "view_details": "عرض التفاصيل",
+    "maps": "الخرائط"
+  },
+  "owner_stations": {
+    "stations": "الأجهزة",
+    "tap_station": "انقر على الجهاز لعرض تفاصيله أو تغيير حالته",
+    "active": "متاح",
+    "maintenance": "صيانة",
+    "blocked": "محظور",
+    "failed_load": "فشل في تحميل الأجهزة",
+    "retry": "إعادة المحاولة",
+    "no_stations": "لا توجد أجهزة",
+    "add_from_admin": "أضف الأجهزة من لوحة التحكم",
+    "ps5_room": "🎮 بلايستيشن 5",
+    "pc_room": "💻 أجهزة بي سي",
+    "vip_room": "⭐ غرفة كبار الشخصيات (VIP)",
+    "room_default": "🕹️ {}",
+    "time_left": "الوقت المتبقي",
+    "set_status": "تغيير حالة \"{}\" إلى {}؟",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "failed": "فشل: {}",
+    "session_details": "تفاصيل الجلسة",
+    "no_active_session": "لا توجد جلسة نشطة",
+    "add_items": "إضافة عناصر",
+    "select_item": "اختر العنصر",
+    "added_successfully": "تم إضافة العنصر بنجاح",
+    "close": "إغلاق",
+    "loading": "جاري التحميل...",
+    "error_inventory": "خطأ في تحميل المخزون"
   }
 }

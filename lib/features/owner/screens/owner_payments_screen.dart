@@ -91,7 +91,7 @@ class OwnerPaymentsScreen extends ConsumerWidget {
           Expanded(
             child: queueAsync.when(
               loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.teal)),
+                  child: CircularProgressIndicator(color: AppColors.primary)),
               error: (e, _) => Center(child: Text('$e')),
               data: (bookings) {
                 if (bookings.isEmpty) {
@@ -217,7 +217,7 @@ class _PaymentQueueCardState extends ConsumerState<_PaymentQueueCard> {
                   child: ElevatedButton(
                     onPressed: () => _decision('confirmed'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.teal,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                     ),
                     child: Text('owner_dashboard.approve'.tr()),
@@ -225,7 +225,7 @@ class _PaymentQueueCardState extends ConsumerState<_PaymentQueueCard> {
                 ),
               ],
             ),
-          if (_busy) const LinearProgressIndicator(color: AppColors.teal),
+          if (_busy) const LinearProgressIndicator(color: AppColors.primary),
         ],
       ),
     );

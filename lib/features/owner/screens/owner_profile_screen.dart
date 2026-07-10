@@ -69,7 +69,7 @@ class _OwnerProfileScreenState extends ConsumerState<OwnerProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('owner_profile.account_saved'.tr()),
-            backgroundColor: AppColors.teal,
+            backgroundColor: AppColors.primary,
           ),
         );
       }
@@ -111,7 +111,7 @@ class _OwnerProfileScreenState extends ConsumerState<OwnerProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('owner_profile.password_saved'.tr()),
-            backgroundColor: AppColors.teal,
+            backgroundColor: AppColors.primary,
           ),
         );
       }
@@ -252,7 +252,7 @@ class _AccountSection extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: saving ? null : onSave,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.teal,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                 ),
                 child: saving

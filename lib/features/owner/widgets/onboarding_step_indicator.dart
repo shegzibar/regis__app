@@ -18,7 +18,7 @@ class OnboardingStepIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = done
-        ? AppColors.teal
+        ? AppColors.primary
         : active
             ? AppColors.purple
             : const Color(0xFFE2E8F0);

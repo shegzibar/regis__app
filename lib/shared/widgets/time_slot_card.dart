@@ -20,42 +20,88 @@ class TimeSlotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool canSelect = isAvailable && !isPast;
+    
+    // Split time for creative layout (e.g., "10:00" and "AM")
+    final parts = time.split(' ');
+    final timeStr = parts.length > 1 ? parts[0] : time;
+    final amPm = parts.length > 1 ? parts[1] : '';
+
     return GestureDetector(
       onTap: canSelect ? onTap : null,
-      child: Container(
-        padding: const EdgeInsets.all(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOutCubic,
+        width: 105,
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected 
               ? AppColors.green 
-              : (canSelect ? AppColors.darkCard : AppColors.darkSurface),
-          borderRadius: BorderRadius.circular(12),
+              : (canSelect ? AppColors.darkCard : AppColors.darkSurface.withOpacity(0.5)),
+          borderRadius: BorderRadius.circular(26), // Pill shape
           border: Border.all(
-            color: isSelected ? AppColors.green : AppColors.darkBorder,
-            width: isSelected ? 2 : 1,
+            color: isSelected 
+                ? AppColors.green.withOpacity(0.8) 
+                : (canSelect ? AppColors.darkBorder : Colors.transparent),
+            width: isSelected ? 0 : 1,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.green.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              time,
-              style: TextStyle(
-                color: isSelected 
-                    ? Colors.white 
-                    : (canSelect ? Colors.white : AppColors.textMuted),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            // Time Text
+            RichText(
+              text: TextSpan(
+                text: timeStr,
+                style: TextStyle(
+                  color: isSelected 
+                      ? Colors.white 
+                      : (canSelect ? Colors.white : AppColors.textMuted.withOpacity(0.4)),
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+                children: [
+                  TextSpan(
+                    text: ' $amPm',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isSelected 
+                          ? Colors.white.withOpacity(0.8)
+                          : (canSelect ? AppColors.textMuted : AppColors.textMuted.withOpacity(0.3)),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              isPast ? 'Past' : (isAvailable ? 'Available' : 'Occupied'),
-              style: TextStyle(
-                color: isSelected 
-                    ? Colors.white 
-                    : (canSelect ? AppColors.green : AppColors.textMuted),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+            const SizedBox(width: 8),
+            // Status Dot
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected
+                    ? Colors.white
+                    : (canSelect ? AppColors.green : AppColors.textMuted.withOpacity(0.2)),
+                boxShadow: (isSelected || canSelect) && !isPast
+                    ? [
+                        BoxShadow(
+                          color: (isSelected ? Colors.white : AppColors.green).withOpacity(0.6),
+                          blurRadius: 4,
+                        )
+                      ]
+                    : [],
               ),
             ),
           ],

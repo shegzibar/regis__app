@@ -207,7 +207,7 @@ class _CyberCenterEditorSectionState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('owner_profile.saved_to_supabase'.tr()),
-            backgroundColor: AppColors.teal,
+            backgroundColor: AppColors.primary,
           ),
         );
       }
@@ -304,7 +304,7 @@ class _CyberCenterEditorSectionState
                   contentPadding: EdgeInsets.zero,
                   title: Text('owner_profile.center_active'.tr()),
                   value: _isActive,
-                  activeThumbColor: AppColors.teal,
+                  activeThumbColor: AppColors.primary,
                   onChanged: (v) => setState(() => _isActive = v),
                 ),
                 const SizedBox(height: 8),

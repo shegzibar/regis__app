@@ -80,7 +80,7 @@
     "select_date": "Select Date",
     "duration": "Duration",
     "available_slots": "Available Slots",
-    "hour_intervals": "2-hour intervals",
+    "hour_intervals": "1-hour intervals",
     "confirm_pay_fee": "Confirm & Pay Fee",
     "please_select_room": "Please select a room first",
     "please_select_time": "Please select a time slot",
@@ -194,7 +194,16 @@
     "transfer_to": "Transfer to",
     "send_to": "Send to",
     "reference_code_provided": "Reference code provided after",
-    "processing_payment": "Processing payment..."
+    "processing_payment": "Processing payment...",
+    "wallet_points": "Wallet Points",
+    "pay_with_wallet": "Pay directly using your Forya wallet",
+    "insufficient_points": "Insufficient Wallet Points. Please recharge your wallet.",
+    "payment_successful": "Payment successful! Your booking is confirmed.",
+    "payment_submitted": "Payment submitted! A manager will review your receipt shortly.",
+    "payment_failed": "Failed to submit payment: ",
+    "forya_station": "Forya Station",
+    "reserved_slot": "Reserved Slot",
+    "session_fee": "Session Fee"
   },
   "profile": {
     "personal_information": "Personal Information",
@@ -521,8 +530,59 @@
       "no_chats": "No active support chats.",
       "select_chat": "Select a chat to view messages",
       "type_message": "Type your message...",
-      "resolve_chat": "Resolve Chat",
       "unread": "unread"
     }
+  },
+  "cyber_details": {
+    "gallery": "Gallery",
+    "available_rooms": "Available Rooms",
+    "share_coming_soon": "Share functionality coming soon!",
+    "user_reviews": "User Reviews",
+    "see_all": "See All",
+    "starting_from": "Starting from",
+    "egp_hr": "EGP/hr",
+    "book_station": "Book a Station",
+    "no_rooms": "No rooms active at this center.",
+    "no_reviews": "No reviews yet. Be the first to review!"
+  },
+  "bottom_nav": {
+    "explore": "Explore",
+    "map": "Map",
+    "bookings": "Bookings",
+    "profile": "Profile"
+  },
+  "map_bottom_sheet": {
+    "available_consoles": "Available Consoles",
+    "price_range": "Price Range",
+    "view_details": "View Details",
+    "maps": "Maps"
+  },
+  "owner_stations": {
+    "stations": "Stations",
+    "tap_station": "Tap a station to view details or toggle its status",
+    "active": "Active",
+    "maintenance": "Maintenance",
+    "blocked": "Blocked",
+    "failed_load": "Failed to load stations",
+    "retry": "Retry",
+    "no_stations": "No stations found",
+    "add_from_admin": "Add stations from the admin panel",
+    "ps5_room": "🎮 PlayStation 5",
+    "pc_room": "💻 Gaming PC",
+    "vip_room": "⭐ VIP Room",
+    "room_default": "🕹️ {}",
+    "time_left": "Time Left",
+    "set_status": "Set \"{}\" to {}?",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "failed": "Failed: {}",
+    "session_details": "Session Details",
+    "no_active_session": "No active session",
+    "add_items": "Add Items",
+    "select_item": "Select Item",
+    "added_successfully": "Item added successfully",
+    "close": "Close",
+    "loading": "Loading...",
+    "error_inventory": "Error loading inventory"
   }
 }

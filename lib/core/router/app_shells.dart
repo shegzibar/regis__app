@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../features/admin/widgets/admin_sidebar.dart';
@@ -20,31 +21,31 @@ class UserShell extends ConsumerStatefulWidget {
 class _UserShellState extends ConsumerState<UserShell> {
   int _currentIndex = 0;
 
-  static const List<NavigationDestination> destinations = [
-    NavigationDestination(
-      icon: Icon(Icons.explore_outlined),
-      selectedIcon: Icon(Icons.explore),
-      label: 'Explore',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.map_outlined),
-      selectedIcon: Icon(Icons.map),
-      label: 'Map',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.calendar_today_outlined),
-      selectedIcon: Icon(Icons.calendar_today),
-      label: 'Bookings',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person),
-      label: 'Profile',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final List<NavigationDestination> destinations = [
+      NavigationDestination(
+        icon: const Icon(Icons.explore_outlined),
+        selectedIcon: const Icon(Icons.explore),
+        label: 'bottom_nav.explore'.tr(),
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.map_outlined),
+        selectedIcon: const Icon(Icons.map),
+        label: 'bottom_nav.map'.tr(),
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.calendar_today_outlined),
+        selectedIcon: const Icon(Icons.calendar_today),
+        label: 'bottom_nav.bookings'.tr(),
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.person_outline),
+        selectedIcon: const Icon(Icons.person),
+        label: 'bottom_nav.profile'.tr(),
+      ),
+    ];
+
     return Scaffold(
       body: widget.child,
       bottomNavigationBar: NavigationBar(

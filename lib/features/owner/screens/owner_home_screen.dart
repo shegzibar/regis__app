@@ -273,7 +273,7 @@ class _TimelineTile extends StatelessWidget {
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
-                color: AppColors.teal,
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -373,7 +373,7 @@ class _QuickActionsPanel extends StatelessWidget {
           const SizedBox(height: 10),
           _ActionCard(
             icon: Icons.person_add_alt_1,
-            color: AppColors.teal,
+            color: AppColors.primary,
             title: 'owner_dashboard.walk_in_card_title'.tr(),
             subtitle: 'owner_dashboard.walk_in_card_sub'.tr(),
             onTap: () => context.push('/owner/manual-booking'),
@@ -493,7 +493,7 @@ class _TimelineLoading extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: const CircularProgressIndicator(color: AppColors.teal),
+      child: const CircularProgressIndicator(color: AppColors.primary),
     );
   }
 }

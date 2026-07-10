@@ -12,9 +12,9 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.teal,
+        seedColor: AppColors.primary,
         brightness: Brightness.light,
-        primary: AppColors.teal,
+        primary: AppColors.primary,
         secondary: AppColors.purple,
         surface: AppColors.white,
         background: AppColors.lightGray,
@@ -85,7 +85,7 @@ class AppTheme {
       // Button Themes
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.teal,
+          backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -101,8 +101,8 @@ class AppTheme {
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.teal,
-          side: const BorderSide(color: AppColors.teal),
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(kRadius),
           ),
@@ -116,7 +116,7 @@ class AppTheme {
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.teal,
+          foregroundColor: AppColors.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(kRadius),
           ),
@@ -142,7 +142,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(kRadius),
-          borderSide: const BorderSide(color: AppColors.teal),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(kRadius),
@@ -161,7 +161,7 @@ class AppTheme {
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.white,
-        selectedItemColor: AppColors.teal,
+        selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.gray,
         type: BottomNavigationBarType.fixed,
         elevation: 8,

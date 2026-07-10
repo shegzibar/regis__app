@@ -109,10 +109,10 @@ class _OwnerScheduleScreenState extends ConsumerState<OwnerScheduleScreen> {
                     width: 52,
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.teal : AppColors.lightGray,
+                      color: isSelected ? AppColors.primary : AppColors.lightGray,
                       borderRadius: BorderRadius.circular(14),
                       border: isToday && !isSelected
-                          ? Border.all(color: AppColors.teal, width: 1.5)
+                          ? Border.all(color: AppColors.primary, width: 1.5)
                           : null,
                     ),
                     child: Column(
@@ -168,7 +168,7 @@ class _OwnerScheduleScreenState extends ConsumerState<OwnerScheduleScreen> {
           Expanded(
             child: bookingsAsync.when(
               loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.teal)),
+                  child: CircularProgressIndicator(color: AppColors.primary)),
               error: (e, _) => Center(
                   child: Text('Error loading schedule',
                       style: const TextStyle(color: AppColors.error))),
@@ -285,7 +285,7 @@ class _ScheduleBookingCard extends StatelessWidget {
               Text(
                 _formatTime(booking.startTime),
                 style: const TextStyle(
-                    color: AppColors.teal,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.bold,
                     fontSize: 13),
               ),
@@ -293,7 +293,7 @@ class _ScheduleBookingCard extends StatelessWidget {
                   width: 2,
                   height: 28,
                   margin: const EdgeInsets.symmetric(vertical: 4),
-                  color: AppColors.teal.withValues(alpha: 0.3)),
+                  color: AppColors.primary.withValues(alpha: 0.3)),
               Text(
                 _formatTime(booking.endTime),
                 style: const TextStyle(

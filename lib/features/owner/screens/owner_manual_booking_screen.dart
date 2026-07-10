@@ -90,7 +90,7 @@ class _OwnerManualBookingScreenState
                   height: 4,
                   margin: EdgeInsetsDirectional.only(end: i < 2 ? 6 : 0),
                   decoration: BoxDecoration(
-                    color: i <= _step ? AppColors.teal : const Color(0xFFE2E8F0),
+                    color: i <= _step ? AppColors.primary : const Color(0xFFE2E8F0),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -109,7 +109,7 @@ class _OwnerManualBookingScreenState
               child: _step == 0
                   ? roomsAsync.when(
                       loading: () => const Center(
-                          child: CircularProgressIndicator(color: AppColors.teal)),
+                          child: CircularProgressIndicator(color: AppColors.primary)),
                       error: (e, _) => Center(child: Text('$e')),
                       data: (rooms) {
                         if (rooms.isEmpty) {
@@ -186,7 +186,7 @@ class _StationStep extends ConsumerWidget {
       builder: (context, snap) {
         if (!snap.hasData) {
           return const Center(
-              child: CircularProgressIndicator(color: AppColors.teal));
+              child: CircularProgressIndicator(color: AppColors.primary));
         }
         final stations = snap.data!
             .where((s) => s.status == 'active')
@@ -242,7 +242,7 @@ class _DurationStep extends StatelessWidget {
               label: Text('$h ${'common.per_hour'.tr()}'),
               selected: selected,
               onSelected: (_) => onChanged(h),
-              selectedColor: AppColors.teal.withValues(alpha: 0.2),
+              selectedColor: AppColors.primary.withValues(alpha: 0.2),
             );
           }).toList(),
         ),
@@ -279,7 +279,7 @@ class _DurationStep extends StatelessWidget {
           child: ElevatedButton(
             onPressed: onConfirm,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.teal,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
             child: saving

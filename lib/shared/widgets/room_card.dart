@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../core/constants/app_colors.dart';
 
 class RoomCard extends StatelessWidget {
@@ -73,7 +74,7 @@ class RoomCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$availableStations stations available',
+                    '$availableStations ${'rooms.stations_available'.tr()}',
                     style: const TextStyle(
                       color: AppColors.textMuted,
                       fontSize: 14,
@@ -95,9 +96,9 @@ class RoomCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(
-                  'per hour',
-                  style: TextStyle(
+                Text(
+                  'common.per_hour'.tr(),
+                  style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 12,
                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/cyber_provider.dart';
 import '../../../core/providers/room_provider.dart';
@@ -32,14 +33,14 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
       context.push('/booking/$_selectedRoomId');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a room first')),
+        SnackBar(content: Text('cyber_details.please_select_room'.tr())),
       );
     }
   }
 
   void _shareCyber() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share functionality coming soon!')),
+      SnackBar(content: Text('cyber_details.share_coming_soon'.tr())),
     );
   }
 
@@ -152,9 +153,9 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Gallery',
-                              style: TextStyle(
+                            Text(
+                              'cyber_details.gallery'.tr(),
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -191,9 +192,9 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                     ),
 
                     // Room Selection
-                    const Text(
-                      'Available Rooms',
-                      style: TextStyle(
+                    Text(
+                      'cyber_details.available_rooms'.tr(),
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -207,7 +208,7 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                       error: (err, _) => Text('Error loading rooms: $err', style: const TextStyle(color: Colors.red)),
                       data: (rooms) {
                         if (rooms.isEmpty) {
-                          return const Text('No rooms active at this center.', style: TextStyle(color: AppColors.textMuted));
+                          return Text('cyber_details.no_rooms'.tr(), style: const TextStyle(color: AppColors.textMuted));
                         }
 
                         // Dynamically update minPrice in microtask if needed
@@ -245,9 +246,9 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'User Reviews',
-                          style: TextStyle(
+                        Text(
+                          'cyber_details.user_reviews'.tr(),
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -255,9 +256,9 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                         ),
                         TextButton(
                           onPressed: () {},
-                          child: const Text(
-                            'See All',
-                            style: TextStyle(
+                          child: Text(
+                            'cyber_details.see_all'.tr(),
+                            style: const TextStyle(
                               color: AppColors.green,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -274,11 +275,11 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                       error: (err, _) => Text('Error loading reviews: $err', style: const TextStyle(color: Colors.red)),
                       data: (reviews) {
                         if (reviews.isEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Text(
-                              'No reviews yet. Be the first to review!',
-                              style: TextStyle(color: AppColors.textMuted),
+                              'cyber_details.no_reviews'.tr(),
+                              style: const TextStyle(color: AppColors.textMuted),
                             ),
                           );
                         }
@@ -320,16 +321,16 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Starting from',
-                        style: TextStyle(
+                      Text(
+                        'cyber_details.starting_from'.tr(),
+                        style: const TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 12,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${_minPrice.toInt()} EGP/hr',
+                        '${_minPrice.toInt()} ${'cyber_details.egp_hr'.tr()}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -350,9 +351,9 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                     ),
-                    child: const Text(
-                      'Book a Station',
-                      style: TextStyle(
+                    child: Text(
+                      'cyber_details.book_station'.tr(),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),

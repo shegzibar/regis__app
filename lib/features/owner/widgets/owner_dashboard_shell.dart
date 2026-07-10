@@ -152,11 +152,11 @@ class _DashboardHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 child: CircleAvatar(
                   radius: 16,
-                  backgroundColor: AppColors.teal.withValues(alpha: 0.15),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.15),
                   child: Text(
                     userName.isNotEmpty ? userName[0].toUpperCase() : '?',
                     style: const TextStyle(
-                      color: AppColors.teal,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -285,7 +285,7 @@ class _SidebarTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: Material(
         color: selected
-            ? AppColors.teal.withValues(alpha: 0.12)
+            ? AppColors.primary.withValues(alpha: 0.12)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
@@ -298,7 +298,7 @@ class _SidebarTile extends StatelessWidget {
                 Icon(
                   item.icon,
                   size: 20,
-                  color: selected ? AppColors.teal : AppColors.textMuted,
+                  color: selected ? AppColors.primary : AppColors.textMuted,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -309,7 +309,7 @@ class _SidebarTile extends StatelessWidget {
                       fontWeight:
                           selected ? FontWeight.w700 : FontWeight.w500,
                       color: selected
-                          ? AppColors.teal
+                          ? AppColors.primary
                           : const Color(0xFF334155),
                     ),
                   ),

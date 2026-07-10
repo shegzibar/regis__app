@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/payment_provider.dart';
 import '../../../core/providers/booking_provider.dart';
@@ -29,8 +30,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   final List<Map<String, dynamic>> _paymentMethods = [
     {
       'id': 'wallet_points',
-      'name': 'Wallet Points',
-      'description': 'Pay directly using your Forya wallet',
+      'name': 'payment.wallet_points',
+      'description': 'payment.pay_with_wallet',
       'icon': Icons.stars,
       'color': AppColors.green,
     },
@@ -70,8 +71,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         if (mounted) {
           setState(() => _isSubmitting = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Insufficient Wallet Points. Please recharge your wallet.'),
+            SnackBar(
+              content: Text('payment.insufficient_points'.tr()),
               backgroundColor: AppColors.error,
             ),
           );
@@ -105,8 +106,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         if (mounted) {
           setState(() => _isSubmitting = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Payment successful! Your booking is confirmed.'),
+            SnackBar(
+              content: Text('payment.payment_successful'.tr()),
               backgroundColor: AppColors.green,
             ),
           );
@@ -119,8 +120,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         if (mounted) {
           setState(() => _isSubmitting = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Payment submitted! A manager will review your receipt shortly.'),
+            SnackBar(
+              content: Text('payment.payment_submitted'.tr()),
               backgroundColor: AppColors.green,
             ),
           );
@@ -132,7 +133,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       if (mounted) {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit payment: $e')),
+          SnackBar(content: Text('${'payment.payment_failed'.tr()}$e')),
         );
       }
     }
@@ -174,9 +175,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     ),
                   ),
                   const Spacer(),
-                  const Text(
-                    'Complete Payment',
-                    style: TextStyle(
+                  Text(
+                    'auth.complete_payment'.tr(),
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -194,7 +195,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Booking ID: #${widget.bookingId.substring(0, 8).toUpperCase()}',
+                  '${'auth.booking_id'.tr()}: #${widget.bookingId.substring(0, 8).toUpperCase()}',
                   style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 14,
@@ -241,7 +242,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Expires in ${_formatTime(_remainingSeconds)}',
+                                  '${'auth.expires_in'.tr()} ${_formatTime(_remainingSeconds)}',
                                   style: const TextStyle(
                                     color: Colors.orange,
                                     fontSize: 16,
@@ -249,9 +250,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 2),
-                                const Text(
-                                  'Pay now to lock slot',
-                                  style: TextStyle(
+                                Text(
+                                  'auth.pay_now_to_lock_slot'.tr(),
+                                  style: const TextStyle(
                                     color: AppColors.textMuted,
                                     fontSize: 12,
                                   ),
@@ -290,22 +291,22 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                 ),
                               ),
                               const SizedBox(width: 16),
-                              const Expanded(
+                              Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Forya Station',
-                                      style: TextStyle(
+                                      'payment.forya_station'.tr(),
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    SizedBox(height: 4),
+                                    const SizedBox(height: 4),
                                     Text(
-                                      'Reserved Slot',
-                                      style: TextStyle(
+                                      'payment.reserved_slot'.tr(),
+                                      style: const TextStyle(
                                         color: AppColors.textMuted,
                                         fontSize: 14,
                                       ),
@@ -323,8 +324,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Session Fee', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
-                              Text('${widget.amount.toInt()} EGP', style: const TextStyle(color: AppColors.textMuted, fontSize: 14)),
+                              Text('payment.session_fee'.tr(), style: const TextStyle(color: AppColors.textMuted, fontSize: 14)),
+                              Text('${widget.amount.toInt()} ${'common.egp'.tr()}', style: const TextStyle(color: AppColors.textMuted, fontSize: 14)),
                             ],
                           ),
                           
@@ -335,8 +336,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Total to Pay', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                              Text('${widget.amount.toInt()} EGP', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              Text('auth.total_to_pay'.tr(), style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              Text('${widget.amount.toInt()} ${'common.egp'.tr()}', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ],
@@ -346,9 +347,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     const SizedBox(height: 32),
                     
                     // Payment Method Selection
-                    const Text(
-                      'Select Payment Method',
-                      style: TextStyle(
+                    Text(
+                      'auth.select_payment_method'.tr(),
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -362,8 +363,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12.0),
                         child: PaymentMethodCard(
-                          name: method['name'],
-                          description: method['description'],
+                          name: method['name'].toString().tr(),
+                          description: method['description'].toString().tr(),
                           icon: method['icon'],
                           iconColor: method['color'],
                           isSelected: method['id'] == _selectedPaymentMethod,
@@ -403,9 +404,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 ),
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Confirm Payment',
-                        style: TextStyle(
+                    : Text(
+                        'auth.confirm_payment'.tr(),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),

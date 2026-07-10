@@ -29,12 +29,12 @@ class OwnerInventoryScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddItemDialog(context, ref),
-        backgroundColor: AppColors.teal,
+        backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('Add Item', style: TextStyle(color: Colors.white)),
       ),
       body: inventoryAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.teal)),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
         error: (e, _) => Center(child: Text('Failed to load: $e')),
         data: (items) {
           if (items.isEmpty) {
@@ -135,7 +135,7 @@ class OwnerInventoryScreen extends ConsumerWidget {
                             }
                           }
                         },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.teal, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
                   child: isSaving ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Save Item'),
                 ),
               ],
@@ -194,10 +194,10 @@ class _InventoryItemCardState extends ConsumerState<_InventoryItemCard> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.teal.withValues(alpha: 0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.inventory_2_outlined, color: AppColors.teal),
+            child: const Icon(Icons.inventory_2_outlined, color: AppColors.primary),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -213,13 +213,13 @@ class _InventoryItemCardState extends ConsumerState<_InventoryItemCard> {
           if (_isLoading)
             const Padding(
               padding: EdgeInsets.only(right: 12.0),
-              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.teal)),
+              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
             )
           else
             Switch(
               value: _isActive,
               onChanged: _toggleStatus,
-              activeThumbColor: AppColors.teal,
+              activeThumbColor: AppColors.primary,
             ),
         ],
       ),

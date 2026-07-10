@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary Colors
+  static const Color primary = Color(0xFF22C55E); // Forya Green
+  static const Color foryaGreen = Color(0xFF22C55E);
+  static const Color foryaDark = Color(0xFF0D1B2A);
+  
   static const Color green = Color(0xFF4CAF50);
   static const Color greenLight = Color(0xFFE8F5E8);
+  static const Color orange = Color(0xFFF59E0B);
   static const Color purple = Color(0xFF534AB7);
   static const Color purpleLight = Color(0xFFEEEDFE);
   static const Color teal = Color(0xFF0F6E56);
@@ -16,7 +21,7 @@ class AppColors {
   static const Color redLight = Color(0xFFFFE5E5);
   
   // Neutral Colors
-  static const Color dark = Color(0xFF1a1a2e);
+  static const Color dark = Color(0xFF0D1B2A); // Forya Dark
   static const Color gray = Color(0xFF888780);
   static const Color lightGray = Color(0xFFF5F5F5);
   static const Color white = Color(0xFFFFFFFF);
@@ -28,7 +33,7 @@ class AppColors {
   static const Color darkSurface = Color(0xFF2A2A2A);
   
   // Text Colors
-  static const Color textPrimary = Color(0xFF1a1a2e);
+  static const Color textPrimary = Color(0xFF0D1B2A);
   static const Color textSecondary = Color(0xFF666666);
   static const Color textLight = Color(0xFFFFFFFF);
   static const Color textDark = Color(0xFF000000);

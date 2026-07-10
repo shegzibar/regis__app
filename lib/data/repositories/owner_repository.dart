@@ -426,19 +426,13 @@ class OwnerRepository {
       'total_price': totalPrice,
     }).select('*, cyber_inventory_items(*)').single();
 
-    // Automatically update the parent booking total amount
-    await _supabase.client.rpc('increment_booking_total', params: {
-      'b_id': bookingId,
-      'amount_to_add': totalPrice,
-    });
-    // Fallback if rpc is not there:
-    // This is a naive implementation if postgres function doesn't exist.
-    // It's safer to fetch the booking, add, and update.
+    // Fetch current total and add only once (avoids double-count from RPC + manual update)
     final bookingRaw = await _supabase.from('bookings').select('total_amount').eq('id', bookingId).single();
     final currentTotal = (bookingRaw['total_amount'] as num).toDouble();
     await _supabase.from('bookings').update({'total_amount': currentTotal + totalPrice}).eq('id', bookingId);
 
     return BookingItem.fromMap(row);
+
   }
 
   Future<void> cancelBooking(String bookingId) async {

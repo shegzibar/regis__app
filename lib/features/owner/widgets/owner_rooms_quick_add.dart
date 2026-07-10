@@ -68,7 +68,7 @@ class _OwnerRoomsQuickAddPanelState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('owner_profile.rooms_added'.tr()),
-            backgroundColor: AppColors.teal,
+            backgroundColor: AppColors.primary,
           ),
         );
         setState(() {
@@ -132,7 +132,7 @@ class _OwnerRoomsQuickAddPanelState
                 : const Icon(Icons.add, size: 18),
             label: Text('owner_profile.add_selected_rooms'.tr()),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.teal,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
           ),

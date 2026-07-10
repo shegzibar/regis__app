@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../core/constants/app_colors.dart';
 
 class GamingCenterBottomSheet extends StatelessWidget {
@@ -129,7 +130,7 @@ class GamingCenterBottomSheet extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        center['isOpen'] ? 'Open Now' : 'Closed',
+                        center['isOpen'] ? 'common.open_now'.tr() : 'common.closed'.tr(),
                         style: TextStyle(
                           color: center['isOpen'] 
                               ? AppColors.green 
@@ -166,7 +167,7 @@ class GamingCenterBottomSheet extends StatelessWidget {
                     
                     // Distance
                     Text(
-                      '${center['distance']} km',
+                      '${center['distance']} ${'map.km_away'.tr()}',
                       style: const TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 14,
@@ -178,9 +179,9 @@ class GamingCenterBottomSheet extends StatelessWidget {
                 const SizedBox(height: 20),
                 
                 // Consoles Available
-                const Text(
-                  'Available Consoles',
-                  style: TextStyle(
+                Text(
+                  'map_bottom_sheet.available_consoles'.tr(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -216,9 +217,9 @@ class GamingCenterBottomSheet extends StatelessWidget {
                 // Price Range
                 Row(
                   children: [
-                    const Text(
-                      'Price Range',
-                      style: TextStyle(
+                    Text(
+                      'map_bottom_sheet.price_range'.tr(),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -273,7 +274,7 @@ class GamingCenterBottomSheet extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           icon: const Icon(Icons.map_outlined, size: 18),
-                          label: const Text('Maps', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          label: Text('map_bottom_sheet.maps'.tr(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                         ),
                       ),
                     if (center['latitude'] != null && center['longitude'] != null)
@@ -292,9 +293,9 @@ class GamingCenterBottomSheet extends StatelessWidget {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        child: const Text(
-                          'View Details',
-                          style: TextStyle(
+                        child: Text(
+                          'map_bottom_sheet.view_details'.tr(),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),

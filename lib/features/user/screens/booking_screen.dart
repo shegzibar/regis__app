@@ -32,12 +32,19 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
   final List<String> _timeSlots = [
     '10:00 AM',
+    '11:00 AM',
     '12:00 PM',
+    '01:00 PM',
     '02:00 PM',
+    '03:00 PM',
     '04:00 PM',
+    '05:00 PM',
     '06:00 PM',
+    '07:00 PM',
     '08:00 PM',
+    '09:00 PM',
     '10:00 PM',
+    '11:00 PM',
   ];
 
   final List<int> _durations = [1, 2, 3, 4];
@@ -522,20 +529,12 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
                         const SizedBox(height: 16),
 
-                        // Time Slots Grid
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 2.0,
-                          ),
-                          itemCount: _timeSlots.length,
-                          itemBuilder: (context, index) {
-                            final timeSlot = _timeSlots[index];
+                        // Time Slots Grid (Responsive Wrap)
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          alignment: WrapAlignment.start,
+                          children: _timeSlots.map((timeSlot) {
                             final isSelected = timeSlot == _selectedTimeSlot;
                             final isBooked = _bookedSlots.contains(timeSlot);
                             final isPast = _isSlotInPast(timeSlot);
@@ -547,7 +546,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                                isPast: isPast,
                                onTap: () => _selectTimeSlot(timeSlot),
                              );
-                          },
+                          }).toList(),
                         ),
 
                         const SizedBox(height: 32),
