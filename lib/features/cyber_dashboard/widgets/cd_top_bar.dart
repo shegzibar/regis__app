@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../constants/cd_colors.dart';
@@ -10,8 +11,7 @@ class CdTopBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(cdLangProvider);
-    final isAr = lang == 'ar';
+    final isAr = context.locale.languageCode == 'ar';
     final cyberAsync = ref.watch(currentCyberProvider);
     final user = ref.watch(authStateProvider);
 
@@ -69,8 +69,7 @@ class CdTopBar extends ConsumerWidget {
           // Language toggle
           GestureDetector(
             onTap: () {
-              ref.read(cdLangProvider.notifier).state =
-                  isAr ? 'en' : 'ar';
+              context.setLocale(Locale(isAr ? 'en' : 'ar'));
             },
             child: Container(
               padding:
@@ -123,7 +122,7 @@ class CdTopBar extends ConsumerWidget {
                     const Icon(Icons.logout, size: 16, color: kRed),
                     const SizedBox(width: 8),
                     Text(
-                      isAr ? 'تسجيل الخروج' : 'Sign out',
+                      'common.logout'.tr(),
                       style: const TextStyle(color: kRed, fontSize: 13),
                     ),
                   ],

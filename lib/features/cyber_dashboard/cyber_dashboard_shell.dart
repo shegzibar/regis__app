@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'constants/cd_colors.dart';
@@ -82,9 +84,7 @@ class _CyberDashboardShellState
     if (bookings == null || bookings.isEmpty) return;
 
     final now = DateTime.now();
-    final lang = ref.read(cdLangProvider);
-    final isAr = lang == 'ar';
-
+    final isAr = context.locale.languageCode == 'ar';
     for (final b in bookings) {
       // Only notify for confirmed or ongoing bookings that just ended
       if (_notifiedEndIds.contains(b.id)) continue;
@@ -93,8 +93,8 @@ class _CyberDashboardShellState
       final localEnd = b.endTime.toLocal();
       if (localEnd.isBefore(now)) {
         _notifiedEndIds.add(b.id);
-        final name = b.userName ?? (isAr ? 'عميل' : 'Customer');
-        final station = b.stationName ?? (isAr ? 'محطة' : 'Station');
+        final name = b.userName ?? ('cyber.customer'.tr());
+        final station = b.stationName ?? ('cyber.station'.tr());
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -104,9 +104,7 @@ class _CyberDashboardShellState
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      isAr
-                          ? '⏰ انتهى حجز $name على $station'
-                          : '⏰ Session ended: $name on $station',
+                      'cyber.session_ended_alert'.tr(args: [name, station]),
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -151,12 +149,10 @@ class _CyberDashboardShellState
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.watch(cdLangProvider);
     final page = ref.watch(cdSelectedPageProvider);
-    final isAr = lang == 'ar';
-
+    final isAr = context.locale.languageCode == 'ar';
     return Directionality(
-      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+      textDirection: isAr ? ui.TextDirection.rtl : ui.TextDirection.ltr,
       child: Scaffold(
         backgroundColor: kBg,
         body: Column(

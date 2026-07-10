@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/cyber.dart';
 import '../../../data/models/room.dart';
@@ -51,10 +52,9 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.watch(cdLangProvider);
-    final isAr = lang == 'ar';
     final cyberAsync = ref.watch(currentCyberProvider);
     final roomsAsync = ref.watch(cyberRoomsProvider);
+    final isAr = context.locale.languageCode == 'ar';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(kPadding),
@@ -74,7 +74,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
             children: [
               // Page Title
               Text(
-                isAr ? 'ملف الكافيه' : 'Cyber Profile',
+                'cyber.cyber_profile'.tr(),
                 style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -103,14 +103,14 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                isAr ? 'البيانات الأساسية' : 'Basic Info',
+                                'cyber.basic_info'.tr(),
                                 style: const TextStyle(
                                     fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                               if (!_isEditing)
                                 TextButton.icon(
                                   icon: const Icon(Icons.edit, size: 16),
-                                  label: Text(isAr ? 'تعديل' : 'Edit'),
+                                  label: Text('cyber.edit'.tr()),
                                   onPressed: () =>
                                       setState(() => _isEditing = true),
                                 )
@@ -118,14 +118,14 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                           ),
                           const Divider(height: 24, thickness: 0.5),
 
-                          _buildTextField(isAr ? 'اسم الكافيه' : 'Cyber Name',
+                          _buildTextField('cyber.cyber_name'.tr(),
                               _nameCtrl, _isEditing),
                           const SizedBox(height: 16),
-                          _buildTextField(isAr ? 'الوصف' : 'Description',
+                          _buildTextField('cyber.description'.tr(),
                               _descCtrl, _isEditing,
                               maxLines: 3),
                           const SizedBox(height: 16),
-                          _buildTextField(isAr ? 'العنوان' : 'Address',
+                          _buildTextField('cyber.address'.tr(),
                               _addressCtrl, _isEditing),
 
                           if (_isEditing) ...[
@@ -138,7 +138,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                                     _populate(cyber);
                                     setState(() => _isEditing = false);
                                   },
-                                  child: Text(isAr ? 'إلغاء' : 'Cancel'),
+                                  child: Text('cyber.cancel'.tr()),
                                 ),
                                 const SizedBox(width: 12),
                                 ElevatedButton(
@@ -156,7 +156,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                                           child: CircularProgressIndicator(
                                               color: Colors.white,
                                               strokeWidth: 2))
-                                      : Text(isAr ? 'حفظ' : 'Save'),
+                                      : Text('cyber.save'.tr()),
                                 ),
                               ],
                             ),
@@ -185,7 +185,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                isAr ? 'الغرف والأسعار' : 'Rooms & Pricing',
+                                'cyber.rooms_pricing'.tr(),
                                 style: const TextStyle(
                                     fontSize: 16, fontWeight: FontWeight.bold),
                               ),
@@ -203,7 +203,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                             error: (e, _) => Text('Error: $e'),
                             data: (rooms) {
                               if (rooms.isEmpty) {
-                                return Text(isAr ? 'لا توجد غرف' : 'No rooms');
+                                return Text('cyber.no_rooms'.tr());
                               }
                               return ListView.separated(
                                 shrinkWrap: true,
@@ -272,7 +272,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                                                   await ref.read(uploadRoomImageProvider({'roomId': r.id, 'file': image}).future);
                                                   ref.invalidate(cyberRoomsProvider);
                                                   if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isAr ? 'تم رفع الصورة' : 'Image uploaded')));
+                                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('cyber.image_uploaded'.tr())));
                                                   }
                                                 } catch (e) {
                                                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
@@ -319,14 +319,14 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isAr ? 'الصور' : 'Photos',
+                      'cyber.photos'.tr(),
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const Divider(height: 24, thickness: 0.5),
                     const SizedBox(height: 8),
 
                     // Cover Photo
-                    Text(isAr ? 'صورة الغلاف' : 'Cover Photo', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text('cyber.cover_photo'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () async {
@@ -358,7 +358,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                                 children: [
                                   const Icon(Icons.add_a_photo, color: kGray, size: 40),
                                   const SizedBox(height: 8),
-                                  Text(isAr ? 'اضغط لإضافة صورة غلاف' : 'Tap to add cover photo', style: const TextStyle(color: kGray)),
+                                  Text('cyber.tap_to_add_cover'.tr(), style: const TextStyle(color: kGray)),
                                 ],
                               )
                             : null,
@@ -371,10 +371,10 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(isAr ? 'معرض الصور' : 'Gallery', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text('cyber.gallery'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
                         TextButton.icon(
                           icon: const Icon(Icons.add_photo_alternate, size: 16),
-                          label: Text(isAr ? 'إضافة صور' : 'Add photos'),
+                          label: Text('cyber.add_photos'.tr()),
                           onPressed: () async {
                             final picker = ImagePicker();
                             final List<XFile> images = await picker.pickMultiImage();
@@ -396,7 +396,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                         padding: const EdgeInsets.all(20),
                         width: double.infinity,
                         decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(kRadiusSm)),
-                        child: Text(isAr ? 'لا توجد صور في المعرض' : 'No photos in gallery', textAlign: TextAlign.center, style: const TextStyle(color: kGray)),
+                        child: Text('cyber.no_photos_in_gallery'.tr(), textAlign: TextAlign.center, style: const TextStyle(color: kGray)),
                       )
                     else
                       GridView.builder(
@@ -425,14 +425,14 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                                     final confirm = await showDialog<bool>(
                                       context: context,
                                       builder: (ctx) => AlertDialog(
-                                        title: Text(isAr ? 'حذف الصورة' : 'Delete Photo'),
-                                        content: Text(isAr ? 'هل أنت متأكد من حذف هذه الصورة؟' : 'Are you sure you want to delete this photo?'),
+                                        title: Text('cyber.delete_photo'.tr()),
+                                        content: Text('cyber.are_you_sure_you'.tr()),
                                         actions: [
-                                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(isAr ? 'إلغاء' : 'Cancel')),
+                                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('cyber.cancel'.tr())),
                                           ElevatedButton(
                                             style: ElevatedButton.styleFrom(backgroundColor: kRed, foregroundColor: Colors.white),
                                             onPressed: () => Navigator.pop(ctx, true),
-                                            child: Text(isAr ? 'حذف' : 'Delete'),
+                                            child: Text('cyber.delete'.tr()),
                                           ),
                                         ],
                                       ),
@@ -506,20 +506,20 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isAr ? 'تعديل السعر' : 'Edit Price'),
+        title: Text('cyber.edit_price'.tr()),
         content: TextField(
           controller: priceCtrl,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
             suffixText: 'EGP/hr',
             border: const OutlineInputBorder(),
-            labelText: isAr ? 'السعر' : 'Price',
+            labelText: 'cyber.price'.tr(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(isAr ? 'إلغاء' : 'Cancel'),
+            child: Text('cyber.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -532,7 +532,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                 ref.invalidate(cyberRoomsProvider);
               }
             },
-            child: Text(isAr ? 'حفظ' : 'Save'),
+            child: Text('cyber.save'.tr()),
           ),
         ],
       ),
@@ -550,14 +550,14 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setStateSB) => AlertDialog(
-          title: Text(isAr ? 'إضافة غرفة' : 'Add Room'),
+          title: Text('cyber.add_room'.tr()),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameCtrl,
                 decoration: InputDecoration(
-                  labelText: isAr ? 'اسم الغرفة' : 'Room Name',
+                  labelText: 'cyber.room_name'.tr(),
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -565,7 +565,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
               DropdownButtonFormField<String>(
                 value: selectedType,
                 decoration: InputDecoration(
-                  labelText: isAr ? 'النوع' : 'Type',
+                  labelText: 'cyber.type'.tr(),
                   border: const OutlineInputBorder(),
                 ),
                 items: const [
@@ -580,7 +580,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                 controller: priceCtrl,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: isAr ? 'السعر (ساعة)' : 'Price (per hr)',
+                  labelText: 'cyber.price_per_hr'.tr(),
                   suffixText: 'EGP',
                   border: const OutlineInputBorder(),
                 ),
@@ -590,7 +590,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                 controller: descCtrl,
                 maxLines: 2,
                 decoration: InputDecoration(
-                  labelText: isAr ? 'المميزات (مثل: نتفليكس)' : 'Amenities (e.g., Netflix)',
+                  labelText: 'cyber.amenities_eg_netflix'.tr(),
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -599,7 +599,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text(isAr ? 'إلغاء' : 'Cancel'),
+              child: Text('cyber.cancel'.tr()),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -617,7 +617,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                   ref.invalidate(cyberRoomsProvider);
                 }
               },
-              child: Text(isAr ? 'إضافة' : 'Add'),
+              child: Text('cyber.add'.tr()),
             ),
           ],
         ),
@@ -630,12 +630,12 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isAr ? 'حذف الغرفة' : 'Delete Room'),
-        content: Text(isAr ? 'هل أنت متأكد من حذف الغرفة "${r.name}" وجميع الأجهزة التابعة لها؟' : 'Are you sure you want to delete "${r.name}" and all its stations?'),
+        title: Text('cyber.delete_room'.tr()),
+        content: Text('cyber.are_you_sure_you_1'.tr(args: [r.name])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(isAr ? 'إلغاء' : 'Cancel'),
+            child: Text('cyber.cancel'.tr()),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kRed, foregroundColor: Colors.white),
@@ -646,7 +646,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                 ref.invalidate(cyberRoomsProvider);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(isAr ? 'تم الحذف بنجاح' : 'Deleted successfully')),
+                    SnackBar(content: Text('cyber.deleted_successfully'.tr())),
                   );
                 }
               } catch (e) {
@@ -657,7 +657,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                 }
               }
             },
-            child: Text(isAr ? 'حذف' : 'Delete'),
+            child: Text('cyber.delete'.tr()),
           ),
         ],
       ),

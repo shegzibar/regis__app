@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/cd_colors.dart';
 import '../providers/cd_providers.dart';
@@ -6,14 +7,12 @@ import '../providers/cd_providers.dart';
 class _NavItem {
   final String key;
   final IconData icon;
-  final String labelAr;
-  final String labelEn;
+  final String labelKey;
 
   const _NavItem({
     required this.key,
     required this.icon,
-    required this.labelAr,
-    required this.labelEn,
+    required this.labelKey,
   });
 }
 
@@ -21,46 +20,37 @@ const _navItems = [
   _NavItem(
     key: 'home',
     icon: Icons.dashboard_outlined,
-    labelAr: 'الرئيسية',
-    labelEn: 'Home',
+    labelKey: 'cyber.home',
   ),
-
-
   _NavItem(
     key: 'schedule',
     icon: Icons.calendar_month_outlined,
-    labelAr: 'الجدول',
-    labelEn: 'Schedule',
+    labelKey: 'cyber.schedule',
   ),
   _NavItem(
     key: 'inventory',
     icon: Icons.inventory_2_outlined,
-    labelAr: 'المخزون والمنتجات',
-    labelEn: 'Inventory & Snacks',
+    labelKey: 'cyber.inventory',
   ),
   _NavItem(
     key: 'stations',
     icon: Icons.computer_outlined,
-    labelAr: 'المحطات',
-    labelEn: 'Stations',
+    labelKey: 'cyber.stations',
   ),
   _NavItem(
     key: 'profile',
     icon: Icons.store_outlined,
-    labelAr: 'ملف الكافيه',
-    labelEn: 'Cyber Profile',
+    labelKey: 'cyber.profile',
   ),
   _NavItem(
     key: 'workers',
     icon: Icons.people_outline,
-    labelAr: 'الموظفون',
-    labelEn: 'Workers',
+    labelKey: 'cyber.workers',
   ),
   _NavItem(
     key: 'wallet_points',
     icon: Icons.stars,
-    labelAr: 'نقاط المحفظة',
-    labelEn: 'Wallet Points',
+    labelKey: 'cyber.wallet_points',
   ),
 ];
 
@@ -69,9 +59,8 @@ class CdSidebar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(cdLangProvider);
     final currentPage = ref.watch(cdSelectedPageProvider);
-    final isAr = lang == 'ar';
+    final isAr = context.locale.languageCode == 'ar';
 
     return Container(
       width: 200,
@@ -158,7 +147,7 @@ class _SidebarTile extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                isAr ? item.labelAr : item.labelEn,
+                item.labelKey.tr(),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight:

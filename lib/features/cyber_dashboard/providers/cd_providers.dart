@@ -9,10 +9,7 @@ import '../repositories/cd_cyber_repository.dart';
 import '../repositories/cd_booking_repository.dart';
 import '../repositories/cd_payment_repository.dart';
 
-// ─── Language & Navigation ──────────────────────────────────────────────────
-
-/// Current UI language: 'ar' (default) or 'en'.
-final cdLangProvider = StateProvider<String>((ref) => 'ar');
+// ─── Navigation ─────────────────────────────────────────────────────────────
 
 /// Currently selected sidebar page key.
 final cdSelectedPageProvider = StateProvider<String>((ref) => 'home');

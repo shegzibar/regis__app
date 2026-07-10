@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../constants/cd_colors.dart';
@@ -9,9 +10,8 @@ class PaymentsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(cdLangProvider);
-    final isAr = lang == 'ar';
     final paymentsAsync = ref.watch(pendingPaymentsProvider);
+    final isAr = context.locale.languageCode == 'ar';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(kPadding),
@@ -20,16 +20,14 @@ class PaymentsPage extends ConsumerWidget {
         children: [
           // Page Title
           Text(
-            isAr ? 'المدفوعات المعلقة' : 'Pending Payments',
+            'cyber.pending_payments'.tr(),
             style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: kSidebarText),
           ),
           Text(
-            isAr
-                ? 'راجع رسوم الحجز (5 جنيهات) للموافقة على الحجوزات'
-                : 'Review booking fees (5 EGP) to approve bookings',
+            'cyber.review_booking_fees_5'.tr(),
             style: const TextStyle(fontSize: 12, color: kGray),
           ),
           const SizedBox(height: 20),
@@ -57,9 +55,7 @@ class PaymentsPage extends ConsumerWidget {
                             size: 48, color: kTeal),
                         const SizedBox(height: 12),
                         Text(
-                          isAr
-                              ? 'لا توجد مدفوعات معلقة!'
-                              : 'No pending payments!',
+                          'cyber.no_pending_payments'.tr(),
                           style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -213,7 +209,7 @@ class PaymentsPage extends ConsumerWidget {
                                 ref.invalidate(todayRevenueProvider);
                               },
                               icon: const Icon(Icons.check, size: 16),
-                              label: Text(isAr ? 'موافقة' : 'Approve'),
+                              label: Text('cyber.approve'.tr()),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kTeal,
                                 foregroundColor: Colors.white,
@@ -227,7 +223,7 @@ class PaymentsPage extends ConsumerWidget {
                                 _showRejectDialog(context, ref, p, isAr);
                               },
                               icon: const Icon(Icons.close, size: 16),
-                              label: Text(isAr ? 'رفض' : 'Reject'),
+                              label: Text('cyber.reject'.tr()),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: kRed,
                                 side: const BorderSide(color: kRed),
@@ -275,18 +271,18 @@ class PaymentsPage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isAr ? 'سبب الرفض' : 'Rejection Reason'),
+        title: Text('cyber.rejection_reason'.tr()),
         content: TextField(
           controller: reasonController,
           decoration: InputDecoration(
             hintText:
-                isAr ? 'مثال: الإيصال غير واضح' : 'e.g. Receipt is unclear',
+                'cyber.eg_receipt_is_unclear'.tr(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(isAr ? 'إلغاء' : 'Cancel'),
+            child: Text('cyber.cancel'.tr()),
           ),
           TextButton(
             onPressed: () async {
@@ -303,7 +299,7 @@ class PaymentsPage extends ConsumerWidget {
               ref.invalidate(todayBookingsProvider);
               ref.invalidate(todayRevenueProvider);
             },
-            child: Text(isAr ? 'تأكيد الرفض' : 'Confirm Reject',
+            child: Text('cyber.confirm_reject'.tr(),
                 style: const TextStyle(color: kRed)),
           ),
         ],

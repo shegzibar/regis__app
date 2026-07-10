@@ -44,6 +44,41 @@ class SupportMessage {
       };
 }
 
+class SupportChatSession {
+  final String id;
+  final String userId;
+  final String userName;
+  final String lastMessage;
+  final DateTime lastMessageAt;
+  final String status;
+  final int unreadBySupport;
+
+  const SupportChatSession({
+    required this.id,
+    required this.userId,
+    required this.userName,
+    required this.lastMessage,
+    required this.lastMessageAt,
+    required this.status,
+    required this.unreadBySupport,
+  });
+
+  factory SupportChatSession.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data()!;
+    return SupportChatSession(
+      id: doc.id,
+      userId: data['userId'] as String? ?? '',
+      userName: data['userName'] as String? ?? 'Unknown',
+      lastMessage: data['lastMessage'] as String? ?? '',
+      lastMessageAt:
+          (data['lastMessageAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      status: data['status'] as String? ?? 'open',
+      unreadBySupport: data['unreadBySupport'] as int? ?? 0,
+    );
+  }
+}
+
 // ──────────────────────────────────────────────────────────────────
 // Firestore chat service
 //
@@ -142,6 +177,54 @@ class SupportChatService {
       'lastMessageAt': FieldValue.serverTimestamp(),
     });
   }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Admin Methods
+  // ──────────────────────────────────────────────────────────────────
+
+  /// Stream of all active (open) support chats for the admin dashboard.
+  Stream<List<SupportChatSession>> allChatsStream() {
+    return _chats
+        .where('status', isEqualTo: 'open')
+        .orderBy('lastMessageAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((d) => SupportChatSession.fromFirestore(d))
+            .toList());
+  }
+
+  /// Mark all messages in a chat as read by support.
+  Future<void> markAsRead(String chatId) async {
+    await _chats.doc(chatId).update({'unreadBySupport': 0});
+  }
+
+  /// Close/resolve a chat.
+  Future<void> resolveChat(String chatId) async {
+    await _chats.doc(chatId).update({'status': 'closed'});
+  }
+
+  /// Sends a message from the admin dashboard to the user.
+  Future<void> sendAdminMessage({
+    required String chatId,
+    required String text,
+  }) async {
+    final batch = _db.batch();
+
+    final msgRef = _messages(chatId).doc();
+    batch.set(msgRef, {
+      'text': text,
+      'sender': 'support',
+      'timestamp': FieldValue.serverTimestamp(),
+      'isRead': false, // Unread by user
+    });
+
+    batch.update(_chats.doc(chatId), {
+      'lastMessage': text,
+      'lastMessageAt': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -169,4 +252,10 @@ final supportMessagesProvider =
     StreamProvider.family<List<SupportMessage>, String>((ref, chatId) {
   final service = ref.read(supportChatServiceProvider);
   return service.messagesStream(chatId);
+});
+
+/// Live stream of all active chat sessions (for admin dashboard).
+final adminChatsProvider = StreamProvider<List<SupportChatSession>>((ref) {
+  final service = ref.read(supportChatServiceProvider);
+  return service.allChatsStream();
 });

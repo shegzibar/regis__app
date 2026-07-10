@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../data/models/booking.dart';
@@ -30,9 +31,8 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.watch(cdLangProvider);
-    final isAr = lang == 'ar';
     final bookingsAsync = ref.watch(allBookingsProvider);
+    final isAr = context.locale.languageCode == 'ar';
 
     return Scaffold(
       backgroundColor: kBg,
@@ -56,7 +56,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isAr ? 'الجدول الزمني' : 'Schedule',
+                          'cyber.schedule'.tr(),
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -64,14 +64,14 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
                           ),
                         ),
                         Text(
-                          isAr ? 'إدارة حجوزاتك اليومية والأسبوعية والشهرية' : 'Manage your daily, weekly, and monthly bookings',
+                          'cyber.manage_your_daily_weekly'.tr(),
                           style: const TextStyle(fontSize: 13, color: kGray),
                         ),
                       ],
                     ),
                     IconButton(
                       icon: const Icon(Icons.refresh, color: kPurple),
-                      tooltip: isAr ? 'تحديث' : 'Refresh',
+                      tooltip: 'cyber.refresh'.tr(),
                       onPressed: () => ref.invalidate(allBookingsProvider),
                       style: IconButton.styleFrom(
                         backgroundColor: kPurple.withValues(alpha: 0.1),
@@ -93,9 +93,9 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
                   dividerColor: Colors.transparent,
                   tabAlignment: TabAlignment.start,
                   tabs: [
-                    Tab(text: isAr ? 'اليوم' : 'Today'),
-                    Tab(text: isAr ? 'هذا الأسبوع' : 'This Week'),
-                    Tab(text: isAr ? 'هذا الشهر' : 'This Month'),
+                    Tab(text: 'cyber.today'.tr()),
+                    Tab(text: 'cyber.this_week'.tr()),
+                    Tab(text: 'cyber.this_month'.tr()),
                   ],
                 ),
               ],
@@ -163,7 +163,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
               ),
               const SizedBox(height: 8),
               Text(
-                isAr ? 'لم يتم العثور على أي حجوزات في هذه الفترة' : 'No bookings found for this period',
+                'cyber.no_bookings_found_for'.tr(),
                 style: const TextStyle(fontSize: 13, color: kGray),
               ),
             ],
@@ -183,7 +183,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
     }).toList();
 
     if (todayBookings.isEmpty) {
-      return _buildEmptyState(isAr, isAr ? 'لا توجد حجوزات اليوم' : 'No bookings today');
+      return _buildEmptyState(isAr, 'cyber.no_bookings_today'.tr());
     }
 
     // Group by hour
@@ -229,7 +229,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
     }).toList();
 
     if (weeklyBookings.isEmpty) {
-      return _buildEmptyState(isAr, isAr ? 'لا توجد حجوزات هذا الأسبوع' : 'No bookings this week');
+      return _buildEmptyState(isAr, 'cyber.no_bookings_this_week'.tr());
     }
 
     // Group by date string (e.g. "2023-10-12")
@@ -256,7 +256,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
           
           String displayTitle;
           if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
-             displayTitle = isAr ? 'اليوم' : 'Today';
+             displayTitle = 'cyber.today'.tr();
           } else {
              displayTitle = DateFormat('EEEE, MMM d').format(dt);
           }
@@ -282,7 +282,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
     }).toList();
 
     if (monthlyBookings.isEmpty) {
-      return _buildEmptyState(isAr, isAr ? 'لا توجد حجوزات هذا الشهر' : 'No bookings this month');
+      return _buildEmptyState(isAr, 'cyber.no_bookings_this_month'.tr());
     }
 
     final grouped = <String, List<Booking>>{};
@@ -308,7 +308,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
           
           String displayTitle;
           if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
-             displayTitle = isAr ? 'اليوم' : 'Today';
+             displayTitle = 'cyber.today'.tr();
           } else {
              displayTitle = DateFormat('EEE, MMM d').format(dt);
           }
@@ -455,8 +455,8 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
                       Text(
                         b.userName ??
                             (b.source == 'manual'
-                                ? (isAr ? 'عميل حضوري' : 'Walk-in')
-                                : (isAr ? 'مستخدم تطبيق' : 'App user')),
+                                ? ('cyber.walkin'.tr())
+                                : ('cyber.app_user'.tr())),
                         style: const TextStyle(
                             fontSize: 15, fontWeight: FontWeight.w600, color: kSidebarText),
                       ),
@@ -487,7 +487,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
                             Text(
                               b.stationName != null 
                                   ? '${b.stationName} ${b.roomName != null ? '(${b.roomName})' : ''}'
-                                  : (isAr ? 'محطة محجوزة' : 'Station booked'),
+                                  : ('cyber.station_booked'.tr()),
                               style: const TextStyle(fontSize: 11, color: kGray, fontWeight: FontWeight.w500),
                             ),
                           ],
@@ -502,7 +502,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
                         ),
                         child: Text(
                           b.source == 'manual'
-                              ? (isAr ? 'يدوي' : 'Manual')
+                              ? ('cyber.manual'.tr())
                               : b.statusDisplay,
                           style: TextStyle(
                               fontSize: 11,

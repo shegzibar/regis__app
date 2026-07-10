@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/room_provider.dart';
@@ -129,7 +130,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   Future<void> _confirmBooking() async {
     if (_selectedTimeSlot == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a time slot')),
+        SnackBar(content: Text('booking.please_select_time'.tr())),
       );
       return;
     }
@@ -137,7 +138,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     // Prevent booking a past time slot
     if (_isSlotInPast(_selectedTimeSlot!)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This time slot has already passed. Please pick a future slot.')),
+        SnackBar(content: Text('booking.time_slot_passed'.tr())),
       );
       setState(() => _selectedTimeSlot = null);
       return;
@@ -151,7 +152,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
           await ref.read(roomStationsProvider(widget.roomId).future);
       if (stations.isEmpty) {
         throw Exception(
-            'No active stations found in this room. Please choose another room.');
+            'booking.no_active_stations'.tr());
       }
 
       // Pick first active/available station
@@ -193,7 +194,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 durationHours: _selectedDuration.toDouble(),
                 totalAmount: totalAmount,
                 bookingFee: bookingFee,
-                notes: 'Booked via Forya mobile app',
+                notes: 'booking.booked_via_app'.tr(),
               );
 
       if (mounted) {
@@ -250,8 +251,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                     ),
                   ),
                   const Spacer(),
-                  const Text(
-                    'Book Station',
+                  Text(
+                    'home.book_station'.tr(),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -290,9 +291,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                         style: const TextStyle(color: Colors.red))),
                 data: (room) {
                   if (room == null) {
-                    return const Center(
-                        child: Text('Room not found',
-                            style: TextStyle(color: Colors.white)));
+                    return Center(
+                        child: Text('booking.room_not_found'.tr(),
+                            style: const TextStyle(color: Colors.white)));
                   }
 
                   return SingleChildScrollView(
@@ -354,9 +355,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                                             color: AppColors.green,
                                             borderRadius: BorderRadius.circular(4),
                                           ),
-                                          child: const Text(
-                                            'OPEN',
-                                            style: TextStyle(
+                                          child: Text(
+                                            'booking.open_badge'.tr(),
+                                            style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
@@ -410,7 +411,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                                       Text(
                                         room.description != null && room.description!.isNotEmpty
                                             ? room.description!
-                                            : 'Category: ${room.displayName}',
+                                            : '${'booking.category_label'.tr()}: ${room.displayName}',
                                         style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
@@ -432,8 +433,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             children: [
 
                         // Date Selection
-                        const Text(
-                          'Select Date',
+                        Text(
+                          'booking.select_date'.tr(),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -470,8 +471,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                         const SizedBox(height: 32),
 
                         // Duration Selection
-                        const Text(
-                          'Duration',
+                        Text(
+                          'booking.duration'.tr(),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -501,16 +502,16 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Available Slots',
+                            Text(
+                              'booking.available_slots'.tr(),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
-                            const Text(
-                              '2-hour intervals',
+                            Text(
+                              'booking.hour_intervals'.tr(),
                               style: TextStyle(
                                 color: AppColors.textMuted,
                                 fontSize: 14,
@@ -565,8 +566,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text(
-                                    'Registration Fee (Pay Now)',
+                                  Text(
+                                    'booking.registration_fee_pay_now'.tr(),
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.white,
@@ -588,8 +589,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text(
-                                    'Total Session Price',
+                                  Text(
+                                    'booking.total_session_price'.tr(),
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: AppColors.textMuted,
@@ -643,8 +644,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 ),
                 child: _isBookingLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Confirm & Book',
+                    : Text(
+                        'booking.confirm_and_book'.tr(),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/wallet_provider.dart';
@@ -26,7 +27,7 @@ class ProfileUserInfoCard extends ConsumerWidget {
     }
     
     final phone =
-        user?.phone?.isNotEmpty == true ? user!.phone : 'No phone set';
+        user?.phone?.isNotEmpty == true ? user!.phone : 'profile_card.no_phone'.tr();
         
     final memberSince = user != null
         ? '${_monthName(user.createdAt.month)} ${user.createdAt.year}'
@@ -193,7 +194,7 @@ class ProfileUserInfoCard extends ConsumerWidget {
                   color: AppColors.textMuted, size: 14),
               const SizedBox(width: 6),
               Text(
-                'Member since $memberSince',
+                '${'profile_card.member_since'.tr()} $memberSince',
                 style: const TextStyle(
                     color: AppColors.textMuted, fontSize: 13),
               ),

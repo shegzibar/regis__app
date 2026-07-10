@@ -74,9 +74,9 @@ class ProfileMenuSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Settings',
-          style: TextStyle(
+        Text(
+          'settings.title'.tr(),
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -88,7 +88,7 @@ class ProfileMenuSection extends StatelessWidget {
         _buildMenuItem(
           context,
           icon: Icons.person_outline,
-          title: 'Personal Information',
+          title: 'settings.personal_information'.tr(),
           onTap: () => context.push('/personal-info'),
         ),
         SizedBox(
@@ -106,7 +106,7 @@ class ProfileMenuSection extends StatelessWidget {
         _buildMenuItem(
           context,
           icon: Icons.account_balance_wallet_outlined,
-          title: 'Wallet & Rewards',
+          title: 'settings.wallet_rewards'.tr(),
           onTap: () => context.push('/wallet'),
         ),
         SizedBox(
@@ -115,7 +115,7 @@ class ProfileMenuSection extends StatelessWidget {
         _buildMenuItem(
           context,
           icon: Icons.help_outline,
-          title: 'Help & Support',
+          title: 'settings.help_support'.tr(),
           onTap: () => context.push('/help-support'),
         ),
         SizedBox(
@@ -124,7 +124,7 @@ class ProfileMenuSection extends StatelessWidget {
         _buildMenuItem(
           context,
           icon: Icons.logout,
-          title: 'Logout',
+          title: 'settings.logout'.tr(),
           onTap: onLogout,
           isDestructive: true,
         ),

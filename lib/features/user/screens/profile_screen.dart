@@ -64,8 +64,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.darkCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title:
-            const Text('Edit Profile', style: TextStyle(color: Colors.white)),
+        title: Text('profile_card.edit_profile'.tr(),
+            style: const TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -73,7 +73,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               controller: _nameController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                labelText: 'Display Name',
+                labelText: 'profile_card.display_name'.tr(),
                 labelStyle: const TextStyle(color: AppColors.textMuted),
                 filled: true,
                 fillColor: AppColors.darkBg,
@@ -96,13 +96,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: AppColors.textMuted)),
+            child: Text('profile_card.cancel'.tr(),
+                style: const TextStyle(color: AppColors.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Save',
-                style: TextStyle(
+            child: Text('profile_card.save'.tr(),
+                style: const TextStyle(
                     color: AppColors.green, fontWeight: FontWeight.bold)),
           ),
         ],
@@ -119,8 +119,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ref.invalidate(profileDataProvider);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Profile updated successfully!'),
+              SnackBar(
+                content: Text('profile_card.updated_success'.tr()),
                 backgroundColor: AppColors.green,
               ),
             );
@@ -129,7 +129,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Failed to update: $e'),
+                content: Text('${'profile_card.update_failed'.tr()}: $e'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -141,7 +141,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _onSettingsTap() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Settings coming soon!')),
+      SnackBar(content: Text('profile_card.settings_soon'.tr())),
     );
   }
 
@@ -150,20 +150,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.darkCard,
-        title: const Text(
-          'Logout',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          'profile_card.logout'.tr(),
+          style: const TextStyle(color: Colors.white),
         ),
-        content: const Text(
-          'Are you sure you want to logout?',
-          style: TextStyle(color: AppColors.textMuted),
+        content: Text(
+          'profile_card.logout_confirm'.tr(),
+          style: const TextStyle(color: AppColors.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.textMuted),
+            child: Text(
+              'profile_card.cancel_logout'.tr(),
+              style: const TextStyle(color: AppColors.textMuted),
             ),
           ),
           TextButton(
@@ -171,9 +171,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Navigator.pop(context);
               ref.read(authControllerProvider.notifier).signOut();
             },
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: AppColors.error),
+            child: Text(
+              'profile_card.logout'.tr(),
+              style: const TextStyle(color: AppColors.error),
             ),
           ),
         ],
@@ -292,8 +292,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       return EmptyState(
                         icon: Icons.favorite_border,
                         title: 'errors.no_data_available'.tr(),
-                        subtitle:
-                            'Book a session to see your top centers here.',
+                        subtitle: 'profile_card.book_to_see'.tr(),
                       );
                     }
                     return SizedBox(
@@ -349,7 +348,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       return EmptyState(
                         icon: Icons.history,
                         title: 'errors.no_data_available'.tr(),
-                        subtitle: 'Your bookings and reviews will appear here.',
+                        subtitle: 'profile_card.activity_here'.tr(),
                       );
                     }
                     return Column(

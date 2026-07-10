@@ -5,6 +5,10 @@ import '../../features/admin/screens/admin_accounts_screen.dart';
 import '../../features/admin/screens/admin_create_cyber_screen.dart';
 import '../../features/admin/screens/admin_home_screen.dart';
 import '../../features/admin/screens/admin_orders_screen.dart';
+import '../../features/admin/screens/admin_support_screen.dart';
+import '../../features/admin/screens/admin_logs_screen.dart';
+import '../../features/admin/screens/cyber_logs_detail_screen.dart';
+import '../../data/models/cyber_analytics.dart';
 import '../../features/auth/screens/auth_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
@@ -77,6 +81,29 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
             path: '/admin/accounts',
             name: 'admin_accounts',
             builder: (context, state) => const AdminAccountsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/support',
+            name: 'admin_support',
+            builder: (context, state) => const AdminSupportScreen(),
+          ),
+          GoRoute(
+            path: '/admin/logs',
+            name: 'admin_logs',
+            builder: (context, state) => const AdminLogsScreen(),
+            routes: [
+              GoRoute(
+                path: 'detail',
+                name: 'admin_logs_detail',
+                builder: (context, state) {
+                  final cyber = state.extra as CyberAnalytics;
+                  return CyberLogsDetailScreen(
+                    cyberName: cyber.cyberName,
+                    logs: cyber.recentLogs,
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),

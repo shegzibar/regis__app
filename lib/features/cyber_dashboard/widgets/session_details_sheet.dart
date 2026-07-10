@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../data/models/booking.dart';
@@ -50,7 +51,7 @@ class _SessionDetailsSheetState extends ConsumerState<SessionDetailsSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isAr ? 'تفاصيل الجلسة' : 'Session Details',
+                'cyber.session_details'.tr(),
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               IconButton(
@@ -60,7 +61,7 @@ class _SessionDetailsSheetState extends ConsumerState<SessionDetailsSheet> {
             ],
           ),
           const Divider(),
-          Text('User: ${b.userName ?? (b.source == 'manual' ? (isAr ? 'عميل حضوري' : 'Walk-in') : (isAr ? 'مستخدم تطبيق' : 'App user'))}'),
+          Text('User: ${b.userName ?? (b.source == 'manual' ? ('cyber.walkin'.tr()) : ('cyber.app_user'.tr()))}'),
           Text('Station: ${b.stationName} (${b.roomName})'),
           Text('Start: ${DateFormat('HH:mm').format(b.startTime)}'),
           Text('End: ${DateFormat('HH:mm').format(b.endTime)}'),
@@ -77,7 +78,7 @@ class _SessionDetailsSheetState extends ConsumerState<SessionDetailsSheet> {
                           await ref.read(ownerRepositoryProvider).completeBooking(b.id);
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(isAr ? 'تم إنهاء الجلسة' : 'Session completed')),
+                              SnackBar(content: Text('cyber.session_completed'.tr())),
                             );
                             widget.onAdded();
                             Navigator.pop(context);
@@ -92,7 +93,7 @@ class _SessionDetailsSheetState extends ConsumerState<SessionDetailsSheet> {
                       },
                       icon: const Icon(Icons.check_circle, color: kGreen, size: 18),
                       label: Text(
-                        isAr ? 'إنهاء ودفع' : 'Complete',
+                        'cyber.complete'.tr(),
                         style: const TextStyle(color: kGreen),
                       ),
                     ),
@@ -103,7 +104,7 @@ class _SessionDetailsSheetState extends ConsumerState<SessionDetailsSheet> {
                           await ref.read(ownerRepositoryProvider).cancelBooking(b.id);
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(isAr ? 'تم إلغاء الحجز' : 'Booking cancelled')),
+                              SnackBar(content: Text('cyber.booking_cancelled'.tr())),
                             );
                             widget.onAdded();
                             Navigator.pop(context);
@@ -118,7 +119,7 @@ class _SessionDetailsSheetState extends ConsumerState<SessionDetailsSheet> {
                       },
                       icon: const Icon(Icons.cancel, color: kRed, size: 18),
                       label: Text(
-                        isAr ? 'إلغاء الحجز' : 'Cancel',
+                        'cyber.cancel'.tr(),
                         style: const TextStyle(color: kRed),
                       ),
                     ),
@@ -131,12 +132,12 @@ class _SessionDetailsSheetState extends ConsumerState<SessionDetailsSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isAr ? 'الطلبات الإضافية' : 'Additional Items',
+                'cyber.additional_items'.tr(),
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               TextButton.icon(
                 icon: const Icon(Icons.add, size: 16),
-                label: Text(isAr ? 'إضافة' : 'Add Item'),
+                label: Text('cyber.add_item'.tr()),
                 onPressed: () => setState(() => _isAddingItem = !_isAddingItem),
               )
             ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/auth_provider.dart';
 
@@ -44,8 +45,8 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully'),
+          SnackBar(
+            content: Text('personal_info.updated_success'.tr()),
             backgroundColor: AppColors.green,
           ),
         );
@@ -55,7 +56,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update profile: $e'),
+            content: Text('${'personal_info.update_failed'.tr()}: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -128,9 +129,9 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Personal Information',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          'personal_info.title'.tr(),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -181,24 +182,24 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 const SizedBox(height: 40),
                 _buildTextField(
                   controller: _nameController,
-                  label: 'Full Name',
+                  label: 'personal_info.full_name'.tr(),
                   icon: Icons.person_outline,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your name';
+                      return 'personal_info.name_required'.tr();
                     }
                     return null;
                   },
                 ),
                 _buildTextField(
                   controller: _emailController,
-                  label: 'Email Address',
+                  label: 'personal_info.email_address'.tr(),
                   icon: Icons.email_outlined,
-                  isReadOnly: true, // Typically email requires special verification to change
+                  isReadOnly: true,
                 ),
                 _buildTextField(
                   controller: _phoneController,
-                  label: 'Phone Number',
+                  label: 'personal_info.phone_number'.tr(),
                   icon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                 ),
@@ -223,9 +224,9 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               strokeWidth: 2.5,
                             ),
                           )
-                        : const Text(
-                            'Save Changes',
-                            style: TextStyle(
+                        : Text(
+                            'personal_info.save_changes'.tr(),
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,

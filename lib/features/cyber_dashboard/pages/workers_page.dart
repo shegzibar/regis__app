@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../constants/cd_colors.dart';
@@ -9,8 +10,6 @@ class WorkersPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(cdLangProvider);
-    final isAr = lang == 'ar';
     final workersAsync = ref.watch(cyberWorkersProvider);
 
     return SingleChildScrollView(
@@ -26,16 +25,14 @@ class WorkersPage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isAr ? 'طاقم العمل' : 'Workers',
+                    'cyber.workers'.tr(),
                     style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: kSidebarText),
                   ),
                   Text(
-                    isAr
-                        ? 'إدارة حسابات الموظفين المسموح لهم بالدخول للوحة'
-                        : 'Manage staff accounts allowed to access dashboard',
+                    'cyber.manage_staff_accounts_allowed'.tr(),
                     style: const TextStyle(fontSize: 12, color: kGray),
                   ),
                 ],
@@ -45,13 +42,11 @@ class WorkersPage extends ConsumerWidget {
                   // In a real app, this would trigger an invite or creation flow.
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(isAr
-                            ? 'سيتم إضافة هذه الميزة قريباً'
-                            : 'Coming soon')),
+                        content: Text('cyber.coming_soon'.tr())),
                   );
                 },
                 icon: const Icon(Icons.person_add),
-                label: Text(isAr ? 'إضافة موظف' : 'Add Worker'),
+                label: Text('cyber.add_worker'.tr()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPurple,
                   foregroundColor: Colors.white,
@@ -79,7 +74,7 @@ class WorkersPage extends ConsumerWidget {
                   ),
                   child: Center(
                     child: Text(
-                        isAr ? 'لا يوجد موظفون' : 'No workers found'),
+                        'cyber.no_workers_found'.tr()),
                   ),
                 );
               }

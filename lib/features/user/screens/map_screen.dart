@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/cyber_provider.dart';
 import '../../../shared/widgets/map_marker.dart';
@@ -68,9 +69,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                'Location services are disabled. Please enable the services')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('map.location_disabled'.tr())));
       }
       return false;
     }
@@ -81,7 +81,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       if (permission == LocationPermission.denied) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Location permissions are denied')));
+              SnackBar(content: Text('map.location_denied'.tr())));
         }
         return false;
       }
@@ -89,9 +89,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     if (permission == LocationPermission.deniedForever) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                'Location permissions are permanently denied, we cannot request permissions.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('map.location_permanently_denied'.tr())));
       }
       return false;
     }
@@ -159,7 +158,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   void _onFilterTap() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Filter options coming soon!')),
+      SnackBar(content: Text('map.filter_options'.tr())),
     );
   }
 
@@ -361,23 +360,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
-                                'Explore',
-                                style: TextStyle(
+                                'map.explore'.tr(),
+                                style: const TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                   letterSpacing: -0.5,
                                 ),
                               ),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
-                                'Gaming Centers',
-                                style: TextStyle(
+                                'map.gaming_centers'.tr(),
+                                style: const TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.w300,
                                   color: AppColors.green,
@@ -444,7 +443,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Search centers...',
+                          hintText: 'map.search_centers'.tr(),
                           hintStyle: const TextStyle(
                             color: AppColors.textMuted,
                             fontWeight: FontWeight.w400,
@@ -500,9 +499,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           ],
                         ),
                         child: cybers.isEmpty
-                            ? const Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Text('No centers found', style: TextStyle(color: AppColors.textMuted)),
+                            ? Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Text('map.no_centers_found'.tr(), style: const TextStyle(color: AppColors.textMuted)),
                               )
                             : ListView.builder(
                                 padding: EdgeInsets.zero,

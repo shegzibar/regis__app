@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/review_provider.dart';
@@ -53,9 +54,9 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen>
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
               child: Row(
                 children: [
-                  const Text(
-                    'My Bookings',
-                    style: TextStyle(
+                  Text(
+                    'my_bookings.title'.tr(),
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -96,10 +97,10 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen>
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
-                  tabs: const [
-                    Tab(text: 'Upcoming'),
-                    Tab(text: 'Past'),
-                    Tab(text: 'Cancelled'),
+                  tabs: [
+                    Tab(text: 'my_bookings.upcoming'.tr()),
+                    Tab(text: 'my_bookings.past'.tr()),
+                    Tab(text: 'my_bookings.cancelled'.tr()),
                   ],
                 ),
               ),
@@ -121,15 +122,15 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen>
                           color: AppColors.error, size: 48),
                       const SizedBox(height: 12),
                       Text(
-                        'Could not load bookings',
+                        'my_bookings.could_not_load'.tr(),
                         style: const TextStyle(
                             color: Colors.white, fontSize: 16),
                       ),
                       const SizedBox(height: 8),
                       TextButton(
                         onPressed: () => ref.invalidate(userBookingsProvider),
-                        child: const Text('Retry',
-                            style: TextStyle(color: AppColors.green)),
+                        child: Text('my_bookings.retry'.tr(),
+                            style: const TextStyle(color: AppColors.green)),
                       ),
                     ],
                   ),
@@ -153,20 +154,20 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen>
                     children: [
                       _BookingList(
                         bookings: upcoming,
-                        emptyMessage: 'No upcoming bookings',
+                        emptyMessage: 'my_bookings.no_upcoming'.tr(),
                         emptyIcon: Icons.calendar_today_outlined,
                         showCancelButton: true,
                         showPayButton: true,
                       ),
                       _BookingList(
                         bookings: past,
-                        emptyMessage: 'No past bookings',
+                        emptyMessage: 'my_bookings.no_past'.tr(),
                         emptyIcon: Icons.history,
                         showReviewButton: true,
                       ),
                       _BookingList(
                         bookings: cancelled,
-                        emptyMessage: 'No cancelled bookings',
+                        emptyMessage: 'my_bookings.no_cancelled'.tr(),
                         emptyIcon: Icons.cancel_outlined,
                       ),
                     ],
@@ -216,9 +217,9 @@ class _BookingList extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Head to Explore to book a session',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            Text(
+              'my_bookings.head_to_explore'.tr(),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
             ),
           ],
         ),
@@ -338,7 +339,7 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Booking #${widget.booking.id.substring(0, 8).toUpperCase()}',
+                      '${'my_bookings.booking_id'.tr()} #${widget.booking.id.substring(0, 8).toUpperCase()}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -384,19 +385,19 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
             children: [
               _InfoItem(
                 icon: Icons.access_time,
-                label: 'Duration',
+                label: 'my_bookings.duration'.tr(),
                 value: '${widget.booking.durationHours.toInt()}h',
               ),
               const SizedBox(width: 24),
               _InfoItem(
                 icon: Icons.schedule,
-                label: 'Time',
+                label: 'my_bookings.time'.tr(),
                 value: _formatTime(widget.booking.startTime),
               ),
               const SizedBox(width: 24),
               _InfoItem(
                 icon: Icons.payments_outlined,
-                label: 'Fee',
+                label: 'my_bookings.fee'.tr(),
                 value: 'EGP ${widget.booking.bookingFee.toStringAsFixed(0)}',
               ),
             ],
@@ -419,8 +420,8 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
                             borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
-                      child: const Text('Cancel',
-                          style: TextStyle(fontSize: 13)),
+                      child: Text('my_bookings.cancel'.tr(),
+                          style: const TextStyle(fontSize: 13)),
                     ),
                   ),
                 if (widget.showCancelButton && widget.showPayButton)
@@ -437,8 +438,8 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
                             borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
-                      child: const Text('Pay Now',
-                          style: TextStyle(fontSize: 13)),
+                      child: Text('my_bookings.pay_now'.tr(),
+                          style: const TextStyle(fontSize: 13)),
                     ),
                   ),
                 if (widget.showReviewButton && !_checkingReview)
@@ -446,8 +447,10 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
                     child: ElevatedButton.icon(
                       onPressed: _hasReviewed ? null : () => _showReviewSheet(context),
                       icon: Icon(_hasReviewed ? Icons.check : Icons.star_outline, size: 16),
-                      label: Text(_hasReviewed ? 'Reviewed' : 'Leave Review',
-                          style: const TextStyle(fontSize: 13)),
+                      label: Text(
+                        _hasReviewed ? 'my_bookings.reviewed'.tr() : 'my_bookings.leave_review'.tr(),
+                        style: const TextStyle(fontSize: 13),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _hasReviewed ? AppColors.darkBorder : AppColors.purple,
                         foregroundColor: Colors.white,
@@ -488,21 +491,21 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
         backgroundColor: AppColors.darkCard,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Cancel Booking',
-            style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'Are you sure you want to cancel this booking?',
-          style: TextStyle(color: AppColors.textMuted),
+        title: Text('my_bookings.cancel_title'.tr(),
+            style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'my_bookings.cancel_msg'.tr(),
+          style: const TextStyle(color: AppColors.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('No', style: TextStyle(color: AppColors.textMuted)),
+            child: Text('my_bookings.no'.tr(), style: const TextStyle(color: AppColors.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Yes, Cancel',
-                style: TextStyle(color: AppColors.error)),
+            child: Text('my_bookings.yes_cancel'.tr(),
+                style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -515,7 +518,7 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to cancel: $e')),
+            SnackBar(content: Text('${'my_bookings.failed_to_cancel'.tr()}: $e')),
           );
         }
       }
@@ -604,7 +607,7 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
   Future<void> _submit() async {
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a rating')),
+        SnackBar(content: Text('my_bookings.please_select_rating'.tr())),
       );
       return;
     }
@@ -627,8 +630,8 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Review submitted successfully!'),
+          SnackBar(
+            content: Text('my_bookings.review_submitted'.tr()),
             backgroundColor: AppColors.green,
           ),
         );
@@ -664,9 +667,9 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Rate your experience',
-                style: TextStyle(
+              Text(
+                'my_bookings.rate_experience'.tr(),
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -699,9 +702,9 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
           const SizedBox(height: 24),
 
           // Comment
-          const Text(
-            'Comment (Optional)',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+          Text(
+            'my_bookings.comment_optional'.tr(),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
           ),
           const SizedBox(height: 8),
           TextField(
@@ -709,7 +712,7 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
             maxLines: 3,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              hintText: 'Tell us about your experience...',
+              hintText: 'my_bookings.comment_hint'.tr(),
               hintStyle: const TextStyle(color: AppColors.textMuted),
               filled: true,
               fillColor: AppColors.darkCard,
@@ -748,9 +751,9 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
                       height: 24,
                       child: CircularProgressIndicator(
                           color: Colors.white, strokeWidth: 2))
-                  : const Text(
-                      'Submit Review',
-                      style: TextStyle(
+                  : Text(
+                      'my_bookings.submit_review'.tr(),
+                      style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold),
                     ),
             ),

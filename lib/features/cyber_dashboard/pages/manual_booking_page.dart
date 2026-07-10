@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../data/models/room.dart';
@@ -70,8 +71,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.watch(cdLangProvider);
-    final isAr = lang == 'ar';
+    final isAr = context.locale.languageCode == 'ar';
     final rooms = ref.watch(cyberRoomsProvider);
     final bookingsAsync = ref.watch(todayBookingsProvider);
 
@@ -82,15 +82,11 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
         children: [
           // Page title
           Text(
-            isAr
-                ? 'حجز يدوي — عميل حضوري'
-                : 'Manual Booking — Walk-in Customer',
+            'cyber.manual_booking_walkin_customer'.tr(),
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
           ),
           Text(
-            isAr
-                ? 'للعملاء الذين يأتون بدون حجز مسبق'
-                : 'For customers who come in without booking through the app',
+            'cyber.for_customers_who_come'.tr(),
             style: const TextStyle(fontSize: 12, color: kGray),
           ),
           const SizedBox(height: 14),
@@ -139,7 +135,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
           Padding(
             padding: const EdgeInsets.all(12),
             child: Text(
-              isAr ? 'بيانات الحجز' : 'Booking details',
+              'cyber.booking_details'.tr(),
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ),
@@ -151,7 +147,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Room type chips
-                Text(isAr ? 'نوع الغرفة' : 'Room type',
+                Text('cyber.room_type'.tr(),
                     style: const TextStyle(fontSize: 11, color: kGray)),
                 const SizedBox(height: 6),
                 rooms.when(
@@ -197,7 +193,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
 
                 // Station grid
                 if (selectedRoomId != null) ...[
-                  Text(isAr ? 'المحطة' : 'Station',
+                  Text('cyber.station'.tr(),
                       style: const TextStyle(fontSize: 11, color: kGray)),
                   const SizedBox(height: 6),
                   Consumer(builder: (context, ref, _) {
@@ -300,7 +296,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
                       child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(isAr ? 'وقت البداية' : 'Start time',
+                      Text('cyber.start_time'.tr(),
                           style: const TextStyle(fontSize: 11, color: kGray)),
                       const SizedBox(height: 4),
                       GestureDetector(
@@ -329,7 +325,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
                       child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(isAr ? 'المدة' : 'Duration',
+                      Text('cyber.duration'.tr(),
                           style: const TextStyle(fontSize: 11, color: kGray)),
                       const SizedBox(height: 4),
                       DropdownButtonFormField<int>(
@@ -364,13 +360,13 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
 
                 // Client name
                 Text(
-                    isAr ? 'اسم العميل (اختياري)' : 'Client name (optional)',
+                    'cyber.client_name_optional'.tr(),
                     style: const TextStyle(fontSize: 11, color: kGray)),
                 const SizedBox(height: 4),
                 TextField(
                   controller: clientNameController,
                   decoration: InputDecoration(
-                    hintText: isAr ? 'مثال: محمد أحمد' : 'e.g. Mohamed Ahmed',
+                    hintText: 'cyber.eg_mohamed_ahmed'.tr(),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(kRadiusSm),
                       borderSide: const BorderSide(color: kBorder, width: 0.5),
@@ -382,7 +378,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
                 const SizedBox(height: 10),
 
                 // Payment method
-                Text(isAr ? 'طريقة الدفع' : 'Payment method',
+                Text('cyber.payment_method'.tr(),
                     style: const TextStyle(fontSize: 11, color: kGray)),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<String>(
@@ -426,7 +422,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(isAr ? 'الإجمالي' : 'Total',
+                      Text('cyber.total'.tr(),
                           style: const TextStyle(fontSize: 12, color: kGray)),
                       Text('${total.toInt()} EGP',
                           style: const TextStyle(
@@ -458,9 +454,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
                             child: CircularProgressIndicator(
                                 color: kWhite, strokeWidth: 2))
                         : Text(
-                            isAr
-                                ? 'تأكيد الحجز وإضافته للجدول'
-                                : 'Confirm booking and add to schedule',
+                            'cyber.confirm_booking_and_add'.tr(),
                             style:
                                 const TextStyle(color: kWhite, fontSize: 13)),
                   ),
@@ -487,9 +481,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              isAr
-                  ? 'تمت إضافة الحجز بنجاح!'
-                  : 'Booking added successfully!',
+              'cyber.booking_added_successfully'.tr(),
               style: const TextStyle(
                   color: kGreen, fontSize: 13, fontWeight: FontWeight.w500),
             ),
@@ -539,7 +531,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
                   padding: const EdgeInsets.all(24),
                   child: Center(
                     child: Text(
-                      isAr ? 'لم تقم بإضافة حجوزات' : 'No manual bookings yet',
+                      'cyber.no_manual_bookings_yet'.tr(),
                       style: const TextStyle(color: kGray, fontSize: 12),
                     ),
                   ),
@@ -565,7 +557,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                b.userName ?? (isAr ? 'عميل حضوري' : 'Walk-in'),
+                                b.userName ?? ('cyber.walkin'.tr()),
                                 style: const TextStyle(
                                     fontSize: 12, fontWeight: FontWeight.w500),
                               ),

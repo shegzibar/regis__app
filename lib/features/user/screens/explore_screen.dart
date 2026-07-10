@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/location_provider.dart';
@@ -73,24 +74,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> with WidgetsBindi
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on,
-                            size: 16,
-                            color: AppColors.textMuted,
-                          ),
-                          const SizedBox(width: 4),
-                          const Text(
-                            'Maadi, Cairo',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
+
                     ],
                   ),
                   const Spacer(),
@@ -131,16 +115,16 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> with WidgetsBindi
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Text('My Wallet', style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
+                                  Text('explore.my_wallet'.tr(), style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
                                   walletAsync.when(
                                     loading: () => const SizedBox(
                                       width: 20, 
                                       height: 14, 
                                       child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.green)
                                     ),
-                                    error: (_, __) => const Text('Error', style: TextStyle(color: AppColors.error, fontSize: 14, fontWeight: FontWeight.bold)),
+                                    error: (_, __) => Text('common.error'.tr(), style: const TextStyle(color: AppColors.error, fontSize: 14, fontWeight: FontWeight.bold)),
                                     data: (wallet) => Text(
-                                      '${wallet?.balance ?? 0} pts',
+                                      '${wallet?.balance ?? 0} ${'explore.pts_suffix'.tr()}',
                                       style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                                     ),
                                   ),
@@ -169,7 +153,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> with WidgetsBindi
                   controller: _searchController,
                   style: const TextStyle(color: Colors.white, fontSize: 16),
                   decoration: InputDecoration(
-                    hintText: 'Search gaming centers...',
+                    hintText: 'home.search_location'.tr(),
                     hintStyle: const TextStyle(color: AppColors.textMuted),
                     prefixIcon: const Icon(
                       Icons.search,
@@ -235,10 +219,10 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> with WidgetsBindi
                       }).toList();
 
                       if (cybers.isEmpty) {
-                        return const Center(
+                        return Center(
                           child: Text(
-                            'No gaming centers found',
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 16),
+                            'home.no_gaming_centers_found'.tr(),
+                            style: const TextStyle(color: AppColors.textMuted, fontSize: 16),
                           ),
                         );
                       }
@@ -257,9 +241,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> with WidgetsBindi
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        const Text(
-                                          'All Gaming Centers',
-                                          style: TextStyle(
+                                        Text(
+                                          'home.all_gaming_centers'.tr(),
+                                          style: const TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.white,
@@ -267,8 +251,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> with WidgetsBindi
                                         ),
                                         TextButton(
                                           onPressed: () {},
-                                          child: const Text(
-                                            'See All',
+                                          child: Text(
+                                            'common.view_all'.tr(),
                                             style: TextStyle(
                                               color: AppColors.green,
                                               fontSize: 14,
@@ -316,7 +300,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> with WidgetsBindi
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 24.0),
                               child: Text(
-                                _searchQuery.isEmpty ? 'Nearby You' : 'Search Results',
+                                _searchQuery.isEmpty ? 'home.nearby_you'.tr() : 'home.search_results'.tr(),
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,

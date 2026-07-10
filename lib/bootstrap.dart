@@ -9,6 +9,14 @@ import 'core/config/app_variant.dart';
 import 'core/router/root_router.dart';
 import 'core/constants/app_constants.dart';
 import 'core/localization/app_localization.dart';
+import 'firebase_options.dart';
+
+/// Whether Firebase was successfully initialized at app startup.
+bool _firebaseReady = false;
+bool get firebaseIsReady => _firebaseReady;
+
+/// Riverpod provider that exposes Firebase readiness state.
+final firebaseReadyProvider = Provider<bool>((_) => _firebaseReady);
 
 /// Shared Supabase + Firebase + localization setup for every app entry point.
 Future<void> initializeForya() async {
@@ -20,7 +28,15 @@ Future<void> initializeForya() async {
   );
 
   // Initialize Firebase (used for CX support Firestore chat)
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    _firebaseReady = true;
+  } catch (e) {
+    _firebaseReady = false;
+    debugPrint('Firebase initialization failed (Firebase not configured for this platform): $e');
+  }
 
   await dotenv.load(fileName: ".env");
 

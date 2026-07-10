@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../data/models/booking.dart';
@@ -13,8 +14,7 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(cdLangProvider);
-    final isAr = lang == 'ar';
+    final isAr = context.locale.languageCode == 'ar';
     final bookingsAsync = ref.watch(todayBookingsProvider);
     final revenueAsync = ref.watch(todayRevenueProvider);
     final paymentsAsync = ref.watch(pendingPaymentsProvider);
@@ -35,15 +35,15 @@ class HomePage extends ConsumerWidget {
         children: [
           // Page Title
           Text(
-            isAr ? 'لوحة التحكم' : 'Dashboard',
+            'cyber.dashboard'.tr(),
             style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: kSidebarText),
           ),
           Text(
-            DateFormat(isAr ? 'EEEE، d MMMM yyyy' : 'EEEE, MMMM d yyyy',
-                    isAr ? 'ar' : 'en')
+            DateFormat('cyber.eeee_mmmm_d_yyyy'.tr(),
+                    'cyber.en'.tr())
                 .format(DateTime.now()),
             style: const TextStyle(fontSize: 12, color: kGray),
           ),
@@ -78,7 +78,7 @@ class HomePage extends ConsumerWidget {
               const SizedBox(width: kGap),
               _StatCard(
                 icon: Icons.check_circle_outline,
-                label: isAr ? 'مؤكد' : 'Confirmed',
+                label: 'cyber.confirmed'.tr(),
                 value: '$confirmedToday',
                 color: kGreen,
                 bgColor: const Color(0xFFE8F5E8),
@@ -86,7 +86,7 @@ class HomePage extends ConsumerWidget {
               const SizedBox(width: kGap),
               _StatCard(
                 icon: Icons.pending_actions_outlined,
-                label: isAr ? 'بانتظار المراجعة' : 'Pending Review',
+                label: 'cyber.pending_review'.tr(),
                 value: paymentsAsync.when(
                   data: (p) => '$pendingCount',
                   loading: () => '...',
@@ -102,7 +102,7 @@ class HomePage extends ConsumerWidget {
 
           // Quick Actions
           Text(
-            isAr ? 'إجراءات سريعة' : 'Quick Actions',
+            'cyber.quick_actions'.tr(),
             style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -113,7 +113,7 @@ class HomePage extends ConsumerWidget {
             children: [
               _QuickAction(
                 icon: Icons.add_circle_outline,
-                label: isAr ? 'حجز يدوي' : 'Manual Booking',
+                label: 'cyber.manual_booking'.tr(),
                 color: kPurple,
                 onTap: () => ref
                     .read(cdSelectedPageProvider.notifier)
@@ -122,9 +122,7 @@ class HomePage extends ConsumerWidget {
               const SizedBox(width: kGap),
               _QuickAction(
                 icon: Icons.payments_outlined,
-                label: isAr
-                    ? 'مراجعة المدفوعات ($pendingCount)'
-                    : 'Review Payments ($pendingCount)',
+                label: 'cyber.review_payments_'.tr(args: [pendingCount.toString()]),
                 color: kAmber,
                 onTap: () => ref
                     .read(cdSelectedPageProvider.notifier)
@@ -133,7 +131,7 @@ class HomePage extends ConsumerWidget {
               const SizedBox(width: kGap),
               _QuickAction(
                 icon: Icons.computer_outlined,
-                label: isAr ? 'حالة المحطات' : 'Station Status',
+                label: 'cyber.station_status'.tr(),
                 color: kTeal,
                 onTap: () => ref
                     .read(cdSelectedPageProvider.notifier)
@@ -160,7 +158,7 @@ class HomePage extends ConsumerWidget {
                     .read(cdSelectedPageProvider.notifier)
                     .state = 'schedule',
                 child: Text(
-                  isAr ? 'عرض الجدول الكامل' : 'View full schedule',
+                  'cyber.view_full_schedule'.tr(),
                   style: const TextStyle(
                       fontSize: 12, color: kPurple),
                 ),
@@ -187,7 +185,7 @@ class HomePage extends ConsumerWidget {
                   ),
                   child: Center(
                     child: Text(
-                      isAr ? 'لا توجد حجوزات اليوم' : 'No bookings today',
+                      'cyber.no_bookings_today'.tr(),
                       style: const TextStyle(color: kGray, fontSize: 13),
                     ),
                   ),
@@ -238,8 +236,8 @@ class HomePage extends ConsumerWidget {
                                   Text(
                                     b.userName ??
                                         (b.source == 'manual'
-                                            ? (isAr ? 'عميل حضوري' : 'Walk-in')
-                                            : (isAr ? 'مستخدم تطبيق' : 'App user')),
+                                            ? ('cyber.walkin'.tr())
+                                            : ('cyber.app_user'.tr())),
                                     style: const TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500),
@@ -270,7 +268,7 @@ class HomePage extends ConsumerWidget {
                               ),
                               child: Text(
                                 b.source == 'manual'
-                                    ? (isAr ? 'يدوي' : 'Manual')
+                                    ? ('cyber.manual'.tr())
                                     : b.statusDisplay,
                                 style: TextStyle(
                                     fontSize: 10,

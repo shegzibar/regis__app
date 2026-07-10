@@ -1,12 +1,10 @@
 {
   "@@locale": "ar",
   "@@context": "GamingHub App",
-  
   "app_name": "جيمينج هب",
   "@app_name": {
     "description": "اسم التطبيق"
   },
-  
   "common": {
     "loading": "جاري التحميل...",
     "error": "خطأ",
@@ -46,7 +44,6 @@
     "english": "English",
     "arabic": "العربية"
   },
-  
   "auth": {
     "login": "تسجيل الدخول",
     "phone_number": "رقم الهاتف",
@@ -66,7 +63,6 @@
     "total_to_pay": "المبلغ الإجمالي",
     "confirm_payment": "تأكيد الدفع"
   },
-  
   "home": {
     "gaming_centers_map": "خريطة مراكز الألعاب",
     "search_location": "ابحث عن موقع...",
@@ -75,9 +71,11 @@
     "nearby_you": "بالقرب منك",
     "select_room": "اختر الغرفة",
     "book_station": "احجز محطة",
-    "starting_from": "بدءاً من"
+    "starting_from": "بدءاً من",
+    "no_gaming_centers_found": "لم يتم العثور على أي مراكز ألعاب",
+    "all_gaming_centers": "جميع مراكز الألعاب",
+    "search_results": "نتائج البحث"
   },
-  
   "booking": {
     "select_date": "اختر التاريخ",
     "duration": "المدة",
@@ -85,9 +83,110 @@
     "hour_intervals": "فترات 2 ساعة",
     "confirm_pay_fee": "تأكيد ودفع الرسوم",
     "please_select_room": "يرجى اختيار غرفة أولاً",
-    "please_select_time": "يرجى اختيار وقت الحجز"
+    "please_select_time": "يرجى اختيار وقت الحجز",
+    "time_slot_passed": "لقد مر هذا الوقت بالفعل. يرجى اختيار وقت قادم.",
+    "no_active_stations": "لا توجد أجهزة نشطة في هذه الغرفة. يرجى اختيار غرفة أخرى.",
+    "room_not_found": "لم يتم العثور على الغرفة",
+    "registration_fee_pay_now": "رسوم الحجز (ادفع الآن)",
+    "total_session_price": "إجمالي سعر الجلسة",
+    "confirm_and_book": "تأكيد وحجز",
+    "open_badge": "مفتوح",
+    "category_label": "التصنيف",
+    "booked_via_app": "محجوز عبر تطبيق فوريا"
   },
-  
+  "my_bookings": {
+    "title": "حجوزاتي",
+    "upcoming": "القادمة",
+    "past": "السابقة",
+    "cancelled": "الملغاة",
+    "no_upcoming": "لا توجد حجوزات قادمة",
+    "no_past": "لا توجد حجوزات سابقة",
+    "no_cancelled": "لا توجد حجوزات ملغاة",
+    "head_to_explore": "اذهب إلى استكشف لحجز جلسة",
+    "could_not_load": "تعذّر تحميل الحجوزات",
+    "retry": "إعادة المحاولة",
+    "duration": "المدة",
+    "time": "الوقت",
+    "fee": "الرسوم",
+    "booking_prefix": "حجز #",
+    "booking_id": "حجز",
+    "cancel": "إلغاء",
+    "pay_now": "ادفع الآن",
+    "reviewed": "تم التقييم",
+    "leave_review": "إضافة تقييم",
+    "cancel_title": "إلغاء الحجز",
+    "cancel_msg": "هل أنت متأكد من إلغاء هذا الحجز؟",
+    "no": "لا",
+    "yes_cancel": "نعم، إلغاء",
+    "failed_to_cancel": "فشل الإلغاء",
+    "please_select_rating": "يرجى اختيار تقييم",
+    "review_submitted": "تم إرسال التقييم بنجاح!",
+    "rate_experience": "قيّم تجربتك",
+    "comment_optional": "تعليق (اختياري)",
+    "comment_hint": "أخبرنا عن تجربتك...",
+    "submit_review": "إرسال التقييم"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "personal_information": "المعلومات الشخصية",
+    "wallet_rewards": "المحفظة والمكافآت",
+    "help_support": "المساعدة والدعم",
+    "logout": "تسجيل الخروج"
+  },
+  "personal_info": {
+    "title": "المعلومات الشخصية",
+    "full_name": "الاسم الكامل",
+    "email_address": "عنوان البريد الإلكتروني",
+    "phone_number": "رقم الهاتف",
+    "save_changes": "حفظ التغييرات",
+    "name_required": "يرجى إدخال اسمك",
+    "updated_success": "تم تحديث الملف الشخصي بنجاح",
+    "update_failed": "فشل تحديث الملف الشخصي"
+  },
+  "help_support": {
+    "title": "المساعدة والدعم",
+    "online_status": "متصل · يرد عادةً بسرعة",
+    "chat_error": "تعذّر بدء جلسة الدردشة.\nيرجى التحقق من الاتصال بالإنترنت.",
+    "here_to_help": "نحن هنا لمساعدتك",
+    "pick_topic": "اختر موضوعًا أو اكتب سؤالك أدناه.",
+    "type_message": "اكتب رسالتك…",
+    "quick_booking": "مشكلة في الحجز",
+    "quick_payment": "الدفع والاسترداد",
+    "quick_account": "الحساب وتسجيل الدخول",
+    "quick_report": "الإبلاغ عن مشكلة",
+    "quick_center": "مركز غير موجود",
+    "quick_pricing": "الأسعار والباقات",
+    "ans_booking": "في حالة وجود مشكلة في الحجز، تأكد من اتصالك بالإنترنت. إذا فشل الحجز، انتظر 60 ثانية وحاول مرة أخرى — يتم عكس الرسوم تلقائيًا خلال 24 ساعة. ما زلت عالقًا؟ صف المشكلة هنا وسيساعدك أحد أفراد الدعم.",
+    "ans_payment": "تتم عملية الاسترداد تلقائيًا خلال 3-5 أيام عمل إلى طريقة الدفع الأصلية. شحن المحفظة فوري. إذا اعتقدت أن الرسوم غير صحيحة، شارك رقم الحجز وسنتحقق فورًا.",
+    "ans_account": "لا تستطيع تسجيل الدخول؟ جرّب إعادة تعيين كلمة المرور. إذا كان حسابك موقوفًا، فقد يكون ذلك بسبب انتهاك سياسة — صف المشكلة وسيراجعها فريقنا.",
+    "ans_report": "نأسف لوجود مشكلة! صف المشكلة بأكبر قدر من التفصيل — اذكر اسم المركز، التاريخ، وما حدث. يراجع فريقنا جميع التقارير خلال 24 ساعة.",
+    "ans_center": "لا ترى مركزًا بالقرب منك؟ تأكد من تفعيل إذن الموقع. يمكنك ايضاً تصفح المراكز يدويًا من قسم الخريطة. إذا كان مركز مفقودًا، أخبرنا باسمه!",
+    "ans_pricing": "يتم تحديد الأسعار من كل مركز وتختلف حسب الغرفة والجهاز والأوقات المزدحمة. جميع الأسعار المعروضة نهائية — لا توجد رسوم خفية.",
+    "greeting": "أهلاً! 👾 مرحبًا بك في دعم فوريا.\n\nكيف يمكننا مساعدتك اليوم؟ اختر موضوعًا أو اكتب سؤالك.",
+    "ack_message": "شكرًا لتواصلك! 🙌 تم استلام رسالتك. سيرد عليك فريق الدعم هنا قريبًا — عادةً خلال دقائق قليلة."
+  },
+  "profile_card": {
+    "member_since": "عضو منذ",
+    "no_phone": "لا يوجد رقم هاتف",
+    "edit_profile": "تعديل الملف",
+    "display_name": "اسم العرض",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "updated_success": "تم تحديث الملف بنجاح!",
+    "update_failed": "فشل التحديث",
+    "settings_soon": "قريبًا — الإعدادات!",
+    "book_to_see": "احجز جلسة لترى مراكزك المفضلة هنا.",
+    "activity_here": "ستظهر حجوزاتك وتقييماتك هنا.",
+    "logout": "تسجيل الخروج",
+    "logout_confirm": "هل أنت متأكد من تسجيل الخروج؟",
+    "cancel_logout": "إلغاء"
+  },
+  "explore": {
+    "my_wallet": "محفظتي",
+    "pts_suffix": "نقطة",
+    "from_price": "من 15 جنيه/ساعة",
+    "price_per_hour": "15 جنيه بالساعة"
+  },
   "payment": {
     "instapay": "انستا باي",
     "vodafone_cash": "فودافون كاش",
@@ -97,7 +196,6 @@
     "reference_code_provided": "سيتم توفير رمز المرجع لاحقاً",
     "processing_payment": "جاري معالجة الدفع..."
   },
-  
   "profile": {
     "personal_information": "المعلومات الشخصية",
     "payment_methods": "طرق الدفع",
@@ -117,7 +215,6 @@
     "logout_confirm": "هل أنت متأكد من تسجيل الخروج؟",
     "logging_out": "جاري تسجيل الخروج..."
   },
-  
   "admin": {
     "fee_queue": "طابور الرسوم",
     "manage_fees": "إدارة رسوم الحجز 5 جنيه",
@@ -133,7 +230,6 @@
     "deposit_rejected": "تم رفض الإيداع",
     "refreshing_data": "جاري تحديث البيانات..."
   },
-  
   "cyber": {
     "dashboard": "لوحة التحكم",
     "today_bookings": "حجوزات اليوم",
@@ -142,25 +238,127 @@
     "occupancy_rate": "معدل الإشغال",
     "manage_bookings": "إدارة الحجوزات",
     "manage_rooms": "إدارة الغرف",
-    "view_analytics": "عرض التحليلات"
+    "view_analytics": "عرض التحليلات",
+    "workers": "طاقم العمل",
+    "manage_staff_accounts_allowed": "إدارة حسابات الموظفين المسموح لهم بالدخول للوحة",
+    "coming_soon": "سيتم إضافة هذه الميزة قريباً",
+    "add_worker": "إضافة موظف",
+    "no_workers_found": "لا يوجد موظفون",
+    "station_status": "حالة المحطات",
+    "realtime_monitoring_of_all": "مراقبة حالة الأجهزة في الوقت الفعلي",
+    "no_rooms_added": "لا توجد غرف",
+    "no_stations": "لا توجد أجهزة",
+    "toggle_maintenance_status": "هل تريد تغيير حالة الصيانة؟",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "over": "انتهى!",
+    "session_completed": "تم إنهاء الجلسة",
+    "schedule": "الجدول الزمني",
+    "manage_your_daily_weekly": "إدارة حجوزاتك اليومية والأسبوعية والشهرية",
+    "refresh": "تحديث",
+    "today": "اليوم",
+    "this_week": "هذا الأسبوع",
+    "this_month": "هذا الشهر",
+    "no_bookings_found_for": "لم يتم العثور على أي حجوزات في هذه الفترة",
+    "no_bookings_today": "لا توجد حجوزات اليوم",
+    "no_bookings_this_week": "لا توجد حجوزات هذا الأسبوع",
+    "no_bookings_this_month": "لا توجد حجوزات هذا الشهر",
+    "walkin": "عميل حضوري",
+    "app_user": "مستخدم تطبيق",
+    "station_booked": "محطة محجوزة",
+    "manual": "يدوي",
+    "manual_booking_walkin_customer": "حجز يدوي — عميل حضوري",
+    "for_customers_who_come": "للعملاء الذين يأتون بدون حجز مسبق",
+    "booking_details": "بيانات الحجز",
+    "room_type": "نوع الغرفة",
+    "station": "المحطة",
+    "start_time": "وقت البداية",
+    "duration": "المدة",
+    "client_name_optional": "اسم العميل (اختياري)",
+    "eg_mohamed_ahmed": "مثال: محمد أحمد",
+    "payment_method": "طريقة الدفع",
+    "total": "الإجمالي",
+    "confirm_booking_and_add": "تأكيد الحجز وإضافته للجدول",
+    "booking_added_successfully": "تمت إضافة الحجز بنجاح!",
+    "no_manual_bookings_yet": "لم تقم بإضافة حجوزات",
+    "pending_payments": "المدفوعات المعلقة",
+    "review_booking_fees_5": "راجع رسوم الحجز (5 جنيهات) للموافقة على الحجوزات",
+    "no_pending_payments": "لا توجد مدفوعات معلقة!",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "rejection_reason": "سبب الرفض",
+    "eg_receipt_is_unclear": "مثال: الإيصال غير واضح",
+    "confirm_reject": "تأكيد الرفض",
+    "eeee_mmmm_d_yyyy": "EEEE، d MMMM yyyy",
+    "en": "ar",
+    "confirmed": "مؤكد",
+    "pending_review": "بانتظار المراجعة",
+    "quick_actions": "إجراءات سريعة",
+    "manual_booking": "حجز يدوي",
+    "review_payments_": "مراجعة المدفوعات ({})",
+    "view_full_schedule": "عرض الجدول الكامل",
+    "cyber_profile": "ملف الكافيه",
+    "basic_info": "البيانات الأساسية",
+    "edit": "تعديل",
+    "cyber_name": "اسم الكافيه",
+    "description": "الوصف",
+    "address": "العنوان",
+    "save": "حفظ",
+    "rooms_pricing": "الغرف والأسعار",
+    "no_rooms": "لا توجد غرف",
+    "image_uploaded": "تم رفع الصورة",
+    "photos": "الصور",
+    "cover_photo": "صورة الغلاف",
+    "tap_to_add_cover": "اضغط لإضافة صورة غلاف",
+    "gallery": "معرض الصور",
+    "add_photos": "إضافة صور",
+    "no_photos_in_gallery": "لا توجد صور في المعرض",
+    "delete_photo": "حذف الصورة",
+    "are_you_sure_you": "هل أنت متأكد من حذف هذه الصورة؟",
+    "delete": "حذف",
+    "edit_price": "تعديل السعر",
+    "price": "السعر",
+    "add_room": "إضافة غرفة",
+    "room_name": "اسم الغرفة",
+    "type": "النوع",
+    "price_per_hr": "السعر (ساعة)",
+    "amenities_eg_netflix": "المميزات (مثل: نتفليكس)",
+    "add": "إضافة",
+    "delete_room": "حذف الغرفة",
+    "are_you_sure_you_1": "هل أنت متأكد من حذف الغرفة \"{}\" وجميع الأجهزة التابعة لها؟",
+    "deleted_successfully": "تم الحذف بنجاح",
+    "customer": "عميل",
+    "session_ended_alert": "⏰ انتهى حجز {} على {}",
+    "session_details": "تفاصيل الجلسة",
+    "complete": "إنهاء ودفع",
+    "booking_cancelled": "تم إلغاء الحجز",
+    "additional_items": "الطلبات الإضافية",
+    "add_item": "إضافة",
+    "inventory": "المخزون والمنتجات",
+    "wallet_points": "نقاط المحفظة",
+    "home": "الرئيسية"
   },
-  
   "rooms": {
     "pro_pc_zone": "منطقة احترافية لأجهزة الكمبيوتر",
     "playstation_vip": "بلايستيشن 5 VIP",
     "private_streaming": "جناح البث الخاص",
     "stations_available": "محطات متاحة"
   },
-  
   "map": {
     "nearest_gaming_center": "أقرب مركز ألعاب",
     "km_away": "كم",
     "recentering_map": "جاري إعادة توسيط الخريطة...",
     "filter_options": "خيارات التصفية قادمة قريباً!",
     "interactive_map": "خريطة تفاعلية",
-    "google_maps_integration": "دمج خرائط جوجل قادم قريباً"
+    "google_maps_integration": "دمج خرائط جوجل قادم قريباً",
+    "explore": "استكشف",
+    "gaming_centers": "مراكز الألعاب",
+    "search_centers": "ابحث عن مراكز...",
+    "no_centers_found": "لا توجد مراكز",
+    "location_disabled": "خدمات الموقع معطلة. يرجى تفعيلها",
+    "location_denied": "تم رفض أذونات الموقع",
+    "location_permanently_denied": "تم رفض أذونات الموقع بشكل دائم، لا يمكننا طلب الأذونات."
   },
-  
   "owner_dashboard": {
     "home": "الرئيسية",
     "manual_booking": "حجز يدوي",
@@ -203,7 +401,6 @@
     "payments_readonly": "قائمة المدفوعات — للعرض فقط",
     "default_cafe_name": "جالاكسي سايبر كافيه"
   },
-
   "owner_onboarding": {
     "title": "تسجيل مركز الألعاب",
     "step_basic": "البيانات الأساسية",
@@ -225,7 +422,6 @@
     "submit": "إنشاء الحساب والمركز",
     "have_account": "لديك حساب؟ تسجيل الدخول"
   },
-
   "owner_profile": {
     "title": "الملف الشخصي",
     "account": "الحساب",
@@ -267,7 +463,6 @@
     "room_type": "نوع الغرفة",
     "station_name": "اسم المحطة"
   },
-
   "owner_cyber_profile": {
     "admin_only": "مدير النظام",
     "general": "معلومات عامة",
@@ -280,12 +475,54 @@
     "select_cyber": "اختر المركز",
     "price_hour": "السعر/ساعة"
   },
-
   "errors": {
     "network_error": "خطأ في الشبكة. يرجى فحص اتصالك.",
     "server_error": "خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً.",
     "invalid_credentials": "بيانات غير صالحة. يرجى المحاولة مرة أخرى.",
     "something_went_wrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
     "no_data_available": "لا توجد بيانات متاحة."
+  },
+  "wallet": {
+    "my_wallet": "محفظتي",
+    "total_balance": "الرصيد الإجمالي",
+    "pts": "نقطة",
+    "show_qr": "اعرض هذا الرمز في السايبر لكسب النقاط",
+    "recent_transactions": "المعاملات الأخيرة",
+    "how_it_works": "كيف يعمل",
+    "no_wallet_found": "لا توجد محفظة",
+    "no_wallet_subtitle": "ستتم إنشاء محفظتك قريباً.",
+    "no_transactions": "لا توجد معاملات",
+    "no_transactions_subtitle": "العب في أحد السايبرات لكسب النقاط!",
+    "id_copied": "تم نسخ الرقم التعريفي!",
+    "points_earned": "نقاط مكتسبة",
+    "points_redeemed": "نقاط مستردة",
+    "error_loading_id": "خطأ في تحميل الرقم التعريفي",
+    "no_id_generated": "لم يتم إنشاء رقم تعريفي",
+    "step1_title": "١. زيارة السايبر",
+    "step1_subtitle": "اذهب إلى أي سايبر شريك.",
+    "step2_title": "٢. أعطِ رقمك التعريفي",
+    "step2_subtitle": "أظهر رمز QR أعلاه أو أعطِ الرقم التعريفي القصير.",
+    "step3_title": "٣. اكسب النقاط",
+    "step3_subtitle": "سيضيف الموظفون نقاطاً إلى محفظتك بناءً على جلستك.",
+    "step4_title": "٤. استرد النقاط",
+    "step4_subtitle": "استخدم النقاط للحصول على خصومات في الجلسات القادمة."
+  },
+  "admin": {
+    "verify_receipts": "التحقق من الإيصالات",
+    "fee_queue": "قائمة الرسوم",
+    "manage_fees": "إدارة الرسوم",
+    "pending": "قيد الانتظار",
+    "confirmed": "مؤكد",
+    "rejected": "مرفوض",
+    "revenue": "الإيرادات",
+    "view_receipt": "عرض الإيصال",
+    "support": {
+      "title": "دعم العملاء",
+      "no_chats": "لا توجد محادثات دعم نشطة.",
+      "select_chat": "اختر محادثة لعرض الرسائل",
+      "type_message": "اكتب رسالتك...",
+      "resolve_chat": "إنهاء المحادثة",
+      "unread": "غير مقروء"
+    }
   }
 }

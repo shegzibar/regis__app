@@ -203,6 +203,33 @@ class AuthService {
 
       if (needsUpdate) {
         await _supabase.from('profiles').upsert(profileData);
+        if (existing == null) {
+          // Log new user registration
+          try {
+            String? cyberId;
+            final cyberCode = authUser.userMetadata?['cyber_code'];
+            if (cyberCode != null) {
+              final cyber = await _supabase.from('profiles').select('cybers(id)').eq('short_id', cyberCode).maybeSingle();
+              if (cyber != null && cyber['cybers'] != null && (cyber['cybers'] as List).isNotEmpty) {
+                 cyberId = cyber['cybers'][0]['id'] as String?;
+              }
+            }
+            
+            await _supabase.from('system_logs').insert({
+              'event_type': 'USER_REGISTERED',
+              'user_id': authUser.id,
+              'cyber_id': cyberId,
+              'details': {
+                'role': role,
+                'provider': email != null ? 'email' : 'phone',
+                if (cyberCode != null) 'cyber_code': cyberCode,
+              }
+            });
+          } catch (e) {
+            debugPrint('Failed to log USER_REGISTERED to system_logs: $e');
+            // Ignore log errors so it doesn't break sign-up
+          }
+        }
       }
 
       // Inject email since it's not stored in the profiles table
@@ -278,6 +305,7 @@ class AuthService {
     String name,
     String phone, {
     String role = 'user',
+    String? cyberCode,
   }) async {
     try {
       if (!AppConstants.userRoles.contains(role)) {
@@ -287,7 +315,12 @@ class AuthService {
       final response = await _supabase.auth.signUp(
         email: email.trim(),
         password: password,
-        data: {'name': name, 'role': role, 'phone': phone},
+        data: {
+          'name': name, 
+          'role': role, 
+          'phone': phone,
+          if (cyberCode != null) 'cyber_code': cyberCode,
+        },
       );
 
       if (response.user == null) {
@@ -431,6 +464,7 @@ class AuthController extends AsyncNotifier<void> {
     String name,
     String phone, {
     String role = 'user',
+    String? cyberCode,
   }) async {
     state = const AsyncValue.loading();
     final user = await AsyncValue.guard(() async {
@@ -440,6 +474,7 @@ class AuthController extends AsyncNotifier<void> {
         name,
         phone,
         role: role,
+        cyberCode: cyberCode,
       );
     });
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/support_chat_provider.dart';
@@ -9,57 +10,47 @@ import '../../../core/providers/support_chat_provider.dart';
 // ──────────────────────────────────────────────
 
 class _QuickReply {
-  final String label;
+  final String labelKey;
   final IconData icon;
-  final String answer;
+  final String answerKey;
 
   const _QuickReply(
-      {required this.label, required this.icon, required this.answer});
+      {required this.labelKey, required this.icon, required this.answerKey});
+
+  String get label => labelKey.tr();
+  String get answer => answerKey.tr();
 }
 
 const _quickReplies = [
   _QuickReply(
-    label: 'Booking Issues',
+    labelKey: 'help_support.quick_booking',
     icon: Icons.calendar_today_outlined,
-    answer:
-        'For booking issues, make sure you have a stable internet connection. '
-        'If a booking fails, wait 60 seconds and try again — charges are auto-reversed within 24 hours. '
-        'Still stuck? Describe the problem here and a support agent will assist you shortly.',
+    answerKey: 'help_support.ans_booking',
   ),
   _QuickReply(
-    label: 'Payment & Refunds',
+    labelKey: 'help_support.quick_payment',
     icon: Icons.account_balance_wallet_outlined,
-    answer:
-        'Refunds are processed automatically within 3–5 business days to your original payment method. '
-        'Wallet top-ups are instant. If you believe a charge is incorrect, please share the booking ID and we will investigate right away.',
+    answerKey: 'help_support.ans_payment',
   ),
   _QuickReply(
-    label: 'Account & Login',
+    labelKey: 'help_support.quick_account',
     icon: Icons.person_outline,
-    answer:
-        "Can't log in? Try resetting your password via the login screen. "
-        'If your account is suspended, it may be due to a policy violation — please describe the issue here and a team member will review it.',
+    answerKey: 'help_support.ans_account',
   ),
   _QuickReply(
-    label: 'Report a Problem',
+    labelKey: 'help_support.quick_report',
     icon: Icons.bug_report_outlined,
-    answer:
-        "We're sorry you're experiencing an issue! Please describe the problem in as much detail as possible — "
-        'include the gaming center name, date/time, and what went wrong. Our team reviews all reports within 24 hours.',
+    answerKey: 'help_support.ans_report',
   ),
   _QuickReply(
-    label: 'Center Not Found',
+    labelKey: 'help_support.quick_center',
     icon: Icons.location_off_outlined,
-    answer:
-        'Not seeing a center near you? Make sure location permissions are enabled. '
-        'You can also browse centers manually on the Map tab. If a center is missing, let us know its name here!',
+    answerKey: 'help_support.ans_center',
   ),
   _QuickReply(
-    label: 'Pricing & Plans',
+    labelKey: 'help_support.quick_pricing',
     icon: Icons.attach_money_outlined,
-    answer:
-        'Pricing is set by each gaming center and may vary by room, device, and peak hours. '
-        'All prices shown on the booking screen are final — there are no hidden fees.',
+    answerKey: 'help_support.ans_pricing',
   ),
 ];
 
@@ -79,6 +70,13 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isBotTyping = false;
   String? _chatId;
+  late final Future<String> _sessionFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionFuture = _getOrCreateSession();
+  }
 
   @override
   void dispose() {
@@ -107,8 +105,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
     if (messages.isEmpty) {
       await service.sendBotMessage(
         chatId: chatId,
-        text: 'Hi there! 👾 Welcome to Forya Support.\n\n'
-            'How can we help you today? Choose a topic below or type your question.',
+        text: 'help_support.greeting'.tr(),
       );
     }
 
@@ -121,14 +118,14 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
     if (text.trim().isEmpty) return;
     _inputController.clear();
 
-    final chatId = await _getOrCreateSession();
+    final chatId = await _sessionFuture;
     final service = ref.read(supportChatServiceProvider);
     await service.sendUserMessage(chatId: chatId, text: text.trim());
     _scrollToBottom();
   }
 
   Future<void> _onQuickReply(_QuickReply reply) async {
-    final chatId = await _getOrCreateSession();
+    final chatId = await _sessionFuture;
     final service = ref.read(supportChatServiceProvider);
 
     await service.sendUserMessage(chatId: chatId, text: reply.label);
@@ -159,9 +156,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
     if (chatId != null) {
       await ref.read(supportChatServiceProvider).sendBotMessage(
             chatId: chatId,
-            text:
-                'Thanks for reaching out! 🙌 Your message has been received. '
-                'A support agent will reply here shortly — usually within a few minutes.',
+            text: 'help_support.ack_message'.tr(),
           );
     }
     if (mounted) setState(() => _isBotTyping = false);
@@ -188,7 +183,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
       backgroundColor: AppColors.darkBg,
       appBar: _buildAppBar(context),
       body: FutureBuilder<String>(
-        future: _getOrCreateSession(),
+        future: _sessionFuture,
         builder: (context, sessionSnap) {
           if (sessionSnap.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -196,11 +191,11 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
             );
           }
           if (sessionSnap.hasError) {
-            return const Center(
+            return Center(
               child: Text(
-                'Could not start chat session.\nPlease check your connection.',
+                'help_support.chat_error'.tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textMuted),
+                style: const TextStyle(color: AppColors.textMuted),
               ),
             );
           }
@@ -234,6 +229,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                       itemBuilder: (_, i) {
                         final msg = messages[i];
                         return _MessageBubble(
+                          key: ValueKey(msg.id),
                           text: msg.text,
                           isUser:
                               msg.sender == MessageSender.user,
@@ -311,10 +307,9 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Text(
-                    'Online · Typically replies fast',
-                    style:
-                        TextStyle(color: AppColors.textMuted, fontSize: 11),
+                  Text(
+                    'help_support.online_status'.tr(),
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
                   ),
                 ],
               ),
@@ -356,15 +351,15 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 const Icon(Icons.support_agent, size: 44, color: AppColors.green),
           ),
           const SizedBox(height: 16),
-          const Text(
-            "We're here to help",
-            style: TextStyle(
+          Text(
+            'help_support.here_to_help'.tr(),
+            style: const TextStyle(
                 color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Pick a topic or type your question below.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          Text(
+            'help_support.pick_topic'.tr(),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
           ),
         ],
       ),
@@ -479,7 +474,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _onSendPressed(),
                 decoration: InputDecoration(
-                  hintText: 'Type your message…',
+                  hintText: 'help_support.type_message'.tr(),
                   hintStyle: const TextStyle(
                       color: AppColors.textMuted, fontSize: 14),
                   filled: true,
@@ -545,6 +540,7 @@ class _MessageBubble extends StatefulWidget {
   final DateTime time;
 
   const _MessageBubble({
+    super.key,
     required this.text,
     required this.isUser,
     required this.time,

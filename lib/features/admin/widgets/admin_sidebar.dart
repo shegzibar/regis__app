@@ -47,6 +47,20 @@ class AdminSidebar extends ConsumerWidget {
             isActive: location.startsWith('/admin/accounts'),
             onTap: () => context.go('/admin/accounts'),
           ),
+          _SidebarItem(
+            icon: Icons.support_agent_outlined,
+            activeIcon: Icons.support_agent,
+            label: 'CX Support',
+            isActive: location.startsWith('/admin/support'),
+            onTap: () => context.go('/admin/support'),
+          ),
+          _SidebarItem(
+            icon: Icons.list_alt_outlined,
+            activeIcon: Icons.list_alt,
+            label: 'System Logs',
+            isActive: location.startsWith('/admin/logs'),
+            onTap: () => context.go('/admin/logs'),
+          ),
         ],
       ),
     );

@@ -1,12 +1,10 @@
 {
   "@@locale": "en",
   "@@context": "GamingHub App",
-  
   "app_name": "GamingHub",
   "@app_name": {
     "description": "The name of the application"
   },
-  
   "common": {
     "loading": "Loading...",
     "error": "Error",
@@ -46,7 +44,6 @@
     "english": "English",
     "arabic": "العربية"
   },
-  
   "auth": {
     "login": "Login",
     "phone_number": "Phone Number",
@@ -66,7 +63,6 @@
     "total_to_pay": "Total to Pay",
     "confirm_payment": "Confirm Payment"
   },
-  
   "home": {
     "gaming_centers_map": "Gaming Centers Map",
     "search_location": "Search location...",
@@ -75,9 +71,11 @@
     "nearby_you": "Nearby You",
     "select_room": "Select Room",
     "book_station": "Book a Station",
-    "starting_from": "Starting from"
+    "starting_from": "Starting from",
+    "no_gaming_centers_found": "No gaming centers found",
+    "all_gaming_centers": "All Gaming Centers",
+    "search_results": "Search Results"
   },
-  
   "booking": {
     "select_date": "Select Date",
     "duration": "Duration",
@@ -85,9 +83,110 @@
     "hour_intervals": "2-hour intervals",
     "confirm_pay_fee": "Confirm & Pay Fee",
     "please_select_room": "Please select a room first",
-    "please_select_time": "Please select a time slot"
+    "please_select_time": "Please select a time slot",
+    "time_slot_passed": "This time slot has already passed. Please pick a future slot.",
+    "no_active_stations": "No active stations found in this room. Please choose another room.",
+    "room_not_found": "Room not found",
+    "registration_fee_pay_now": "Registration Fee (Pay Now)",
+    "total_session_price": "Total Session Price",
+    "confirm_and_book": "Confirm & Book",
+    "open_badge": "OPEN",
+    "category_label": "Category",
+    "booked_via_app": "Booked via Forya mobile app"
   },
-  
+  "my_bookings": {
+    "title": "My Bookings",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "cancelled": "Cancelled",
+    "no_upcoming": "No upcoming bookings",
+    "no_past": "No past bookings",
+    "no_cancelled": "No cancelled bookings",
+    "head_to_explore": "Head to Explore to book a session",
+    "could_not_load": "Could not load bookings",
+    "retry": "Retry",
+    "duration": "Duration",
+    "time": "Time",
+    "fee": "Fee",
+    "booking_prefix": "Booking #",
+    "booking_id": "Booking",
+    "cancel": "Cancel",
+    "pay_now": "Pay Now",
+    "reviewed": "Reviewed",
+    "leave_review": "Leave Review",
+    "cancel_title": "Cancel Booking",
+    "cancel_msg": "Are you sure you want to cancel this booking?",
+    "no": "No",
+    "yes_cancel": "Yes, Cancel",
+    "failed_to_cancel": "Failed to cancel",
+    "please_select_rating": "Please select a rating",
+    "review_submitted": "Review submitted successfully!",
+    "rate_experience": "Rate your experience",
+    "comment_optional": "Comment (Optional)",
+    "comment_hint": "Tell us about your experience...",
+    "submit_review": "Submit Review"
+  },
+  "settings": {
+    "title": "Settings",
+    "personal_information": "Personal Information",
+    "wallet_rewards": "Wallet & Rewards",
+    "help_support": "Help & Support",
+    "logout": "Logout"
+  },
+  "personal_info": {
+    "title": "Personal Information",
+    "full_name": "Full Name",
+    "email_address": "Email Address",
+    "phone_number": "Phone Number",
+    "save_changes": "Save Changes",
+    "name_required": "Please enter your name",
+    "updated_success": "Profile updated successfully",
+    "update_failed": "Failed to update profile"
+  },
+  "help_support": {
+    "title": "Help & Support",
+    "online_status": "Online · Typically replies fast",
+    "chat_error": "Could not start chat session.\nPlease check your connection.",
+    "here_to_help": "We're here to help",
+    "pick_topic": "Pick a topic or type your question below.",
+    "type_message": "Type your message…",
+    "quick_booking": "Booking Issues",
+    "quick_payment": "Payment & Refunds",
+    "quick_account": "Account & Login",
+    "quick_report": "Report a Problem",
+    "quick_center": "Center Not Found",
+    "quick_pricing": "Pricing & Plans",
+    "ans_booking": "For booking issues, make sure you have a stable internet connection. If a booking fails, wait 60 seconds and try again — charges are auto-reversed within 24 hours. Still stuck? Describe the problem here and a support agent will assist you shortly.",
+    "ans_payment": "Refunds are processed automatically within 3–5 business days to your original payment method. Wallet top-ups are instant. If you believe a charge is incorrect, please share the booking ID and we will investigate right away.",
+    "ans_account": "Can't log in? Try resetting your password via the login screen. If your account is suspended, it may be due to a policy violation — please describe the issue here and a team member will review it.",
+    "ans_report": "We're sorry you're experiencing an issue! Please describe the problem in as much detail as possible — include the gaming center name, date/time, and what went wrong. Our team reviews all reports within 24 hours.",
+    "ans_center": "Not seeing a center near you? Make sure location permissions are enabled. You can also browse centers manually on the Map tab. If a center is missing, let us know its name here!",
+    "ans_pricing": "Pricing is set by each gaming center and may vary by room, device, and peak hours. All prices shown on the booking screen are final — there are no hidden fees.",
+    "greeting": "Hi there! 👾 Welcome to Forya Support.\n\nHow can we help you today? Choose a topic below or type your question.",
+    "ack_message": "Thanks for reaching out! 🙌 Your message has been received. A support agent will reply here shortly — usually within a few minutes."
+  },
+  "profile_card": {
+    "member_since": "Member since",
+    "no_phone": "No phone set",
+    "edit_profile": "Edit Profile",
+    "display_name": "Display Name",
+    "cancel": "Cancel",
+    "save": "Save",
+    "updated_success": "Profile updated successfully!",
+    "update_failed": "Failed to update",
+    "settings_soon": "Settings coming soon!",
+    "book_to_see": "Book a session to see your top centers here.",
+    "activity_here": "Your bookings and reviews will appear here.",
+    "logout": "Logout",
+    "logout_confirm": "Are you sure you want to logout?",
+    "cancel_logout": "Cancel"
+  },
+  "explore": {
+    "my_wallet": "My Wallet",
+    "pts_suffix": "pts",
+    "from_price": "From EGP 15/hr",
+    "price_per_hour": "EGP 15 per hour"
+  },
   "payment": {
     "instapay": "InstaPay",
     "vodafone_cash": "Vodafone Cash",
@@ -97,7 +196,6 @@
     "reference_code_provided": "Reference code provided after",
     "processing_payment": "Processing payment..."
   },
-  
   "profile": {
     "personal_information": "Personal Information",
     "payment_methods": "Payment Methods",
@@ -117,7 +215,6 @@
     "logout_confirm": "Are you sure you want to logout?",
     "logging_out": "Logging out..."
   },
-  
   "admin": {
     "fee_queue": "Fee Queue",
     "manage_fees": "Manage 5 EGP booking fees",
@@ -133,7 +230,6 @@
     "deposit_rejected": "Deposit rejected",
     "refreshing_data": "Refreshing data..."
   },
-  
   "cyber": {
     "dashboard": "Dashboard",
     "today_bookings": "Today's Bookings",
@@ -142,25 +238,127 @@
     "occupancy_rate": "Occupancy Rate",
     "manage_bookings": "Manage Bookings",
     "manage_rooms": "Manage Rooms",
-    "view_analytics": "View Analytics"
+    "view_analytics": "View Analytics",
+    "workers": "Workers",
+    "manage_staff_accounts_allowed": "Manage staff accounts allowed to access dashboard",
+    "coming_soon": "Coming soon",
+    "add_worker": "Add Worker",
+    "no_workers_found": "No workers found",
+    "station_status": "Station Status",
+    "realtime_monitoring_of_all": "Real-time monitoring of all stations",
+    "no_rooms_added": "No rooms added",
+    "no_stations": "No stations",
+    "toggle_maintenance_status": "Toggle maintenance status?",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "over": "Over!",
+    "session_completed": "Session completed",
+    "schedule": "Schedule",
+    "manage_your_daily_weekly": "Manage your daily, weekly, and monthly bookings",
+    "refresh": "Refresh",
+    "today": "Today",
+    "this_week": "This Week",
+    "this_month": "This Month",
+    "no_bookings_found_for": "No bookings found for this period",
+    "no_bookings_today": "No bookings today",
+    "no_bookings_this_week": "No bookings this week",
+    "no_bookings_this_month": "No bookings this month",
+    "walkin": "Walk-in",
+    "app_user": "App user",
+    "station_booked": "Station booked",
+    "manual": "Manual",
+    "manual_booking_walkin_customer": "Manual Booking — Walk-in Customer",
+    "for_customers_who_come": "For customers who come in without booking through the app",
+    "booking_details": "Booking details",
+    "room_type": "Room type",
+    "station": "Station",
+    "start_time": "Start time",
+    "duration": "Duration",
+    "client_name_optional": "Client name (optional)",
+    "eg_mohamed_ahmed": "e.g. Mohamed Ahmed",
+    "payment_method": "Payment method",
+    "total": "Total",
+    "confirm_booking_and_add": "Confirm booking and add to schedule",
+    "booking_added_successfully": "Booking added successfully!",
+    "no_manual_bookings_yet": "No manual bookings yet",
+    "pending_payments": "Pending Payments",
+    "review_booking_fees_5": "Review booking fees (5 EGP) to approve bookings",
+    "no_pending_payments": "No pending payments!",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejection_reason": "Rejection Reason",
+    "eg_receipt_is_unclear": "e.g. Receipt is unclear",
+    "confirm_reject": "Confirm Reject",
+    "eeee_mmmm_d_yyyy": "EEEE, MMMM d yyyy",
+    "en": "en",
+    "confirmed": "Confirmed",
+    "pending_review": "Pending Review",
+    "quick_actions": "Quick Actions",
+    "manual_booking": "Manual Booking",
+    "review_payments_": "Review Payments ({})",
+    "view_full_schedule": "View full schedule",
+    "cyber_profile": "Cyber Profile",
+    "basic_info": "Basic Info",
+    "edit": "Edit",
+    "cyber_name": "Cyber Name",
+    "description": "Description",
+    "address": "Address",
+    "save": "Save",
+    "rooms_pricing": "Rooms & Pricing",
+    "no_rooms": "No rooms",
+    "image_uploaded": "Image uploaded",
+    "photos": "Photos",
+    "cover_photo": "Cover Photo",
+    "tap_to_add_cover": "Tap to add cover photo",
+    "gallery": "Gallery",
+    "add_photos": "Add photos",
+    "no_photos_in_gallery": "No photos in gallery",
+    "delete_photo": "Delete Photo",
+    "are_you_sure_you": "Are you sure you want to delete this photo?",
+    "delete": "Delete",
+    "edit_price": "Edit Price",
+    "price": "Price",
+    "add_room": "Add Room",
+    "room_name": "Room Name",
+    "type": "Type",
+    "price_per_hr": "Price (per hr)",
+    "amenities_eg_netflix": "Amenities (e.g., Netflix)",
+    "add": "Add",
+    "delete_room": "Delete Room",
+    "are_you_sure_you_1": "Are you sure you want to delete \"{}\" and all its stations?",
+    "deleted_successfully": "Deleted successfully",
+    "customer": "Customer",
+    "session_ended_alert": "⏰ Session ended: {} on {}",
+    "session_details": "Session Details",
+    "complete": "Complete",
+    "booking_cancelled": "Booking cancelled",
+    "additional_items": "Additional Items",
+    "add_item": "Add Item",
+    "inventory": "Inventory & Snacks",
+    "wallet_points": "Wallet Points",
+    "home": "Home"
   },
-  
   "rooms": {
     "pro_pc_zone": "Pro PC Zone",
     "playstation_vip": "PlayStation 5 VIP",
     "private_streaming": "Private Streaming Suite",
     "stations_available": "stations available"
   },
-  
   "map": {
     "nearest_gaming_center": "Nearest Gaming Center",
     "km_away": "km away",
     "recentering_map": "Recentering map...",
     "filter_options": "Filter options coming soon!",
     "interactive_map": "Interactive Map",
-    "google_maps_integration": "Google Maps integration coming soon"
+    "google_maps_integration": "Google Maps integration coming soon",
+    "explore": "Explore",
+    "gaming_centers": "Gaming Centers",
+    "search_centers": "Search centers...",
+    "no_centers_found": "No centers found",
+    "location_disabled": "Location services are disabled. Please enable the services",
+    "location_denied": "Location permissions are denied",
+    "location_permanently_denied": "Location permissions are permanently denied, we cannot request permissions."
   },
-  
   "owner_dashboard": {
     "home": "Home",
     "manual_booking": "Manual Booking",
@@ -203,7 +401,6 @@
     "payments_readonly": "Payments queue — view only",
     "default_cafe_name": "Galaxy Cyber Cafe"
   },
-
   "owner_onboarding": {
     "title": "Register your gaming center",
     "step_basic": "Basic info",
@@ -225,7 +422,6 @@
     "submit": "Create account & center",
     "have_account": "Have an account? Sign in"
   },
-
   "owner_profile": {
     "title": "Profile",
     "account": "Account",
@@ -267,7 +463,6 @@
     "room_type": "Room type",
     "station_name": "Station name"
   },
-
   "owner_cyber_profile": {
     "admin_only": "admin",
     "general": "General info",
@@ -280,12 +475,54 @@
     "select_cyber": "Select center",
     "price_hour": "Price/hour"
   },
-
   "errors": {
     "network_error": "Network error. Please check your connection.",
     "server_error": "Server error. Please try again later.",
     "invalid_credentials": "Invalid credentials. Please try again.",
     "something_went_wrong": "Something went wrong. Please try again.",
     "no_data_available": "No data available."
+  },
+  "wallet": {
+    "my_wallet": "My Wallet",
+    "total_balance": "Total Balance",
+    "pts": "pts",
+    "show_qr": "Show this QR at the cyber to earn points",
+    "recent_transactions": "Recent Transactions",
+    "how_it_works": "How It Works",
+    "no_wallet_found": "No Wallet Found",
+    "no_wallet_subtitle": "Your wallet will be generated soon.",
+    "no_transactions": "No Transactions",
+    "no_transactions_subtitle": "Play at a cyber to earn points!",
+    "id_copied": "ID copied to clipboard!",
+    "points_earned": "Points Earned",
+    "points_redeemed": "Points Redeemed",
+    "error_loading_id": "Error loading ID",
+    "no_id_generated": "No ID Generated",
+    "step1_title": "1. Visit a cyber",
+    "step1_subtitle": "Go to any partner cyber.",
+    "step2_title": "2. Give your ID",
+    "step2_subtitle": "Show the QR code above or give your short ID.",
+    "step3_title": "3. Earn Points",
+    "step3_subtitle": "Staff will add points to your wallet based on your session.",
+    "step4_title": "4. Redeem Points",
+    "step4_subtitle": "Use points for discounts on future sessions."
+  },
+  "admin": {
+    "verify_receipts": "Verify Receipts",
+    "fee_queue": "Fee Queue",
+    "manage_fees": "Manage Fees",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "rejected": "Rejected",
+    "revenue": "Revenue",
+    "view_receipt": "View Receipt",
+    "support": {
+      "title": "CX Support",
+      "no_chats": "No active support chats.",
+      "select_chat": "Select a chat to view messages",
+      "type_message": "Type your message...",
+      "resolve_chat": "Resolve Chat",
+      "unread": "unread"
+    }
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/wallet_provider.dart';
@@ -23,7 +24,7 @@ class WalletScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.darkBg,
         elevation: 0,
-        title: const Text('My Wallet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('wallet.my_wallet'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: RefreshIndicator(
@@ -60,7 +61,7 @@ class WalletScreen extends ConsumerWidget {
                 ),
                 child: Column(
                   children: [
-                    const Text('Total Balance', style: TextStyle(color: AppColors.textMuted, fontSize: 16)),
+                    Text('wallet.total_balance'.tr(), style: const TextStyle(color: AppColors.textMuted, fontSize: 16)),
                     const SizedBox(height: 8),
                     walletAsync.when(
                       loading: () => const LoadingWidget(),
@@ -76,9 +77,9 @@ class WalletScreen extends ConsumerWidget {
                             style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.bold, height: 1.0),
                           ),
                           const SizedBox(width: 6),
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 6),
-                            child: Text('pts', style: TextStyle(color: AppColors.green, fontSize: 18, fontWeight: FontWeight.bold)),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Text('wallet.pts'.tr(), style: const TextStyle(color: AppColors.green, fontSize: 18, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -94,10 +95,10 @@ class WalletScreen extends ConsumerWidget {
                       ),
                       child: shortIdAsync.when(
                         loading: () => const SizedBox(height: 150, child: LoadingWidget()),
-                        error: (_, __) => const SizedBox(height: 150, child: Center(child: Text('Error loading ID'))),
+                        error: (_, __) => SizedBox(height: 150, child: Center(child: Text('wallet.error_loading_id'.tr()))),
                         data: (shortId) {
                           if (shortId == null) {
-                            return const SizedBox(height: 150, child: Center(child: Text('No ID Generated')));
+                            return SizedBox(height: 150, child: Center(child: Text('wallet.no_id_generated'.tr())));
                           }
                           return Column(
                             children: [
@@ -125,7 +126,7 @@ class WalletScreen extends ConsumerWidget {
                                     onTap: () {
                                       Clipboard.setData(ClipboardData(text: shortId));
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('ID copied to clipboard!')),
+                                        SnackBar(content: Text('wallet.id_copied'.tr())),
                                       );
                                     },
                                     child: const Icon(Icons.copy, color: AppColors.gray, size: 20),
@@ -138,17 +139,17 @@ class WalletScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text('Show this QR at the cyber to earn points', 
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                    Text('wallet.show_qr'.tr(), 
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                     ),
                   ],
                 ),
               ),
 
               // --- Transactions Section ---
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24),
-                child: Text('Recent Transactions', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text('wallet.recent_transactions'.tr(), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 16),
               
@@ -157,10 +158,10 @@ class WalletScreen extends ConsumerWidget {
                 error: (err, _) => Center(child: Text('Error loading transactions: $err')),
                 data: (wallet) {
                   if (wallet == null) {
-                     return const EmptyState(
+                     return EmptyState(
                       icon: Icons.receipt_long,
-                      title: 'No Wallet Found',
-                      subtitle: 'Your wallet will be generated soon.',
+                      title: 'wallet.no_wallet_found'.tr(),
+                      subtitle: 'wallet.no_wallet_subtitle'.tr(),
                     );
                   }
                   
@@ -171,15 +172,15 @@ class WalletScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               
               // --- How It Works Section ---
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24),
-                child: Text('How It Works', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text('wallet.how_it_works'.tr(), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 16),
-              _buildHowItWorksCard(Icons.store_outlined, '1. Visit a cyber', 'Go to any partner cyber.'),
-              _buildHowItWorksCard(Icons.qr_code, '2. Give your ID', 'Show the QR code above or give your short ID.'),
-              _buildHowItWorksCard(Icons.add_circle_outline, '3. Earn Points', 'Staff will add points to your wallet based on your session.'),
-              _buildHowItWorksCard(Icons.card_giftcard, '4. Redeem Points', 'Use points for discounts on future sessions.'),
+              _buildHowItWorksCard(Icons.store_outlined, 'wallet.step1_title'.tr(), 'wallet.step1_subtitle'.tr()),
+              _buildHowItWorksCard(Icons.qr_code, 'wallet.step2_title'.tr(), 'wallet.step2_subtitle'.tr()),
+              _buildHowItWorksCard(Icons.add_circle_outline, 'wallet.step3_title'.tr(), 'wallet.step3_subtitle'.tr()),
+              _buildHowItWorksCard(Icons.card_giftcard, 'wallet.step4_title'.tr(), 'wallet.step4_subtitle'.tr()),
               
               const SizedBox(height: 40),
             ],
@@ -238,12 +239,12 @@ class _TransactionsList extends ConsumerWidget {
       error: (err, _) => Center(child: Text('Error: $err')),
       data: (transactions) {
         if (transactions.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: EmptyState(
               icon: Icons.receipt_long,
-              title: 'No Transactions',
-              subtitle: 'Play at a cyber to earn points!',
+              title: 'wallet.no_transactions'.tr(),
+              subtitle: 'wallet.no_transactions_subtitle'.tr(),
             ),
           );
         }
@@ -287,7 +288,7 @@ class _TransactionsList extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          tx.note ?? (isEarned ? 'Points Earned' : 'Points Redeemed'),
+                          tx.note ?? (isEarned ? 'wallet.points_earned'.tr() : 'wallet.points_redeemed'.tr()),
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,

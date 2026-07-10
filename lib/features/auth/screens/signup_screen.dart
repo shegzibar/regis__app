@@ -21,6 +21,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _cyberCodeController = TextEditingController(); // Optional cyber code
   final _formKey = GlobalKey<FormState>();
 
   bool _isLoading = false;
@@ -34,6 +35,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _cyberCodeController.dispose();
     super.dispose();
   }
 
@@ -61,6 +63,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             _nameController.text.trim(),
             _phoneController.text.trim(),
             role: role,
+            cyberCode: _cyberCodeController.text.trim().isEmpty 
+                ? null 
+                : _cyberCodeController.text.trim(),
           );
 
       if (mounted) {
@@ -390,7 +395,42 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                   const SizedBox(height: 24),
 
+                  // Optional Cyber Code Field
+                  const Text(
+                    'Cyber Code (Optional)',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _cyberCodeController,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    decoration: InputDecoration(
+                      hintText: 'If you were referred by a cyber',
+                      hintStyle: const TextStyle(color: Color(0xFF6A6A6A)),
+                      filled: true,
+                      fillColor: const Color(0xFF2A2A2A),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFF3A3A3A)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFF3A3A3A)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 16),
+                    ),
+                  ),
 
+                  const SizedBox(height: 32),
 
                   // Sign Up Button
                   SizedBox(

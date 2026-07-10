@@ -103,6 +103,25 @@ class WalletRepository {
         'note': note,
         'cyber_name': cyberName,
       });
+
+      // Step 6: Log the event to system_logs
+      String? cyberId;
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser != null) {
+        final cyber = await supabase.from('cybers').select('id').eq('owner_id', currentUser.id).maybeSingle();
+        cyberId = cyber?['id'] as String?;
+      }
+
+      await supabase.from('system_logs').insert({
+        'event_type': 'POINTS_${type.toUpperCase()}',
+        'user_id': userId,
+        'cyber_id': cyberId,
+        'details': {
+          'amount': amount,
+          'note': note,
+          'cyber_name': cyberName,
+        }
+      });
     } catch (e) {
       final msg = e.toString();
       if (msg.contains('No rows') || msg.contains('0 rows')) {

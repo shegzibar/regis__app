@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/cd_colors.dart';
 import '../providers/cd_providers.dart';
@@ -13,9 +14,8 @@ class StationsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(cdLangProvider);
-    final isAr = lang == 'ar';
     final roomsAsync = ref.watch(cyberRoomsProvider);
+    final isAr = context.locale.languageCode == 'ar';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(kPadding),
@@ -24,16 +24,14 @@ class StationsPage extends ConsumerWidget {
         children: [
           // Page Title
           Text(
-            isAr ? 'حالة المحطات' : 'Station Status',
+            'cyber.station_status'.tr(),
             style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: kSidebarText),
           ),
           Text(
-            isAr
-                ? 'مراقبة حالة الأجهزة في الوقت الفعلي'
-                : 'Real-time monitoring of all stations',
+            'cyber.realtime_monitoring_of_all'.tr(),
             style: const TextStyle(fontSize: 12, color: kGray),
           ),
           const SizedBox(height: 20),
@@ -48,7 +46,7 @@ class StationsPage extends ConsumerWidget {
             data: (rooms) {
               if (rooms.isEmpty) {
                 return Center(
-                    child: Text(isAr ? 'لا توجد غرف' : 'No rooms added'));
+                    child: Text('cyber.no_rooms_added'.tr()));
               }
               return Column(
                 children: rooms.map((room) => _RoomSection(room: room, isAr: isAr)).toList(),
@@ -143,7 +141,7 @@ class _RoomSectionState extends ConsumerState<_RoomSection> {
               error: (e, _) => Text('Error: $e', style: const TextStyle(color: kRed)),
               data: (stations) {
                 if (stations.isEmpty) {
-                  return Text(isAr ? 'لا توجد أجهزة' : 'No stations');
+                  return Text('cyber.no_stations'.tr());
                 }
                 return GridView.builder(
                   shrinkWrap: true,
@@ -308,13 +306,11 @@ class _StationCardState extends State<_StationCard> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: Text(s.name),
-            content: Text(isAr
-                ? 'هل تريد تغيير حالة الصيانة؟'
-                : 'Toggle maintenance status?'),
+            content: Text('cyber.toggle_maintenance_status'.tr()),
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: Text(isAr ? 'إلغاء' : 'Cancel')),
+                  child: Text('cyber.cancel'.tr())),
               TextButton(
                 onPressed: () async {
                   Navigator.pop(ctx);
@@ -325,7 +321,7 @@ class _StationCardState extends State<_StationCard> {
                       .updateStationStatus(s.id, newStatus);
                   ref.invalidate(stationStatusProvider(s.roomId));
                 },
-                child: Text(isAr ? 'تأكيد' : 'Confirm',
+                child: Text('cyber.confirm'.tr(),
                     style: const TextStyle(color: kPurple)),
               ),
             ],
@@ -380,7 +376,7 @@ class _StationCardState extends State<_StationCard> {
                       const SizedBox(width: 4),
                       Text(
                         isOvertime
-                            ? (isAr ? 'انتهى!' : 'Over!')
+                            ? ('cyber.over'.tr())
                             : _formatDuration(_remaining),
                         style: const TextStyle(
                           color: Colors.white,
@@ -411,7 +407,7 @@ class _StationCardState extends State<_StationCard> {
                             Navigator.pop(context); // close loading
                             ref.invalidate(stationStatusProvider(s.roomId));
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(isAr ? 'تم إنهاء الجلسة' : 'Session completed')),
+                              SnackBar(content: Text('cyber.session_completed'.tr())),
                             );
                           }
                         } catch (e) {
