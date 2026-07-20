@@ -251,7 +251,10 @@ class _StationGroup extends StatelessWidget {
                 if (bookingsRaw != null) {
                   for (final b in bookingsRaw) {
                     final booking = Booking.fromMap(b);
-                    if (booking.status == 'confirmed' || booking.status == 'ongoing') {
+                    if (booking.status == 'confirmed' || 
+                        booking.status == 'ongoing' || 
+                        booking.status == 'pending_payment' || 
+                        booking.status == 'fee_under_review') {
                       if (booking.endTime.isAfter(DateTime.now())) {
                         activeBooking = booking;
                         break;

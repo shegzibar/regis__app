@@ -13,6 +13,7 @@ import '../../features/user/screens/map_screen.dart';
 import '../../features/user/screens/profile_screen.dart';
 import '../../features/user/screens/personal_info_screen.dart';
 import '../../features/user/screens/help_support_screen.dart';
+import '../../features/user/screens/terms_and_conditions_screen.dart';
 import '../../features/wallet/screens/wallet_screen.dart';
 
 import '../providers/auth_provider.dart';
@@ -130,7 +131,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'help_support',
             builder: (context, state) => const HelpSupportScreen(),
           ),
-
+          GoRoute(
+            path: '/terms-and-conditions',
+            name: 'terms_and_conditions',
+            builder: (context, state) => const TermsAndConditionsScreen(),
+          ),
         ],
       ),
     ],

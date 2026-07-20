@@ -4,9 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/cyber.dart';
 import '../../../data/models/room.dart';
 import '../constants/cd_colors.dart';
-import '../providers/cd_providers.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import '../providers/cd_providers.dart';
 import '../../../core/providers/owner_dashboard_provider.dart';
 import '../providers/photo_providers.dart';
 
@@ -263,28 +262,11 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                                           ),
                                         ),
                                           IconButton(
-                                            icon: const Icon(Icons.image, size: 16, color: kPurple),
-                                            onPressed: () async {
-                                              final picker = ImagePicker();
-                                              final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-                                              if (image != null) {
-                                                try {
-                                                  await ref.read(uploadRoomImageProvider({'roomId': r.id, 'file': image}).future);
-                                                  ref.invalidate(cyberRoomsProvider);
-                                                  if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('cyber.image_uploaded'.tr())));
-                                                  }
-                                                } catch (e) {
-                                                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
-                                                }
-                                              }
-                                            },
-                                          ),
-                                          IconButton(
                                             icon: const Icon(Icons.edit,
                                                 size: 16, color: kGray),
-                                            onPressed: () => _showEditPriceDialog(
-                                                context, ref, r, isAr),
+                                            onPressed: () {
+                                              ref.read(cdSelectedPageProvider.notifier).state = 'edit_room_${r.id}';
+                                            },
                                           ),
                                           IconButton(
                                             icon: const Icon(Icons.delete,
@@ -500,44 +482,7 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
     );
   }
 
-  void _showEditPriceDialog(
-      BuildContext context, WidgetRef ref, Room r, bool isAr) {
-    final priceCtrl = TextEditingController(text: r.pricePerHour.toString());
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('cyber.edit_price'.tr()),
-        content: TextField(
-          controller: priceCtrl,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            suffixText: 'EGP/hr',
-            border: const OutlineInputBorder(),
-            labelText: 'cyber.price'.tr(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('cyber.cancel'.tr()),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final val = double.tryParse(priceCtrl.text.trim());
-              if (val != null) {
-                Navigator.pop(ctx);
-                await ref
-                    .read(cdCyberRepoProvider)
-                    .updateRoomPrice(r.id, val);
-                ref.invalidate(cyberRoomsProvider);
-              }
-            },
-            child: Text('cyber.save'.tr()),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _showAddRoomDialog(
       BuildContext context, WidgetRef ref, String cyberId, bool isAr) {

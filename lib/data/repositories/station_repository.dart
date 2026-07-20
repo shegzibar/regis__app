@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/station.dart';
 import '../supabase/supabase_client.dart';
 
@@ -88,6 +90,11 @@ class StationRepository {
   Future<void> deleteStation(String stationId) async {
     try {
       await _supabase.from('stations').delete().eq('id', stationId);
+    } on PostgrestException catch (e) {
+      if (e.code == '23503') {
+        throw Exception('Cannot delete station because it has associated bookings.');
+      }
+      throw Exception('Failed to delete station: $e');
     } catch (e) {
       throw Exception('Failed to delete station: $e');
     }

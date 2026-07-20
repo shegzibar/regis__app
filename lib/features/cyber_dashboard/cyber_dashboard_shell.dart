@@ -14,6 +14,8 @@ import 'pages/stations_page.dart';
 import 'pages/cyber_profile_page.dart';
 import 'pages/workers_page.dart';
 import 'pages/wallet_points_page.dart';
+import 'pages/cd_edit_room_page.dart';
+import 'pages/accounting_page.dart';
 import '../owner/screens/owner_inventory_screen.dart';
 import 'widgets/cd_top_bar.dart';
 import 'widgets/cd_sidebar.dart';
@@ -133,6 +135,11 @@ class _CyberDashboardShellState
   }
 
   Widget _currentPage(String page) {
+    if (page.startsWith('edit_room_')) {
+      final roomId = page.split('edit_room_')[1];
+      return CdEditRoomPage(roomId: roomId);
+    }
+
     return switch (page) {
       'home' => const HomePage(),
 
@@ -143,6 +150,7 @@ class _CyberDashboardShellState
       'workers' => const WorkersPage(),
       'wallet_points' => const WalletPointsPage(),
       'inventory' => const OwnerInventoryScreen(),
+      'accounting' => const AccountingPage(),
       _ => const HomePage(),
     };
   }

@@ -52,6 +52,11 @@ const _navItems = [
     icon: Icons.stars,
     labelKey: 'cyber.wallet_points',
   ),
+  _NavItem(
+    key: 'accounting',
+    icon: Icons.account_balance_outlined,
+    labelKey: 'cyber.accounting',
+  ),
 ];
 
 class CdSidebar extends ConsumerWidget {

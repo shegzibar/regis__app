@@ -301,7 +301,7 @@ class CdBookingRepository {
         .from('bookings')
         .select('id, station_id, end_time, user_id')
         .inFilter('station_id', stationIds)
-        .eq('status', 'confirmed')
+        .inFilter('status', ['confirmed', 'fee_under_review', 'pending_payment', 'ongoing'])
         .lte('start_time', now.toUtc().toIso8601String())
         .gte('end_time', now.toUtc().toIso8601String());
 
@@ -399,5 +399,60 @@ class CdBookingRepository {
           callback: (_) => onUpdate(),
         )
         .subscribe();
+  }
+
+  /// Fetch all bookings for this cyber within [start, end) for accounting.
+  Future<List<Booking>> getBookingsForPeriod({
+    required String cyberId,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    try {
+      final data = await _db.from('bookings').select('''
+        *,
+        stations ( id, name, rooms ( id, name, type, cyber_id ) )
+      ''')
+          .gte('start_time', start.toUtc().toIso8601String())
+          .lt('start_time', end.toUtc().toIso8601String())
+          .order('start_time', ascending: false);
+
+      final all = (data as List).map((b) => Booking.fromMap(b)).toList();
+      final filtered = all.where((b) => b.cyberId == cyberId).toList();
+
+      // Resolve user names
+      if (filtered.isNotEmpty) {
+        final userIds = filtered.map((b) => b.userId).toSet().toList();
+        final profileMap = <String, String>{};
+        try {
+          final profiles = await _db
+              .from('profiles')
+              .select('id, name, phone')
+              .inFilter('id', userIds);
+          for (final p in profiles as List) {
+            final name = p['name'] as String?;
+            final phone = p['phone'] as String?;
+            final id = p['id'] as String;
+            profileMap[id] = (name?.trim().isNotEmpty == true
+                    ? name!
+                    : phone?.trim().isNotEmpty == true
+                        ? phone!
+                        : 'User #${id.substring(0, 8).toUpperCase()}');
+          }
+        } catch (_) {}
+
+        for (var i = 0; i < filtered.length; i++) {
+          final b = filtered[i];
+          if (b.source == 'app') {
+            final name = profileMap[b.userId];
+            if (name != null) filtered[i] = b.copyWith(userName: name);
+          }
+        }
+      }
+
+      return filtered;
+    } catch (e) {
+      debugPrint('getBookingsForPeriod failed: $e');
+      return [];
+    }
   }
 }

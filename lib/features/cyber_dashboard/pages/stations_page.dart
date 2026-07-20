@@ -48,8 +48,13 @@ class StationsPage extends ConsumerWidget {
                 return Center(
                     child: Text('cyber.no_rooms_added'.tr()));
               }
-              return Column(
-                children: rooms.map((room) => _RoomSection(room: room, isAr: isAr)).toList(),
+              return Wrap(
+                spacing: 24,
+                runSpacing: 24,
+                children: rooms.map((room) => SizedBox(
+                  width: 360,
+                  child: _RoomSection(room: room, isAr: isAr),
+                )).toList(),
               );
             },
           ),
@@ -96,7 +101,6 @@ class _RoomSectionState extends ConsumerState<_RoomSection> {
     final stationsAsync = ref.watch(stationStatusProvider(room.id));
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: kWhite,
         borderRadius: BorderRadius.circular(kRadius),
@@ -104,6 +108,7 @@ class _RoomSectionState extends ConsumerState<_RoomSection> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Header
           Container(
@@ -137,26 +142,32 @@ class _RoomSectionState extends ConsumerState<_RoomSection> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: stationsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('Error: $e', style: const TextStyle(color: kRed)),
+              loading: () => const Center(child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(),
+              )),
+              error: (e, _) => Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text('Error: $e', style: const TextStyle(color: kRed)),
+              ),
               data: (stations) {
                 if (stations.isEmpty) {
-                  return Text('cyber.no_stations'.tr());
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('cyber.no_stations'.tr()),
+                  );
                 }
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.85, // More vertical space for buttons
-                  ),
-                  itemCount: stations.length,
-                  itemBuilder: (context, i) {
-                    final s = stations[i];
-                    return _StationCard(s: s, isAr: isAr, ref: ref);
-                  },
+                return Column(
+                  children: stations.map((s) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 240, // Increased height to prevent overflow when busy
+                        child: _StationCard(s: s, isAr: isAr, ref: ref),
+                      ),
+                    );
+                  }).toList(),
                 );
               },
             ),
@@ -338,19 +349,19 @@ class _StationCardState extends State<_StationCard> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: iconColor, size: 22),
-            const SizedBox(height: 6),
+            Icon(icon, color: iconColor, size: 36),
+            const SizedBox(height: 12),
             Text(
               s.name,
               style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: s.isBusy ? kPurple : kSidebarText),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               s.statusLabel(arabic: isAr),
-              style: TextStyle(fontSize: 9, color: iconColor),
+              style: TextStyle(fontSize: 13, color: iconColor),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -380,7 +391,7 @@ class _StationCardState extends State<_StationCard> {
                             : _formatDuration(_remaining),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 14, // Made clock larger
+                          fontSize: 16, // Larger clock text
                           fontWeight: FontWeight.bold,
                           fontFeatures: [FontFeature.tabularFigures()],
                         ),
@@ -402,12 +413,45 @@ class _StationCardState extends State<_StationCard> {
                           builder: (_) => const Center(child: CircularProgressIndicator()),
                         );
                         try {
+                          final bookingBeforeStop = await ref.read(ownerRepositoryProvider).getBookingById(s.currentBookingId!);
                           await ref.read(ownerRepositoryProvider).completeBooking(s.currentBookingId!);
                           if (context.mounted) {
                             Navigator.pop(context); // close loading
                             ref.invalidate(stationStatusProvider(s.roomId));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('cyber.session_completed'.tr())),
+                            
+                            final duration = DateTime.now().difference(bookingBeforeStop.startTime);
+                            final h = duration.inHours;
+                            final m = duration.inMinutes.remainder(60);
+                            final timeStr = h > 0 ? '$h hr $m min' : '$m min';
+                            final timeStrAr = h > 0 ? '$h ساعة و $m دقيقة' : '$m دقيقة';
+
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Row(
+                                  children: [
+                                    const Icon(Icons.receipt_long, color: kPurple),
+                                    const SizedBox(width: 8),
+                                    Text(isAr ? 'ملخص الجلسة' : 'Session Summary', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                                  ],
+                                ),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('${isAr ? 'الوقت المنقضي' : 'Time spent'}: ${isAr ? timeStrAr : timeStr}', style: const TextStyle(fontSize: 16)),
+                                    const SizedBox(height: 12),
+                                    Text('${isAr ? 'الإجمالي' : 'Total Price'}: ${bookingBeforeStop.totalAmount.toStringAsFixed(2)} EGP', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kGreen)),
+                                  ],
+                                ),
+                                actions: [
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(backgroundColor: kPurple),
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: Text(isAr ? 'إغلاق' : 'Close', style: const TextStyle(color: Colors.white)),
+                                  ),
+                                ],
+                              ),
                             );
                           }
                         } catch (e) {
@@ -418,12 +462,12 @@ class _StationCardState extends State<_StationCard> {
                         }
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(color: kRed, borderRadius: BorderRadius.circular(4)),
-                        child: const Icon(Icons.stop, color: Colors.white, size: 16),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: kRed, borderRadius: BorderRadius.circular(6)),
+                        child: const Icon(Icons.stop, color: Colors.white, size: 22),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     // Add Item Button
                     GestureDetector(
                       onTap: () async {
@@ -456,9 +500,9 @@ class _StationCardState extends State<_StationCard> {
                         }
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(color: kTeal, borderRadius: BorderRadius.circular(4)),
-                        child: const Icon(Icons.add_shopping_cart, color: Colors.white, size: 16),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: kTeal, borderRadius: BorderRadius.circular(6)),
+                        child: const Icon(Icons.add_shopping_cart, color: Colors.white, size: 22),
                       ),
                     ),
                   ],

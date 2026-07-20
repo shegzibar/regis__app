@@ -85,6 +85,9 @@ class RoomRepository {
     double? pricePerHour,
     String? description,
     bool? isActive,
+    String? type,
+    List<String>? images,
+    String? imageUrl,
   }) async {
     try {
       final updateData = <String, dynamic>{};
@@ -92,6 +95,9 @@ class RoomRepository {
       if (pricePerHour != null) updateData['price_per_hour'] = pricePerHour;
       if (description != null) updateData['description'] = description;
       if (isActive != null) updateData['is_active'] = isActive;
+      if (type != null) updateData['type'] = type;
+      if (images != null) updateData['images'] = images;
+      if (imageUrl != null) updateData['image_url'] = imageUrl;
 
       final response = await _supabase
           .from('rooms')

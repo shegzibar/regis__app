@@ -90,118 +90,124 @@ class _WalletPointsPageState extends ConsumerState<WalletPointsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 500),
-          margin: const EdgeInsets.all(24),
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              )
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Wallet Points Management',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.dark,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Add or redeem points for a user using their 6-character short ID.',
-                style: TextStyle(color: AppColors.gray),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: _TypeButton(
-                      title: 'Add Points (Earned)',
-                      isSelected: _transactionType == 'earned',
-                      color: AppColors.green,
-                      onTap: () => setState(() => _transactionType = 'earned'),
-                    ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 500),
+            padding: const EdgeInsets.all(36),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                )
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Wallet Points Management',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.dark,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _TypeButton(
-                      title: 'Redeem Points',
-                      isSelected: _transactionType == 'redeemed',
-                      color: AppColors.error,
-                      onTap: () => setState(() => _transactionType = 'redeemed'),
-                    ),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 24),
-              
-              TextField(
-                controller: _shortIdController,
-                decoration: InputDecoration(
-                  labelText: 'User Short ID (e.g. ab12c3)',
-                  prefixIcon: Icon(Icons.qr_code, color: AppColors.green),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  textAlign: TextAlign.center,
                 ),
-                textCapitalization: TextCapitalization.none,
-              ),
-              const SizedBox(height: 16),
-              
-              TextField(
-                controller: _amountController,
-                decoration: InputDecoration(
-                  labelText: 'Amount (Points)',
-                  prefixIcon: Icon(Icons.stars, color: AppColors.green),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                const SizedBox(height: 8),
+                const Text(
+                  'Add or redeem points for a user using their 6-character short ID.',
+                  style: TextStyle(color: AppColors.gray),
+                  textAlign: TextAlign.center,
                 ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              
-              TextField(
-                controller: _noteController,
-                decoration: InputDecoration(
-                  labelText: 'Note (Optional)',
-                  prefixIcon: const Icon(Icons.note, color: AppColors.gray),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitTransaction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _transactionType == 'earned' ? AppColors.green : AppColors.error,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isLoading 
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text(
-                        _transactionType == 'earned' ? 'Add Points' : 'Redeem Points',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                const SizedBox(height: 36),
+                
+                Row(
+                  children: [
+                    Expanded(
+                      child: _TypeButton(
+                        title: 'Add Points (Earned)',
+                        isSelected: _transactionType == 'earned',
+                        color: AppColors.green,
+                        onTap: () => setState(() => _transactionType = 'earned'),
                       ),
-              ),
-            ],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _TypeButton(
+                        title: 'Redeem Points',
+                        isSelected: _transactionType == 'redeemed',
+                        color: AppColors.error,
+                        onTap: () => setState(() => _transactionType = 'redeemed'),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 28),
+                
+                TextField(
+                  controller: _shortIdController,
+                  decoration: InputDecoration(
+                    labelText: 'User Short ID (e.g. ab12c3)',
+                    prefixIcon: Icon(Icons.qr_code, color: AppColors.green),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  ),
+                  textCapitalization: TextCapitalization.none,
+                ),
+                const SizedBox(height: 16),
+                
+                TextField(
+                  controller: _amountController,
+                  decoration: InputDecoration(
+                    labelText: 'Amount (Points)',
+                    prefixIcon: Icon(Icons.stars, color: AppColors.green),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                
+                TextField(
+                  controller: _noteController,
+                  decoration: InputDecoration(
+                    labelText: 'Note (Optional)',
+                    prefixIcon: const Icon(Icons.note, color: AppColors.gray),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  ),
+                ),
+                
+                const SizedBox(height: 36),
+                
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _submitTransaction,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _transactionType == 'earned' ? AppColors.green : AppColors.error,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: _isLoading 
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(
+                          _transactionType == 'earned' ? 'Add Points' : 'Redeem Points',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

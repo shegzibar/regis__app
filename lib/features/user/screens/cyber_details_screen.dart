@@ -19,25 +19,6 @@ class CyberDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
-  String? _selectedRoomId;
-  double _minPrice = 15;
-
-  void _selectRoom(String roomId) {
-    setState(() {
-      _selectedRoomId = roomId;
-    });
-  }
-
-  void _bookStation() {
-    if (_selectedRoomId != null) {
-      context.push('/booking/$_selectedRoomId');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('cyber_details.please_select_room'.tr())),
-      );
-    }
-  }
-
   void _shareCyber() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('cyber_details.share_coming_soon'.tr())),
@@ -211,16 +192,6 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                           return Text('cyber_details.no_rooms'.tr(), style: const TextStyle(color: AppColors.textMuted));
                         }
 
-                        // Dynamically update minPrice in microtask if needed
-                        final currentMin = rooms.map((r) => r.pricePerHour).reduce((a, b) => a < b ? a : b);
-                        if (currentMin != _minPrice) {
-                          Future.microtask(() {
-                            setState(() {
-                              _minPrice = currentMin;
-                            });
-                          });
-                        }
-
                         return Column(
                           children: rooms.map((room) {
                             return Padding(
@@ -231,8 +202,10 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                                 iconColor: _getRoomIconColor(room.type),
                                 availableStations: 8, // Default fallback count
                                 pricePerHour: room.pricePerHour.toInt(),
-                                isSelected: _selectedRoomId == room.id,
-                                onTap: () => _selectRoom(room.id),
+                                isSelected: false,
+                                onTap: () {
+                                  context.push('/booking/${room.id}');
+                                },
                               ),
                             );
                           }).toList(),
@@ -300,66 +273,9 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                         );
                       },
                     ),
-                    
                     const SizedBox(height: 32),
                   ],
                 ),
-              ),
-            ),
-            
-            // Bottom Booking Bar
-            Container(
-              padding: const EdgeInsets.all(24.0),
-              decoration: BoxDecoration(
-                color: AppColors.darkCard,
-                border: Border(
-                  top: BorderSide(color: AppColors.darkBorder),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'cyber_details.starting_from'.tr(),
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${_minPrice.toInt()} ${'cyber_details.egp_hr'.tr()}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  ElevatedButton(
-                    onPressed: _bookStation,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.green,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    ),
-                    child: Text(
-                      'cyber_details.book_station'.tr(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ],

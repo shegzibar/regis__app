@@ -7,6 +7,7 @@ class Room {
   final double? bookingFee;
   final String? description;
   final String? imageUrl;
+  final List<String> images;
   final bool isActive;
 
   const Room({
@@ -18,6 +19,7 @@ class Room {
     this.bookingFee,
     this.description,
     this.imageUrl,
+    this.images = const [],
     this.isActive = true,
   });
 
@@ -31,6 +33,7 @@ class Room {
       bookingFee: map['booking_fee'] != null ? (map['booking_fee'] as num).toDouble() : null,
       description: map['description'] as String?,
       imageUrl: map['image_url'] as String?,
+      images: List<String>.from(map['images'] as List? ?? []),
       isActive: map['is_active'] as bool? ?? true,
     );
   }
@@ -45,6 +48,7 @@ class Room {
       'booking_fee': bookingFee,
       'description': description,
       'image_url': imageUrl,
+      'images': images,
       'is_active': isActive,
     };
   }
@@ -58,6 +62,7 @@ class Room {
     double? bookingFee,
     String? description,
     String? imageUrl,
+    List<String>? images,
     bool? isActive,
   }) {
     return Room(
@@ -69,6 +74,7 @@ class Room {
       bookingFee: bookingFee ?? this.bookingFee,
       description: description ?? this.description,
       imageUrl: imageUrl ?? this.imageUrl,
+      images: images ?? this.images,
       isActive: isActive ?? this.isActive,
     );
   }

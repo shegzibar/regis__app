@@ -34,6 +34,16 @@ class CloudinaryService {
     return _uploadImage(imageFile, 'Forya/rooms/$roomId');
   }
 
+  /// Uploads multiple room photos to Cloudinary
+  Future<List<String>> uploadRoomPhotos(String roomId, List<XFile> imageFiles) async {
+    final List<String> urls = [];
+    for (final file in imageFiles) {
+      final url = await uploadRoomPhoto(roomId, file);
+      if (url != null) urls.add(url);
+    }
+    return urls;
+  }
+
   /// Uploads multiple gallery photos
   Future<List<String>> uploadGalleryPhotos(String cyberId, List<XFile> imageFiles) async {
     List<String> urls = [];

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/room_provider.dart';
 import '../../../core/providers/booking_provider.dart';
@@ -28,6 +29,10 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   bool _isBookingLoading = false;
   Set<String> _bookedSlots = {};
 
+  // Realtime subscription
+  String? _subscribedStationId;
+  RealtimeChannel? _realtimeChannel;
+
   late final List<DateTime> _availableDates;
 
   final List<String> _timeSlots = [
@@ -52,11 +57,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   @override
   void initState() {
     super.initState();
-    // Dynamic dates starting from today
     _availableDates =
         List.generate(7, (index) => DateTime.now().add(Duration(days: index)));
     _selectedDate = _availableDates[0];
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadBookedSlots());
+    // Load initial data + subscribe to realtime
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initRealtime());
   }
 
   DateTime? _parseSlotToDateTime(DateTime date, String slot) {
@@ -74,22 +79,63 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     }
   }
 
-  Future<void> _loadBookedSlots() async {
+  Future<void> _initRealtime() async {
     try {
       final stations = await ref.read(roomStationsProvider(widget.roomId).future);
-      if (stations.isEmpty) return;
+      if (stations.isEmpty || !mounted) return;
       final stationId = stations.first.id;
-      final startOfDay = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      _subscribedStationId = stationId;
+
+      // Initial load
+      await _loadBookedSlotsForStation(stationId);
+
+      // Subscribe to realtime changes on the bookings table for this station
+      _realtimeChannel = Supabase.instance.client
+          .channel('bookings:station_id=eq.$stationId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'bookings',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'station_id',
+              value: stationId,
+            ),
+            callback: (_) {
+              // Refresh booked slots whenever any booking changes
+              if (mounted) _loadBookedSlotsForStation(stationId);
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      debugPrint('Realtime init failed: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _realtimeChannel?.unsubscribe();
+    super.dispose();
+  }
+
+  Future<void> _loadBookedSlotsForStation(String stationId) async {
+    try {
+      final startOfDay = DateTime(
+          _selectedDate.year, _selectedDate.month, _selectedDate.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
       final existing = await BookingRepository().getStationBookings(
-        stationId, startDate: startOfDay, endDate: endOfDay);
+          stationId,
+          startDate: startOfDay,
+          endDate: endOfDay);
       final booked = <String>{};
       for (final b in existing) {
         for (final slot in _timeSlots) {
           final slotTime = _parseSlotToDateTime(_selectedDate, slot);
           if (slotTime != null &&
               slotTime.isBefore(b.endTime) &&
-              slotTime.add(Duration(hours: _selectedDuration)).isAfter(b.startTime)) {
+              slotTime
+                  .add(Duration(hours: _selectedDuration))
+                  .isAfter(b.startTime)) {
             booked.add(slot);
           }
         }
@@ -104,8 +150,12 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     setState(() {
       _selectedDate = date;
       _selectedTimeSlot = null;
+      _bookedSlots = {}; // Clear immediately so stale slots don't show
     });
-    _loadBookedSlots();
+    // Re-fetch for new date using the already-known stationId
+    if (_subscribedStationId != null) {
+      _loadBookedSlotsForStation(_subscribedStationId!);
+    }
   }
 
   void _selectDuration(int duration) {
@@ -158,12 +208,51 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       final stations =
           await ref.read(roomStationsProvider(widget.roomId).future);
       if (stations.isEmpty) {
-        throw Exception(
-            'booking.no_active_stations'.tr());
+        throw Exception('booking.no_active_stations'.tr());
       }
 
       // Pick first active/available station
       final targetStation = stations.first;
+
+      // ── Conflict-check (race-condition guard) ───────────────────────────────
+      // Re-query the DB right before inserting to make sure the slot is still
+      // free even if another user booked it in the last few seconds.
+      final startOfDay = DateTime(
+          _selectedDate.year, _selectedDate.month, _selectedDate.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+      final latestBookings = await BookingRepository().getStationBookings(
+          targetStation.id,
+          startDate: startOfDay,
+          endDate: endOfDay);
+
+      // Re-compute which slots are taken
+      final slotTime = _parseSlotToDateTime(_selectedDate, _selectedTimeSlot!);
+      if (slotTime != null) {
+        for (final b in latestBookings) {
+          if (slotTime.isBefore(b.endTime) &&
+              slotTime
+                  .add(Duration(hours: _selectedDuration))
+                  .isAfter(b.startTime)) {
+            // Slot was taken while the user was looking at the screen
+            if (mounted) {
+              setState(() {
+                _bookedSlots.add(_selectedTimeSlot!);
+                _selectedTimeSlot = null;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('⚡ This slot was just booked by someone else. Please choose another time.'),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+            }
+            setState(() => _isBookingLoading = false);
+            return;
+          }
+        }
+      }
+      // ────────────────────────────────────────────────────────────────────────
 
       // Parse slot time (e.g. "10:00 AM")
       final parts = _selectedTimeSlot!.split(' ');
@@ -308,127 +397,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Airbnb-style: full-width image fading into dark background
-                        if (room.imageUrl != null && room.imageUrl!.isNotEmpty)
-                          Stack(
-                            children: [
-                              // Full-width image
-                              Image.network(
-                                room.imageUrl!,
-                                width: double.infinity,
-                                height: 260,
-                                fit: BoxFit.cover,
-                              ),
-                              // Gradient fade: transparent → dark at bottom
-                              Container(
-                                height: 260,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.transparent,
-                                      AppColors.darkBg.withOpacity(0.6),
-                                      AppColors.darkBg,
-                                    ],
-                                    stops: const [0.3, 0.7, 1.0],
-                                  ),
-                                ),
-                              ),
-                              // Room name + description overlaid at bottom of image
-                              Positioned(
-                                bottom: 16,
-                                left: 24,
-                                right: 24,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            room.name,
-                                            style: const TextStyle(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                              shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
-                                            ),
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.green,
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            'booking.open_badge'.tr(),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (room.description != null && room.description!.isNotEmpty) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        room.description!,
-                                        style: const TextStyle(
-                                          color: AppColors.textMuted,
-                                          fontSize: 13,
-                                          height: 1.4,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          )
-                        else
-                          // No image — compact title row
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.darkCard,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Center(
-                                    child: Text(room.typeIcon, style: const TextStyle(fontSize: 28)),
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(room.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        room.description != null && room.description!.isNotEmpty
-                                            ? room.description!
-                                            : '${'booking.category_label'.tr()}: ${room.displayName}',
-                                        style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        // Room image banner — carousel when multiple photos, single when one, icon fallback
+                        _RoomImageBanner(room: room),
 
                         const SizedBox(height: 24),
 
@@ -662,5 +632,232 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     return date1.year == date2.year &&
         date1.month == date2.month &&
         date1.day == date2.day;
+  }
+}
+
+/// Shows a full-width image banner on the booking screen.
+/// • Multiple images → horizontal PageView carousel with dot indicators
+/// • Single image   → simple Stack with gradient overlay
+/// • No images      → compact icon + text row
+class _RoomImageBanner extends StatefulWidget {
+  final dynamic room; // Room
+  const _RoomImageBanner({required this.room});
+
+  @override
+  State<_RoomImageBanner> createState() => _RoomImageBannerState();
+}
+
+class _RoomImageBannerState extends State<_RoomImageBanner> {
+  int _currentPage = 0;
+  final PageController _pageController = PageController();
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Widget _gradient({required Widget child}) {
+    return Stack(
+      children: [
+        child,
+        // Gradient fade at bottom
+        Container(
+          height: 260,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                AppColors.darkBg.withOpacity(0.6),
+                AppColors.darkBg,
+              ],
+              stops: const [0.3, 0.7, 1.0],
+            ),
+          ),
+        ),
+        // Room name overlay
+        Positioned(
+          bottom: 16,
+          left: 24,
+          right: 24,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.room.name,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.green,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'booking.open_badge'.tr(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (widget.room.description != null &&
+                  widget.room.description!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  widget.room.description!,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final images = widget.room.images as List<String>;
+    final imageUrl = widget.room.imageUrl as String?;
+
+    // Build effective list: prefer images[], fall back to imageUrl
+    final allImages = images.isNotEmpty
+        ? images
+        : (imageUrl != null && imageUrl.isNotEmpty ? [imageUrl] : <String>[]);
+
+    if (allImages.isEmpty) {
+      // No image — compact title row
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.darkCard,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(widget.room.typeIcon,
+                    style: const TextStyle(fontSize: 28)),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.room.name,
+                    style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.room.description != null &&
+                            widget.room.description!.isNotEmpty
+                        ? widget.room.description!
+                        : '${'booking.category_label'.tr()}: ${widget.room.displayName}',
+                    style: const TextStyle(
+                        color: AppColors.textMuted, fontSize: 13),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (allImages.length == 1) {
+      // Single image — simple banner
+      return SizedBox(
+        height: 260,
+        child: _gradient(
+          child: Image.network(
+            allImages.first,
+            width: double.infinity,
+            height: 260,
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
+
+    // Multiple images — PageView carousel
+    return SizedBox(
+      height: 260,
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: allImages.length,
+            onPageChanged: (i) => setState(() => _currentPage = i),
+            itemBuilder: (context, index) => Image.network(
+              allImages[index],
+              width: double.infinity,
+              height: 260,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: AppColors.darkCard,
+                child: const Icon(Icons.broken_image, color: Colors.white38),
+              ),
+            ),
+          ),
+          // Gradient + text overlay
+          _gradient(child: const SizedBox(width: double.infinity, height: 260)),
+          // Dot indicators
+          Positioned(
+            bottom: 60,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                allImages.length,
+                (i) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: _currentPage == i ? 16 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: _currentPage == i
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

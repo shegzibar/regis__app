@@ -352,7 +352,7 @@ class OwnerRepository {
   }
 
   Future<void> deleteRoomCascade(String roomId) async {
-    await _supabase.from('rooms').delete().eq('id', roomId);
+    await _supabase.from('rooms').update({'is_active': false}).eq('id', roomId);
   }
 
   Future<Station> addStation({
@@ -372,7 +372,14 @@ class OwnerRepository {
   }
 
   Future<void> deleteStation(String stationId) async {
-    await _supabase.from('stations').delete().eq('id', stationId);
+    try {
+      await _supabase.from('stations').delete().eq('id', stationId);
+    } on PostgrestException catch (e) {
+      if (e.code == '23503') {
+        throw Exception('Cannot delete station because it has associated bookings.');
+      }
+      rethrow;
+    }
   }
 
   // --- Inventory Management ---
@@ -432,7 +439,48 @@ class OwnerRepository {
     await _supabase.from('bookings').update({'total_amount': currentTotal + totalPrice}).eq('id', bookingId);
 
     return BookingItem.fromMap(row);
+  }
 
+  Future<void> stopBookingEarly(String bookingId) async {
+    // 1. Fetch booking and the room's hourly price
+    final bookingRaw = await _supabase
+        .from('bookings')
+        .select('*, stations!inner(rooms!inner(price_per_hour))')
+        .eq('id', bookingId)
+        .single();
+    
+    final startTime = DateTime.parse(bookingRaw['start_time']);
+    final bookingFee = (bookingRaw['booking_fee'] as num).toDouble();
+    
+    // Parse the joined data safely
+    final stationData = bookingRaw['stations'] as Map<String, dynamic>;
+    final roomData = stationData['rooms'] as Map<String, dynamic>;
+    final pricePerHour = (roomData['price_per_hour'] as num).toDouble();
+    
+    // 2. Calculate time stayed in 30-min blocks
+    final now = DateTime.now();
+    int minutesStayed = now.difference(startTime).inMinutes;
+    if (minutesStayed < 0) minutesStayed = 0;
+    
+    int blocks = (minutesStayed / 30.0).ceil();
+    if (blocks == 0) blocks = 1; // Minimum 30 min charge
+    
+    final newRoomCost = blocks * (pricePerHour / 2);
+    final newDurationHours = blocks * 0.5;
+    
+    // 3. Get any additional items cost
+    final itemsRes = await _supabase.from('booking_items').select('total_price').eq('booking_id', bookingId);
+    final itemsCost = (itemsRes as List).fold<double>(0.0, (sum, row) => sum + (row['total_price'] as num).toDouble());
+    
+    // 4. Update the booking
+    final newTotalAmount = newRoomCost + bookingFee + itemsCost;
+    
+    await _supabase.from('bookings').update({
+      'end_time': now.toIso8601String(),
+      'duration_hours': newDurationHours,
+      'total_amount': newTotalAmount,
+      'status': 'completed',
+    }).eq('id', bookingId);
   }
 
   Future<void> cancelBooking(String bookingId) async {

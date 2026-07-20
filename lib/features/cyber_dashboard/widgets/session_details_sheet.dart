@@ -101,13 +101,25 @@ class _SessionDetailsSheetState extends ConsumerState<SessionDetailsSheet> {
                     TextButton.icon(
                       onPressed: () async {
                         try {
-                          await ref.read(ownerRepositoryProvider).cancelBooking(b.id);
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('cyber.booking_cancelled'.tr())),
-                            );
-                            widget.onAdded();
-                            Navigator.pop(context);
+                          final now = DateTime.now();
+                          if (now.isAfter(b.startTime)) {
+                            await ref.read(ownerRepositoryProvider).stopBookingEarly(b.id);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Session stopped early and cost recalculated')),
+                              );
+                              widget.onAdded();
+                              Navigator.pop(context);
+                            }
+                          } else {
+                            await ref.read(ownerRepositoryProvider).cancelBooking(b.id);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('cyber.booking_cancelled'.tr())),
+                              );
+                              widget.onAdded();
+                              Navigator.pop(context);
+                            }
                           }
                         } catch (e) {
                           if (mounted) {

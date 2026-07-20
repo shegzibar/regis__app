@@ -123,6 +123,15 @@ class ProfileMenuSection extends StatelessWidget {
                 mobile: 8, tablet: 12, desktop: 16)),
         _buildMenuItem(
           context,
+          icon: Icons.description_outlined,
+          title: 'settings.terms_and_conditions'.tr(),
+          onTap: () => context.push('/terms-and-conditions'),
+        ),
+        SizedBox(
+            height: _getResponsiveSpacing(context,
+                mobile: 8, tablet: 12, desktop: 16)),
+        _buildMenuItem(
+          context,
           icon: Icons.logout,
           title: 'settings.logout'.tr(),
           onTap: onLogout,
