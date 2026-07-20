@@ -483,6 +483,40 @@ class OwnerRepository {
     }).eq('id', bookingId);
   }
 
+  Future<Map<String, dynamic>> previewStopBookingEarly(String bookingId) async {
+    final bookingRaw = await _supabase
+        .from('bookings')
+        .select('*, stations!inner(rooms!inner(price_per_hour))')
+        .eq('id', bookingId)
+        .single();
+    
+    final startTime = DateTime.parse(bookingRaw['start_time']);
+    final bookingFee = (bookingRaw['booking_fee'] as num).toDouble();
+    
+    final stationData = bookingRaw['stations'] as Map<String, dynamic>;
+    final roomData = stationData['rooms'] as Map<String, dynamic>;
+    final pricePerHour = (roomData['price_per_hour'] as num).toDouble();
+    
+    final now = DateTime.now();
+    int minutesStayed = now.difference(startTime).inMinutes;
+    if (minutesStayed < 0) minutesStayed = 0;
+    
+    int blocks = (minutesStayed / 30.0).ceil();
+    if (blocks == 0) blocks = 1;
+    
+    final newRoomCost = blocks * (pricePerHour / 2);
+    
+    final itemsRes = await _supabase.from('booking_items').select('total_price').eq('booking_id', bookingId);
+    final itemsCost = (itemsRes as List).fold<double>(0.0, (sum, row) => sum + (row['total_price'] as num).toDouble());
+    
+    final newTotalAmount = newRoomCost + bookingFee + itemsCost;
+    
+    return {
+      'newTotalAmount': newTotalAmount,
+      'minutesStayed': minutesStayed,
+    };
+  }
+
   Future<void> cancelBooking(String bookingId) async {
     await _supabase
         .from('bookings')

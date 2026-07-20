@@ -413,47 +413,73 @@ class _StationCardState extends State<_StationCard> {
                           builder: (_) => const Center(child: CircularProgressIndicator()),
                         );
                         try {
-                          final bookingBeforeStop = await ref.read(ownerRepositoryProvider).getBookingById(s.currentBookingId!);
-                          await ref.read(ownerRepositoryProvider).completeBooking(s.currentBookingId!);
-                          if (context.mounted) {
-                            Navigator.pop(context); // close loading
-                            ref.invalidate(stationStatusProvider(s.roomId));
-                            
-                            final duration = DateTime.now().difference(bookingBeforeStop.startTime);
-                            final h = duration.inHours;
-                            final m = duration.inMinutes.remainder(60);
-                            final timeStr = h > 0 ? '$h hr $m min' : '$m min';
-                            final timeStrAr = h > 0 ? '$h ساعة و $m دقيقة' : '$m دقيقة';
+                          final preview = await ref.read(ownerRepositoryProvider).previewStopBookingEarly(s.currentBookingId!);
+                          if (!context.mounted) return;
+                          Navigator.pop(context); // close loading
 
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Row(
-                                  children: [
-                                    const Icon(Icons.receipt_long, color: kPurple),
-                                    const SizedBox(width: 8),
-                                    Text(isAr ? 'ملخص الجلسة' : 'Session Summary', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                                  ],
-                                ),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('${isAr ? 'الوقت المنقضي' : 'Time spent'}: ${isAr ? timeStrAr : timeStr}', style: const TextStyle(fontSize: 16)),
-                                    const SizedBox(height: 12),
-                                    Text('${isAr ? 'الإجمالي' : 'Total Price'}: ${bookingBeforeStop.totalAmount.toStringAsFixed(2)} EGP', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kGreen)),
-                                  ],
-                                ),
-                                actions: [
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(backgroundColor: kPurple),
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: Text(isAr ? 'إغلاق' : 'Close', style: const TextStyle(color: Colors.white)),
-                                  ),
+                          final double newTotal = preview['newTotalAmount'];
+                          final int minutesStayed = preview['minutesStayed'];
+                          final int h = minutesStayed ~/ 60;
+                          final int m = minutesStayed % 60;
+                          final timeStr = h > 0 ? '$h hr $m min' : '$m min';
+                          final timeStrAr = h > 0 ? '$h ساعة و $m دقيقة' : '$m دقيقة';
+
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Row(
+                                children: [
+                                  const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                                  const SizedBox(width: 8),
+                                  Text(isAr ? 'تأكيد إيقاف الجلسة' : 'Confirm Stop Session', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                                 ],
                               ),
-                            );
-                          }
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('${isAr ? 'الوقت المنقضي' : 'Time spent'}: ${isAr ? timeStrAr : timeStr}', style: const TextStyle(fontSize: 16)),
+                                  const SizedBox(height: 12),
+                                  Text('${isAr ? 'التكلفة المحسوبة' : 'Calculated Cost'}: ${newTotal.toStringAsFixed(2)} EGP', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kGreen)),
+                                  const SizedBox(height: 16),
+                                  Text(isAr ? 'هل أنت متأكد أنك تريد إيقاف هذه الجلسة الآن؟' : 'Are you sure you want to stop this session now?', style: const TextStyle(fontSize: 14, color: kGray)),
+                                ],
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: Text(isAr ? 'إلغاء' : 'Cancel', style: const TextStyle(color: kGray)),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(backgroundColor: kRed),
+                                  onPressed: () async {
+                                    Navigator.pop(ctx);
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (_) => const Center(child: CircularProgressIndicator()),
+                                    );
+                                    try {
+                                      await ref.read(ownerRepositoryProvider).stopBookingEarly(s.currentBookingId!);
+                                      if (context.mounted) {
+                                        Navigator.pop(context); // close loading
+                                        ref.invalidate(stationStatusProvider(s.roomId));
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(isAr ? 'تم إيقاف الجلسة بنجاح' : 'Session stopped successfully')),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        Navigator.pop(context); // close loading
+                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                                      }
+                                    }
+                                  },
+                                  child: Text(isAr ? 'تأكيد الإيقاف' : 'Confirm Stop', style: const TextStyle(color: Colors.white)),
+                                ),
+                              ],
+                            ),
+                          );
                         } catch (e) {
                           if (context.mounted) {
                             Navigator.pop(context);
