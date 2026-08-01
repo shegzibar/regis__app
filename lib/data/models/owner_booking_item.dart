@@ -39,8 +39,8 @@ class OwnerBookingItem {
     return OwnerBookingItem(
       id: map['id'] as String,
       status: map['status'] as String? ?? 'pending_payment',
-      startTime: DateTime.parse(map['start_time'] as String),
-      endTime: DateTime.parse(map['end_time'] as String),
+      startTime: _parseDate(map['start_time']),
+      endTime: _parseDate(map['end_time']),
       durationHours: (map['duration_hours'] as num).toDouble(),
       totalAmount: (map['total_amount'] as num).toDouble(),
       notes: map['notes'] as String?,
@@ -50,6 +50,14 @@ class OwnerBookingItem {
       cyberName: cybers?['name'] as String? ?? '—',
       guestName: map['guest_name'] as String?,
     );
+  }
+
+  static DateTime _parseDate(dynamic dateVal) {
+    String dateStr = dateVal.toString();
+    if (!dateStr.endsWith('Z') && !dateStr.contains('+', 10) && !dateStr.contains('-', 10)) {
+      dateStr += 'Z';
+    }
+    return DateTime.parse(dateStr).toLocal();
   }
 }
 

@@ -50,14 +50,14 @@ class BookingRepository {
           .from('bookings')
           .select()
           .eq('station_id', stationId)
-          .inFilter('status', ['confirmed', 'pending_payment', 'fee_under_review']);
+          .inFilter('status', ['confirmed', 'active', 'pending_payment', 'fee_under_review']);
 
       if (startDate != null) {
-        query = query.gte('start_time', startDate.toIso8601String());
+        query = query.gte('start_time', startDate.toUtc().toIso8601String());
       }
 
       if (endDate != null) {
-        query = query.lte('end_time', endDate.toIso8601String());
+        query = query.lte('end_time', endDate.toUtc().toIso8601String());
       }
 
       final response = await query;
@@ -86,8 +86,8 @@ class BookingRepository {
       final bookingData = <String, dynamic>{
         'user_id': userId,
         'station_id': stationId,
-        'start_time': startTime.toIso8601String(),
-        'end_time': endTime.toIso8601String(),
+        'start_time': startTime.toUtc().toIso8601String(),
+        'end_time': endTime.toUtc().toIso8601String(),
         'duration_hours': durationHours,
         'total_amount': totalAmount,
         'booking_fee': bookingFee,

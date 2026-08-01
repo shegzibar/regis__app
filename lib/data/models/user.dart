@@ -8,6 +8,8 @@ class AppUser {
   final String role;
   final String? avatarUrl;
   final String? fcmToken;
+  final String? shortId;
+  final String? cyberId;
   final DateTime createdAt;
 
   const AppUser({
@@ -18,6 +20,8 @@ class AppUser {
     required this.role,
     this.avatarUrl,
     this.fcmToken,
+    this.shortId,
+    this.cyberId,
     required this.createdAt,
   });
 
@@ -30,6 +34,8 @@ class AppUser {
       role: map['role'] as String? ?? 'user',
       avatarUrl: map['avatar_url'] as String?,
       fcmToken: map['fcm_token'] as String?,
+      shortId: map['short_id'] as String?,
+      cyberId: map['cyber_id'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
     );
   }
@@ -43,6 +49,8 @@ class AppUser {
       role: user.userMetadata?['role'] ?? 'user',
       avatarUrl: user.userMetadata?['avatar_url'],
       fcmToken: user.userMetadata?['fcm_token'],
+      shortId: user.userMetadata?['short_id'],
+      cyberId: user.userMetadata?['cyber_id'],
       createdAt: DateTime.tryParse(user.createdAt.toString()) ?? DateTime.now(),
     );
   }
@@ -55,6 +63,8 @@ class AppUser {
       'role': role,
       'avatar_url': avatarUrl,
       'fcm_token': fcmToken,
+      'short_id': shortId,
+      'cyber_id': cyberId,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -84,8 +94,9 @@ class AppUser {
   bool get isUser => role == 'user';
   bool get isOwner => role == 'owner';
   bool get isManager => role == 'manager';
+  bool get isWorker => role == 'worker';
   bool get isAdmin => role == 'admin';
-  bool get isStaff => isOwner || isManager || isAdmin;
+  bool get isStaff => isOwner || isManager || isWorker || isAdmin;
 
   @override
   bool operator ==(Object other) {

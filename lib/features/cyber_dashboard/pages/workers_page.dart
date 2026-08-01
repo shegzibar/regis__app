@@ -39,10 +39,9 @@ class WorkersPage extends ConsumerWidget {
               ),
               ElevatedButton.icon(
                 onPressed: () {
-                  // In a real app, this would trigger an invite or creation flow.
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text('cyber.coming_soon'.tr())),
+                  showDialog(
+                    context: context,
+                    builder: (_) => const _AddWorkerDialog(),
                   );
                 },
                 icon: const Icon(Icons.person_add),
@@ -125,21 +124,42 @@ class WorkersPage extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      trailing: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: kBg,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: kBorder),
-                        ),
-                        child: Text(
-                          w.role.toUpperCase(),
-                          style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: kSidebarText),
-                        ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: kBg,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: kBorder),
+                            ),
+                            child: Text(
+                              w.role == 'manager' 
+                                  ? 'cyber.manager_role'.tr()
+                                  : 'cyber.worker_role'.tr(),
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: kSidebarText),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.edit, size: 20, color: kGray),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (_) => _EditWorkerDialog(worker: w),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                            onPressed: () => _confirmRemove(context, ref, w),
+                          ),
+                        ],
                       ),
                     );
                   },
@@ -149,6 +169,286 @@ class WorkersPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _confirmRemove(BuildContext context, WidgetRef ref, dynamic worker) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('cyber.remove_worker'.tr()),
+        content: Text('cyber.confirm_remove'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('cyber.cancel'.tr(), style: const TextStyle(color: kGray)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('cyber.remove_worker'.tr()),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await ref.read(cdCyberRepoProvider).removeWorker(userId: worker.id);
+        ref.invalidate(cyberWorkersProvider);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('cyber.worker_removed'.tr())),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+}
+
+class _AddWorkerDialog extends ConsumerStatefulWidget {
+  const _AddWorkerDialog();
+
+  @override
+  ConsumerState<_AddWorkerDialog> createState() => _AddWorkerDialogState();
+}
+
+class _AddWorkerDialogState extends ConsumerState<_AddWorkerDialog> {
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  String _selectedRole = 'worker';
+  bool _isLoading = false;
+
+  Future<void> _submit() async {
+    final name = _nameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+    final pass = _passwordCtrl.text;
+
+    if (name.isEmpty || email.isEmpty || pass.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('cyber.fill_all_fields'.tr())),
+      );
+      return;
+    }
+
+    final cyber = await ref.read(currentCyberProvider.future);
+    if (cyber == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(cdCyberRepoProvider).addWorker(
+            cyberId: cyber.id,
+            name: name,
+            email: email,
+            password: pass,
+            role: _selectedRole,
+          );
+      if (!mounted) return;
+      Navigator.pop(context);
+      ref.invalidate(cyberWorkersProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('cyber.worker_added'.tr())),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('cyber.add_worker'.tr(),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameCtrl,
+              decoration: InputDecoration(
+                labelText: 'cyber.name'.tr(),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _emailCtrl,
+              decoration: InputDecoration(
+                labelText: 'cyber.email'.tr(),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _passwordCtrl,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'cyber.password'.tr(),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _selectedRole,
+              decoration: InputDecoration(
+                labelText: 'cyber.role'.tr(),
+                border: const OutlineInputBorder(),
+              ),
+              items: [
+                DropdownMenuItem(value: 'worker', child: Text('cyber.worker_role'.tr())),
+                DropdownMenuItem(value: 'manager', child: Text('cyber.manager_role'.tr())),
+              ],
+              onChanged: (val) {
+                if (val != null) setState(() => _selectedRole = val);
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          child: Text('cyber.cancel'.tr(), style: const TextStyle(color: kGray)),
+        ),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kPurple,
+            foregroundColor: Colors.white,
+          ),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2))
+              : Text('cyber.add'.tr()),
+        ),
+      ],
+    );
+  }
+}
+
+class _EditWorkerDialog extends ConsumerStatefulWidget {
+  final dynamic worker;
+  const _EditWorkerDialog({required this.worker});
+
+  @override
+  ConsumerState<_EditWorkerDialog> createState() => _EditWorkerDialogState();
+}
+
+class _EditWorkerDialogState extends ConsumerState<_EditWorkerDialog> {
+  late TextEditingController _nameCtrl;
+  late String _selectedRole;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.worker.name ?? '');
+    _selectedRole = widget.worker.role == 'manager' ? 'manager' : 'worker';
+  }
+
+  Future<void> _submit() async {
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('cyber.fill_all_fields'.tr())),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(cdCyberRepoProvider).updateWorker(
+            userId: widget.worker.id,
+            name: name,
+            role: _selectedRole,
+          );
+      if (!mounted) return;
+      Navigator.pop(context);
+      ref.invalidate(cyberWorkersProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('cyber.worker_updated'.tr())),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('cyber.edit_worker'.tr(),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameCtrl,
+              decoration: InputDecoration(
+                labelText: 'cyber.name'.tr(),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _selectedRole,
+              decoration: InputDecoration(
+                labelText: 'cyber.role'.tr(),
+                border: const OutlineInputBorder(),
+              ),
+              items: [
+                DropdownMenuItem(value: 'worker', child: Text('cyber.worker_role'.tr())),
+                DropdownMenuItem(value: 'manager', child: Text('cyber.manager_role'.tr())),
+              ],
+              onChanged: (val) {
+                if (val != null) setState(() => _selectedRole = val);
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          child: Text('cyber.cancel'.tr(), style: const TextStyle(color: kGray)),
+        ),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kPurple,
+            foregroundColor: Colors.white,
+          ),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2))
+              : Text('cyber.save'.tr()),
+        ),
+      ],
     );
   }
 }

@@ -51,7 +51,7 @@ class AppConstants {
   ];
 
   // User Roles
-  static const List<String> userRoles = ['user', 'owner', 'manager', 'admin'];
+  static const List<String> userRoles = ['user', 'owner', 'manager', 'worker', 'admin'];
 
   // Room Types
   static const List<String> roomTypes = ['ps5', 'pc', 'vip'];

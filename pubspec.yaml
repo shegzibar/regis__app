@@ -45,6 +45,7 @@ dependencies:
   intl: ^0.20.2
   uuid: ^4.2.1
   easy_localization: ^3.0.7
+  http: ^1.2.0
   
   # UI Components
   flutter_svg: ^2.0.9

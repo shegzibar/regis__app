@@ -378,7 +378,21 @@
     "total_col": "الإجمالي",
     "type_col": "النوع",
     "status_col": "الحالة",
-    "no_transactions": "لا توجد معاملات"
+    "no_transactions": "لا توجد معاملات",
+    "worker_added": "تمت إضافة الموظف بنجاح!",
+    "worker_updated": "تم تحديث بيانات الموظف بنجاح!",
+    "worker_removed": "تمت إزالة الموظف بنجاح!",
+    "fill_all_fields": "يرجى ملء جميع الحقول",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "add": "إضافة",
+    "edit_worker": "تعديل بيانات الموظف",
+    "remove_worker": "إزالة الموظف",
+    "confirm_remove": "هل أنت متأكد أنك تريد إزالة وصول هذا الموظف؟",
+    "role": "الصلاحية",
+    "manager_role": "مدير",
+    "worker_role": "موظف"
   },
   "rooms": {
     "pro_pc_zone": "منطقة احترافية لأجهزة الكمبيوتر",

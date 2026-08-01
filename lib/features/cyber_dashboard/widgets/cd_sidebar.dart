@@ -23,6 +23,11 @@ const _navItems = [
     labelKey: 'cyber.home',
   ),
   _NavItem(
+    key: 'manual',
+    icon: Icons.add_circle_outline,
+    labelKey: 'cyber.manual_booking',
+  ),
+  _NavItem(
     key: 'schedule',
     icon: Icons.calendar_month_outlined,
     labelKey: 'cyber.schedule',
@@ -65,7 +70,24 @@ class CdSidebar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentPage = ref.watch(cdSelectedPageProvider);
+    final userProfile = ref.watch(currentUserProfileProvider).value;
     final isAr = context.locale.languageCode == 'ar';
+    
+    final isManager = userProfile?.role == 'manager';
+    final isWorker = userProfile?.role == 'worker';
+    
+    final visibleItems = _navItems.where((item) {
+      if (isManager) {
+        return item.key != 'workers' && item.key != 'accounting' && item.key != 'profile';
+      } else if (isWorker) {
+        return item.key == 'home' || 
+               item.key == 'manual' ||
+               item.key == 'schedule' || 
+               item.key == 'stations' || 
+               item.key == 'wallet_points';
+      }
+      return true;
+    }).toList();
 
     return Container(
       width: 200,
@@ -87,9 +109,9 @@ class CdSidebar extends ConsumerWidget {
             child: ListView.builder(
               padding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              itemCount: _navItems.length,
+              itemCount: visibleItems.length,
               itemBuilder: (_, i) {
-                final item = _navItems[i];
+                final item = visibleItems[i];
                 final isSelected = currentPage == item.key;
                 final hasBadge = false;
 

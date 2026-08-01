@@ -13,7 +13,12 @@ final ownerCybersProvider = FutureProvider.autoDispose<List<Cyber>>((ref) async 
 });
 
 /// True when the logged-in owner already has at least one cyber center.
+/// Managers/Workers always return true if they are linked to a cyber_id
+/// and should skip the onboarding/setup flow entirely.
 final ownerHasCyberProvider = Provider<bool?>((ref) {
+  final user = ref.watch(authStateProvider);
+  if (user != null && (user.isManager || user.isWorker)) return true;
+
   final cybers = ref.watch(ownerCybersProvider);
   return cybers.when(
     data: (list) => list.isNotEmpty,

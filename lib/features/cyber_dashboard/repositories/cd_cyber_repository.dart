@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../data/models/cyber.dart';
 import '../../../data/models/room.dart';
 import '../../../data/models/station.dart';
@@ -109,36 +112,84 @@ class CdCyberRepository {
         .eq('id', stationId);
   }
 
-  /// Get the owner profile for a cyber.
-  /// Note: The current schema has no workers/staff table and profiles has no
-  /// cyber_id column. This returns the cyber owner's profile.
-  /// To support multiple workers per cyber, add a cyber_workers join table.
+  /// Get the workers for a cyber (users where cyber_id = cyberId and role = 'manager').
   Future<List<AppUser>> getWorkers(String cyberId) async {
     try {
-      // Get the owner_id for this cyber
-      final cyberData = await _db
-          .from('cybers')
-          .select('owner_id')
-          .eq('id', cyberId)
-          .maybeSingle();
-
-      if (cyberData == null) return [];
-
-      final ownerId = cyberData['owner_id'] as String?;
-      if (ownerId == null) return [];
-
-      // Fetch the owner's profile
       final data = await _db
           .from('profiles')
           .select()
-          .eq('id', ownerId)
-          .maybeSingle();
-
-      if (data == null) return [];
-      return [AppUser.fromMap(data)];
+          .eq('cyber_id', cyberId)
+          .inFilter('role', ['manager', 'worker']);
+      return (data as List).map((p) => AppUser.fromMap(p)).toList();
     } catch (e) {
       debugPrint('getWorkers failed: $e');
       return [];
     }
+  }
+
+  /// Add a new worker account via raw HTTP request to avoid signing out the current owner.
+  Future<void> addWorker({
+    required String cyberId,
+    required String name,
+    required String email,
+    required String password,
+    String role = 'manager',
+  }) async {
+    // Use raw HTTP request to /auth/v1/signup
+    // This allows creating an account without modifying the active session in Supabase SDK.
+    final authUrl = '${AppConstants.supabaseUrl}/auth/v1/signup';
+    final anonKey = AppConstants.supabaseAnonKey;
+
+    final response = await http.post(
+      Uri.parse(authUrl),
+      headers: {
+        'apikey': anonKey,
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        'data': {
+          'name': name,
+          'role': role,
+          'cyber_id': cyberId,
+        }
+      }),
+    );
+
+    if (response.statusCode >= 400) {
+      final body = jsonDecode(response.body);
+      throw Exception(body['msg'] ?? 'Failed to create worker account');
+    }
+
+    final resBody = jsonDecode(response.body);
+    final userId = resBody['user']['id'];
+
+    // The backend trigger handles creating the profile. We just need to ensure the profile is updated with the correct role and cyber_id.
+    await _db.from('profiles').update({
+      'role': role,
+      'cyber_id': cyberId,
+    }).eq('id', userId);
+  }
+
+  Future<void> updateWorker({
+    required String userId,
+    required String name,
+    required String role,
+  }) async {
+    await _db.from('profiles').update({
+      'name': name,
+      'role': role,
+    }).eq('id', userId);
+  }
+
+  Future<void> removeWorker({
+    required String userId,
+  }) async {
+    // Revoke access by setting cyber_id to null and role back to user
+    await _db.from('profiles').update({
+      'cyber_id': null,
+      'role': 'user',
+    }).eq('id', userId);
   }
 }

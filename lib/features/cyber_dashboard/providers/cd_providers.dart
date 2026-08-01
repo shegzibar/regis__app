@@ -27,11 +27,27 @@ final cdPaymentRepoProvider =
 
 // ─── Core Data ──────────────────────────────────────────────────────────────
 
-/// The cyber owned by the current logged-in user. Loaded once on start-up.
-final currentCyberProvider = FutureProvider<Cyber?>((ref) async {
+/// The profile of the current logged-in user (owner or manager).
+final currentUserProfileProvider = FutureProvider<AppUser?>((ref) async {
   final userId = Supabase.instance.client.auth.currentUser?.id;
   if (userId == null) return null;
-  return ref.read(cdCyberRepoProvider).getCyberByOwner(userId);
+  final data = await Supabase.instance.client.from('profiles').select().eq('id', userId).maybeSingle();
+  if (data == null) return null;
+  return AppUser.fromMap(data);
+});
+
+/// The cyber owned by the current logged-in user or managed by them. Loaded once on start-up.
+final currentCyberProvider = FutureProvider<Cyber?>((ref) async {
+  final user = await ref.watch(currentUserProfileProvider.future);
+  if (user == null) return null;
+
+  if ((user.role == 'manager' || user.role == 'worker') && user.cyberId != null) {
+    final data = await Supabase.instance.client.from('cybers').select().eq('id', user.cyberId!).maybeSingle();
+    return data != null ? Cyber.fromMap(data) : null;
+  }
+  
+  // Default: assume owner
+  return ref.read(cdCyberRepoProvider).getCyberByOwner(user.id);
 });
 
 /// Active rooms for the current cyber.

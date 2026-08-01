@@ -80,10 +80,10 @@ class AccountingPage extends ConsumerWidget {
                         icon: Icons.receipt_long_outlined,
                         iconBg: const Color(0xFFFFF8EC),
                         iconColor: const Color(0xFFB06A00),
-                        label: 'cyber.booking_fees'.tr(),
+                        label: isAr ? 'مستحقات النظام' : 'System Dues',
                         value:
-                            'EGP ${summary.bookingFees.toStringAsFixed(0)}',
-                        sub: 'cyber.platform_fees'.tr(),
+                            'EGP ${summary.pointsRevenue.toStringAsFixed(0)}',
+                        sub: isAr ? 'إيرادات النقاط' : 'Points Revenue',
                       ),
                     ),
                     const SizedBox(width: kGap),
@@ -608,7 +608,6 @@ class _TransactionsTableState extends State<_TransactionsTable> {
                 _ColHead('cyber.station'.tr(), flex: 2),
                 _ColHead('cyber.duration'.tr(), flex: 1),
                 _ColHead('cyber.session_cost'.tr(), flex: 2),
-                _ColHead('cyber.booking_fee'.tr(), flex: 2),
                 _ColHead('cyber.total_col'.tr(), flex: 2),
                 _ColHead('cyber.type_col'.tr(), flex: 2),
                 _ColHead('cyber.status_col'.tr(), flex: 2),
@@ -711,12 +710,8 @@ class _TransactionRow extends StatelessWidget {
                   'EGP ${booking.roomCost.toStringAsFixed(0)}')),
           Expanded(
               flex: 2,
-              child: _Cell(
-                  'EGP ${booking.bookingFee.toStringAsFixed(0)}')),
-          Expanded(
-              flex: 2,
               child: Text(
-                'EGP ${booking.totalAmount.toStringAsFixed(0)}',
+                'EGP ${(booking.totalAmount - booking.bookingFee).toStringAsFixed(0)}',
                 style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,

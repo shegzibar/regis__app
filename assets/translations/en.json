@@ -378,7 +378,21 @@
     "total_col": "Total",
     "type_col": "Type",
     "status_col": "Status",
-    "no_transactions": "No transactions found"
+    "no_transactions": "No transactions found",
+    "worker_added": "Worker added successfully!",
+    "worker_updated": "Worker updated successfully!",
+    "worker_removed": "Worker removed successfully!",
+    "fill_all_fields": "Please fill in all fields",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "add": "Add",
+    "edit_worker": "Edit Worker",
+    "remove_worker": "Remove Worker",
+    "confirm_remove": "Are you sure you want to remove this worker's access?",
+    "role": "Role",
+    "manager_role": "Manager",
+    "worker_role": "Worker"
   },
   "rooms": {
     "pro_pc_zone": "Pro PC Zone",

@@ -40,6 +40,23 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
         startTime.minute,
       );
 
+      // Conflict check
+      final isAvailable = await ref.read(cdBookingRepoProvider).isStationAvailable(
+        selectedStationId!,
+        start,
+        start.add(Duration(hours: durationHours)),
+      );
+
+      if (!isAvailable) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('cyber.time_slot_passed'.tr())),
+          );
+          setState(() => isSubmitting = false);
+        }
+        return;
+      }
+
       await ref.read(cdBookingRepoProvider).addManualBooking(
             stationId: selectedStationId!,
             startTime: start,
@@ -216,7 +233,7 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
                           final isBusy = s.isBusy;
                           final isMaint = !s.isActive;
                           final isSelected = selectedStationId == s.id;
-                          final isDisabled = isBusy || isMaint;
+                          final isDisabled = isMaint;
 
                           Color borderColor = kBorder;
                           Color bgColor = kBg;

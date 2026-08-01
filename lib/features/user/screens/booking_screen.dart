@@ -30,26 +30,40 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   Set<String> _bookedSlots = {};
 
   // Realtime subscription
-  String? _subscribedStationId;
-  RealtimeChannel? _realtimeChannel;
+  List<String> _allStationIds = []; // all stations in this room
+  List<RealtimeChannel> _realtimeChannels = [];
 
   late final List<DateTime> _availableDates;
 
   final List<String> _timeSlots = [
     '10:00 AM',
+    '10:30 AM',
     '11:00 AM',
+    '11:30 AM',
     '12:00 PM',
+    '12:30 PM',
     '01:00 PM',
+    '01:30 PM',
     '02:00 PM',
+    '02:30 PM',
     '03:00 PM',
+    '03:30 PM',
     '04:00 PM',
+    '04:30 PM',
     '05:00 PM',
+    '05:30 PM',
     '06:00 PM',
+    '06:30 PM',
     '07:00 PM',
+    '07:30 PM',
     '08:00 PM',
+    '08:30 PM',
     '09:00 PM',
+    '09:30 PM',
     '10:00 PM',
+    '10:30 PM',
     '11:00 PM',
+    '11:30 PM',
   ];
 
   final List<int> _durations = [1, 2, 3, 4];
@@ -83,30 +97,31 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     try {
       final stations = await ref.read(roomStationsProvider(widget.roomId).future);
       if (stations.isEmpty || !mounted) return;
-      final stationId = stations.first.id;
-      _subscribedStationId = stationId;
+      _allStationIds = stations.map((s) => s.id).toList();
 
-      // Initial load
-      await _loadBookedSlotsForStation(stationId);
+      // Initial load for all stations
+      await _loadBookedSlotsForRoom();
 
-      // Subscribe to realtime changes on the bookings table for this station
-      _realtimeChannel = Supabase.instance.client
-          .channel('bookings:station_id=eq.$stationId')
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'bookings',
-            filter: PostgresChangeFilter(
-              type: PostgresChangeFilterType.eq,
-              column: 'station_id',
-              value: stationId,
-            ),
-            callback: (_) {
-              // Refresh booked slots whenever any booking changes
-              if (mounted) _loadBookedSlotsForStation(stationId);
-            },
-          )
-          .subscribe();
+      // Subscribe to realtime changes for ALL stations in this room
+      for (final stationId in _allStationIds) {
+        final channel = Supabase.instance.client
+            .channel('bookings:station_id=eq.$stationId')
+            .onPostgresChanges(
+              event: PostgresChangeEvent.all,
+              schema: 'public',
+              table: 'bookings',
+              filter: PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: 'station_id',
+                value: stationId,
+              ),
+              callback: (_) {
+                if (mounted) _loadBookedSlotsForRoom();
+              },
+            )
+            .subscribe();
+        _realtimeChannels.add(channel);
+      }
     } catch (e) {
       debugPrint('Realtime init failed: $e');
     }
@@ -114,32 +129,53 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
   @override
   void dispose() {
-    _realtimeChannel?.unsubscribe();
+    for (final ch in _realtimeChannels) {
+      ch.unsubscribe();
+    }
     super.dispose();
   }
 
-  Future<void> _loadBookedSlotsForStation(String stationId) async {
+  /// Marks a slot as booked only if ALL stations in the room are occupied at
+  /// that time. If even one station is free, the slot stays available.
+  Future<void> _loadBookedSlotsForRoom() async {
     try {
+      if (_allStationIds.isEmpty) return;
       final startOfDay = DateTime(
           _selectedDate.year, _selectedDate.month, _selectedDate.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
-      final existing = await BookingRepository().getStationBookings(
-          stationId,
-          startDate: startOfDay,
-          endDate: endOfDay);
-      final booked = <String>{};
-      for (final b in existing) {
-        for (final slot in _timeSlots) {
-          final slotTime = _parseSlotToDateTime(_selectedDate, slot);
-          if (slotTime != null &&
-              slotTime.isBefore(b.endTime) &&
-              slotTime
-                  .add(Duration(hours: _selectedDuration))
-                  .isAfter(b.startTime)) {
-            booked.add(slot);
+
+      // For each time slot, track which stations are occupied
+      final stationOccupied = <String, Set<String>>{}; // slot -> set of occupied station IDs
+      for (final stationId in _allStationIds) {
+        final existing = await BookingRepository().getStationBookings(
+            stationId,
+            startDate: startOfDay,
+            endDate: endOfDay);
+        for (final b in existing) {
+          for (final slot in _timeSlots) {
+            final slotTime = _parseSlotToDateTime(_selectedDate, slot);
+            // A slot is occupied if any part of its 30-min window falls
+            // within an existing booking's time range.
+            if (slotTime != null &&
+                slotTime.isBefore(b.endTime.toLocal()) &&
+                slotTime
+                    .add(const Duration(minutes: 30))
+                    .isAfter(b.startTime.toLocal())) {
+              stationOccupied.putIfAbsent(slot, () => <String>{}).add(stationId);
+            }
           }
         }
       }
+
+      // A slot is considered booked if ANY station in the room is occupied
+      final booked = <String>{};
+      for (final slot in _timeSlots) {
+        final occupiedCount = stationOccupied[slot]?.length ?? 0;
+        if (occupiedCount > 0) {
+          booked.add(slot);
+        }
+      }
+
       if (mounted) setState(() => _bookedSlots = booked);
     } catch (e) {
       debugPrint('Failed to load booked slots: $e');
@@ -152,10 +188,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       _selectedTimeSlot = null;
       _bookedSlots = {}; // Clear immediately so stale slots don't show
     });
-    // Re-fetch for new date using the already-known stationId
-    if (_subscribedStationId != null) {
-      _loadBookedSlotsForStation(_subscribedStationId!);
-    }
+    // Re-fetch for new date using all stations in the room
+    _loadBookedSlotsForRoom();
   }
 
   void _selectDuration(int duration) {
@@ -211,46 +245,61 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         throw Exception('booking.no_active_stations'.tr());
       }
 
-      // Pick first active/available station
-      final targetStation = stations.first;
-
       // ── Conflict-check (race-condition guard) ───────────────────────────────
       // Re-query the DB right before inserting to make sure the slot is still
       // free even if another user booked it in the last few seconds.
       final startOfDay = DateTime(
           _selectedDate.year, _selectedDate.month, _selectedDate.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
-      final latestBookings = await BookingRepository().getStationBookings(
-          targetStation.id,
-          startDate: startOfDay,
-          endDate: endOfDay);
-
-      // Re-compute which slots are taken
+      
       final slotTime = _parseSlotToDateTime(_selectedDate, _selectedTimeSlot!);
-      if (slotTime != null) {
+      if (slotTime == null) throw Exception('Invalid time slot');
+
+      // Find an available station
+      var targetStation = stations.first;
+      bool foundAvailable = false;
+
+      for (final station in stations) {
+        final latestBookings = await BookingRepository().getStationBookings(
+            station.id,
+            startDate: startOfDay,
+            endDate: endOfDay);
+
+        bool hasConflict = false;
         for (final b in latestBookings) {
           if (slotTime.isBefore(b.endTime) &&
               slotTime
                   .add(Duration(hours: _selectedDuration))
                   .isAfter(b.startTime)) {
-            // Slot was taken while the user was looking at the screen
-            if (mounted) {
-              setState(() {
-                _bookedSlots.add(_selectedTimeSlot!);
-                _selectedTimeSlot = null;
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('⚡ This slot was just booked by someone else. Please choose another time.'),
-                  backgroundColor: Colors.red,
-                  duration: Duration(seconds: 4),
-                ),
-              );
-            }
-            setState(() => _isBookingLoading = false);
-            return;
+            hasConflict = true;
+            break;
           }
         }
+
+        if (!hasConflict) {
+          targetStation = station;
+          foundAvailable = true;
+          break;
+        }
+      }
+
+      if (!foundAvailable) {
+        // Slot was taken while the user was looking at the screen
+        if (mounted) {
+          setState(() {
+            _bookedSlots.add(_selectedTimeSlot!);
+            _selectedTimeSlot = null;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('⚡ This slot was just booked by someone else. Please choose another time.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        setState(() => _isBookingLoading = false);
+        return;
       }
       // ────────────────────────────────────────────────────────────────────────
 

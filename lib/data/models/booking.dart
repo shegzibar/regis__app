@@ -46,8 +46,8 @@ class Booking {
       id: map['id'] as String,
       userId: map['user_id'] as String,
       stationId: map['station_id'] as String,
-      startTime: DateTime.parse(map['start_time'] as String),
-      endTime: DateTime.parse(map['end_time'] as String),
+      startTime: _parseDate(map['start_time']),
+      endTime: _parseDate(map['end_time']),
       durationHours: (map['duration_hours'] as num).toDouble(),
       totalAmount: (map['total_amount'] as num).toDouble(),
       bookingFee: (map['booking_fee'] as num?)?.toDouble() ?? 5.0,
@@ -58,13 +58,9 @@ class Booking {
       stationName: stationMap?['name'] as String?,
       roomName: roomMap?['name'] as String?,
       cyberId: roomMap?['cyber_id'] as String?,
-      createdAt: DateTime.parse(map['created_at'] as String),
-      confirmedAt: map['confirmed_at'] != null 
-          ? DateTime.parse(map['confirmed_at'] as String)
-          : null,
-      expiresAt: map['expires_at'] != null 
-          ? DateTime.parse(map['expires_at'] as String)
-          : null,
+      createdAt: _parseDate(map['created_at']),
+      confirmedAt: map['confirmed_at'] != null ? _parseDate(map['confirmed_at']) : null,
+      expiresAt: map['expires_at'] != null ? _parseDate(map['expires_at']) : null,
     );
   }
 
@@ -173,5 +169,13 @@ class Booking {
   @override
   String toString() {
     return 'Booking(id: $id, status: $status, startTime: $startTime)';
+  }
+
+  static DateTime _parseDate(dynamic dateVal) {
+    String dateStr = dateVal.toString();
+    if (!dateStr.endsWith('Z') && !dateStr.contains('+', 10) && !dateStr.contains('-', 10)) {
+      dateStr += 'Z';
+    }
+    return DateTime.parse(dateStr).toLocal();
   }
 }

@@ -15,6 +15,7 @@ import 'pages/cyber_profile_page.dart';
 import 'pages/workers_page.dart';
 import 'pages/wallet_points_page.dart';
 import 'pages/cd_edit_room_page.dart';
+import 'pages/manual_booking_page.dart';
 import 'pages/accounting_page.dart';
 import '../owner/screens/owner_inventory_screen.dart';
 import 'widgets/cd_top_bar.dart';
@@ -142,8 +143,7 @@ class _CyberDashboardShellState
 
     return switch (page) {
       'home' => const HomePage(),
-
-
+      'manual' => const ManualBookingPage(),
       'schedule' => const SchedulePage(),
       'stations' => const StationsPage(),
       'profile' => const CyberProfilePage(),

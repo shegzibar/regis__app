@@ -1,21 +1,26 @@
-# GamingHub - Egypt's Gaming Center Reservation Platform
+# Forya App - Egypt's Premier Gaming Center Reservation Platform
 
-GamingHub is a Flutter mobile application that serves as a reservation marketplace for gaming centers (cyber cafes) in Egypt. Think of it as the **Talabat of gaming centers**: users discover, book and pay for gaming station sessions at any registered cyber cafe.
+**Forya** is a comprehensive Flutter-based platform that acts as the primary reservation and management marketplace for gaming centers (cyber cafes) in Egypt. Think of it as the **Talabat of gaming centers**: users can discover, book, and pay for gaming station sessions at any registered cyber cafe.
 
-## 🏗️ Architecture Overview
+## 🏗️ The Forya Ecosystem
+
+The Forya project is composed of three interconnected applications serving different types of users, all powered by a centralized Supabase backend:
+
+1. **User App (Gamers)**: The main app where gamers discover nearby cyber cafes, view available PC/PS5 rooms, make reservations, and manage their wallet points.
+2. **Cyber Dashboard (Owners/Managers/Workers)**: A dedicated management interface for gaming center staff to track real-time bookings, manage station status (start/stop/pause), review accounting, and manage their inventory and schedule. It includes role-based access control to restrict staff capabilities.
+3. **Admin Dashboard (Forya Admins)**: A master control panel for the Forya team to oversee the entire platform, manage cyber registrations, and monitor platform-wide analytics.
 
 ```
-GamingHub Flutter App
-├── Role: user      → User App (discovery + booking)
-├── Role: owner     → Owner Dashboard (manage stations + bookings)
-├── Role: manager   → Manager Dashboard (review 5 EGP booking fees)
-└── Role: admin     → Admin Panel (platform-wide oversight)
+Forya Ecosystem Architecture
+├── User App (Gamers)          → Discovery, booking, wallet, reviews
+├── Cyber Dashboard (Owners)   → Real-time station control, staff management, accounting
+└── Admin Panel (Forya Staff)  → Platform oversight, cyber management
 
 Backend: Supabase
-├── PostgreSQL database
-├── Supabase Auth (phone/OTP login)
-├── Supabase Storage (receipt screenshots)
-└── Supabase Realtime (live booking status updates)
+├── PostgreSQL Database
+├── Supabase Auth (Phone/OTP)
+├── Supabase Storage
+└── Supabase Realtime (Live station/booking sync)
 ```
 
 ## 🚀 Getting Started
@@ -180,10 +185,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 📞 Support
 
 For support and questions:
-- Email: support@gaminghub.eg
-- Website: www.gaminghub.eg
+- Email: support@forya.eg
+- Website: www.forya.eg
 
 ---
 
-*GamingHub — Egypt's Gaming Center Reservation Platform*
+*Forya — Egypt's Premier Gaming Center Reservation Platform*
 *Flutter + Supabase | Cairo, Egypt*

@@ -40,8 +40,8 @@ class OwnerRepository {
     final response = await _supabase
         .from('bookings')
         .select(_bookingSelect)
-        .gte('start_time', start.toIso8601String())
-        .lt('start_time', end.toIso8601String())
+        .gte('start_time', start.toUtc().toIso8601String())
+        .lt('start_time', end.toUtc().toIso8601String())
         .eq('stations.rooms.cybers.owner_id', ownerId)
         .order('start_time');
 
@@ -152,8 +152,8 @@ class OwnerRepository {
     final data = {
       'user_id': ownerUserId,
       'station_id': stationId,
-      'start_time': startTime.toIso8601String(),
-      'end_time': endTime.toIso8601String(),
+      'start_time': startTime.toUtc().toIso8601String(),
+      'end_time': endTime.toUtc().toIso8601String(),
       'duration_hours': durationHours,
       'total_amount': totalAmount,
       'booking_fee': 0,

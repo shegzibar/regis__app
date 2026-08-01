@@ -218,9 +218,9 @@ class CdBookingRepository {
         .select('id')
         .eq('station_id', stationId)
         .inFilter(
-            'status', ['confirmed', 'fee_under_review', 'pending_payment'])
-        .lt('start_time', endTime.toIso8601String())
-        .gt('end_time', startTime.toIso8601String());
+            'status', ['confirmed', 'active', 'fee_under_review', 'pending_payment'])
+        .lt('start_time', endTime.toUtc().toIso8601String())
+        .gt('end_time', startTime.toUtc().toIso8601String());
 
     return (conflicts as List).isEmpty;
   }
@@ -250,16 +250,16 @@ class CdBookingRepository {
         .insert({
           'user_id': workerId,
           'station_id': stationId,
-          'start_time': startTime.toIso8601String(),
-          'end_time': endTime.toIso8601String(),
+          'start_time': startTime.toUtc().toIso8601String(),
+          'end_time': endTime.toUtc().toIso8601String(),
           'duration_hours': durationHours,
           'total_amount': totalAmount,
           'booking_fee': 0,
           'status': 'confirmed',
           'source': 'manual',
+          if (clientName != null && clientName.isNotEmpty)
+            'guest_name': clientName,
           'notes': '$clientNote | Payment: $paymentMethod',
-          if (clientName != null && clientName.trim().isNotEmpty)
-            'guest_name': clientName.trim(),
           'confirmed_at': DateTime.now().toIso8601String(),
         })
         .select()
