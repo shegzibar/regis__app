@@ -8,6 +8,7 @@ import '../models/station_live.dart';
 import '../repositories/cd_cyber_repository.dart';
 import '../repositories/cd_booking_repository.dart';
 import '../repositories/cd_payment_repository.dart';
+import '../../../core/providers/auth_provider.dart';
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
 
@@ -29,9 +30,15 @@ final cdPaymentRepoProvider =
 
 /// The profile of the current logged-in user (owner or manager).
 final currentUserProfileProvider = FutureProvider<AppUser?>((ref) async {
-  final userId = Supabase.instance.client.auth.currentUser?.id;
-  if (userId == null) return null;
-  final data = await Supabase.instance.client.from('profiles').select().eq('id', userId).maybeSingle();
+  // Watch authStateProvider so this invalidates when the user logs out/in
+  final authUser = ref.watch(authStateProvider);
+  if (authUser == null) return null;
+  
+  final data = await Supabase.instance.client
+      .from('profiles')
+      .select()
+      .eq('id', authUser.id)
+      .maybeSingle();
   if (data == null) return null;
   return AppUser.fromMap(data);
 });

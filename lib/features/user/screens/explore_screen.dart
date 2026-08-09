@@ -205,18 +205,24 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> with WidgetsBindi
                     ),
                     data: (unfilteredCybers) {
                       final location = ref.watch(locationProvider).value;
-                      final cybers = unfilteredCybers.where((cyber) {
+                      var cybers = unfilteredCybers.where((cyber) {
                         if (location == null) return true; // Show all if location not available
                         if (cyber.lat == null || cyber.lng == null) return false; // Hide if cyber has no location
-                        
-                        final distance = Geolocator.distanceBetween(
-                          location.latitude,
-                          location.longitude,
-                          cyber.lat!,
-                          cyber.lng!,
-                        );
-                        return distance <= 10000; // 10 km in meters
+                        return true;
                       }).toList();
+
+                      // Sort by distance if location is available
+                      if (location != null) {
+                        cybers.sort((a, b) {
+                          if (a.lat == null || a.lng == null) return 1;
+                          if (b.lat == null || b.lng == null) return -1;
+                          final distA = Geolocator.distanceBetween(
+                              location.latitude, location.longitude, a.lat!, a.lng!);
+                          final distB = Geolocator.distanceBetween(
+                              location.latitude, location.longitude, b.lat!, b.lng!);
+                          return distA.compareTo(distB);
+                        });
+                      }
 
                       if (cybers.isEmpty) {
                         return Center(

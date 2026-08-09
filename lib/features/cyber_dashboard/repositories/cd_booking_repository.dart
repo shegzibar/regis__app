@@ -207,16 +207,20 @@ class CdBookingRepository {
     }
   }
 
-  /// Returns true if the station has no confirmed/pending bookings in the range.
-  Future<bool> isStationAvailable(
-    String stationId,
+  /// Returns true if the room has no confirmed/pending bookings in the range.
+  Future<bool> isRoomAvailable(
+    String roomId,
     DateTime startTime,
     DateTime endTime,
   ) async {
+    final stations = await _db.from('stations').select('id').eq('room_id', roomId);
+    final stationIds = (stations as List).map((s) => s['id'] as String).toList();
+    if (stationIds.isEmpty) return false;
+
     final conflicts = await _db
         .from('bookings')
         .select('id')
-        .eq('station_id', stationId)
+        .inFilter('station_id', stationIds)
         .inFilter(
             'status', ['confirmed', 'active', 'fee_under_review', 'pending_payment'])
         .lt('start_time', endTime.toUtc().toIso8601String())

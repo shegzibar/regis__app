@@ -6,7 +6,7 @@ import '../../../data/repositories/cyber_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 
 final allCybersProvider = FutureProvider.autoDispose<List<Cyber>>((ref) async {
-  return await CyberRepository().getAllCybers();
+  return await CyberRepository().getAllCybersAdmin();
 });
 
 final allUsersProvider =
@@ -29,4 +29,26 @@ final userBookingsProvider = FutureProvider.autoDispose
     )
   ''').eq('user_id', userId).order('created_at', ascending: false);
   return (data as List).cast<Map<String, dynamic>>();
+});
+
+/// Provider that fetches the wallet for a specific user ID.
+final adminUserWalletProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>?, String>((ref, userId) async {
+  final response = await Supabase.instance.client
+      .from('wallets')
+      .select()
+      .eq('user_id', userId)
+      .maybeSingle();
+  return response;
+});
+
+/// Provider that fetches the short_id for a specific user ID (from profiles table).
+final adminUserShortIdProvider = FutureProvider.autoDispose
+    .family<String?, String>((ref, userId) async {
+  final response = await Supabase.instance.client
+      .from('profiles')
+      .select('short_id')
+      .eq('id', userId)
+      .maybeSingle();
+  return response?['short_id'] as String?;
 });

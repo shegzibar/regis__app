@@ -4,7 +4,7 @@ import '../supabase/supabase_client.dart';
 class CyberRepository {
   final SupabaseService _supabase = SupabaseService();
 
-  // Get all gaming centers
+  // Get all gaming centers (for public use — active only)
   Future<List<Cyber>> getAllCybers() async {
     try {
       final response =
@@ -13,6 +13,20 @@ class CyberRepository {
       return (response as List).map((cyber) => Cyber.fromMap(cyber)).toList();
     } catch (e) {
       throw Exception('Failed to fetch cybers: $e');
+    }
+  }
+
+  // Get ALL cybers regardless of status (admin use only)
+  Future<List<Cyber>> getAllCybersAdmin() async {
+    try {
+      final response = await _supabase
+          .from('cybers')
+          .select()
+          .order('created_at', ascending: false);
+
+      return (response as List).map((cyber) => Cyber.fromMap(cyber)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch all cybers for admin: $e');
     }
   }
 
@@ -204,6 +218,29 @@ class CyberRepository {
       return Cyber.fromMap(response);
     } catch (e) {
       throw Exception('Failed to update cyber: $e');
+    }
+  }
+
+  // Update cyber subscription
+  Future<void> updateCyberSubscription({
+    required String cyberId,
+    required String subscriptionPlan,
+    required String subscriptionBilling,
+    DateTime? subscriptionEndDate,
+  }) async {
+    try {
+      final updateData = {
+        'subscription_plan': subscriptionPlan,
+        'subscription_billing': subscriptionBilling,
+        'subscription_end_date': subscriptionEndDate?.toIso8601String(),
+      };
+
+      await _supabase
+          .from('cybers')
+          .update(updateData)
+          .eq('id', cyberId);
+    } catch (e) {
+      throw Exception('Failed to update cyber subscription: $e');
     }
   }
 

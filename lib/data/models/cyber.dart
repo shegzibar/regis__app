@@ -18,6 +18,9 @@ class Cyber {
   final bool isFeatured;
   final bool isActive;
   final DateTime createdAt;
+  final String subscriptionPlan;
+  final String subscriptionBilling;
+  final DateTime? subscriptionEndDate;
 
   const Cyber({
     required this.id,
@@ -37,6 +40,9 @@ class Cyber {
     this.isFeatured = false,
     this.isActive = true,
     required this.createdAt,
+    this.subscriptionPlan = 'starter',
+    this.subscriptionBilling = 'monthly',
+    this.subscriptionEndDate,
   });
 
   factory Cyber.fromMap(Map<String, dynamic> map) {
@@ -59,6 +65,11 @@ class Cyber {
       isFeatured: map['is_featured'] as bool? ?? false,
       isActive: map['is_active'] as bool? ?? true,
       createdAt: DateTime.parse(map['created_at'] as String),
+      subscriptionPlan: map['subscription_plan'] as String? ?? 'starter',
+      subscriptionBilling: map['subscription_billing'] as String? ?? 'monthly',
+      subscriptionEndDate: map['subscription_end_date'] != null
+          ? DateTime.parse(map['subscription_end_date'] as String)
+          : null,
     );
   }
 
@@ -81,6 +92,9 @@ class Cyber {
       'is_featured': isFeatured,
       'is_active': isActive,
       'created_at': createdAt.toIso8601String(),
+      'subscription_plan': subscriptionPlan,
+      'subscription_billing': subscriptionBilling,
+      'subscription_end_date': subscriptionEndDate?.toIso8601String(),
     };
   }
 
@@ -102,6 +116,9 @@ class Cyber {
     bool? isFeatured,
     bool? isActive,
     DateTime? createdAt,
+    String? subscriptionPlan,
+    String? subscriptionBilling,
+    DateTime? subscriptionEndDate,
   }) {
     return Cyber(
       id: id ?? this.id,
@@ -121,6 +138,9 @@ class Cyber {
       isFeatured: isFeatured ?? this.isFeatured,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
+      subscriptionPlan: subscriptionPlan ?? this.subscriptionPlan,
+      subscriptionBilling: subscriptionBilling ?? this.subscriptionBilling,
+      subscriptionEndDate: subscriptionEndDate ?? this.subscriptionEndDate,
     );
   }
 
@@ -138,6 +158,52 @@ class Cyber {
       // Overnight (e.g., 10:00 - 02:00)
       return currentTime.compareTo(workingHoursFrom) >= 0 || currentTime.compareTo(workingHoursTo) <= 0;
     }
+  }
+
+  bool get isSubscriptionActive {
+    if (subscriptionEndDate == null) return true; // If no end date, assume active (or change this logic if you prefer default inactive)
+    return subscriptionEndDate!.isAfter(DateTime.now());
+  }
+
+  int get daysUntilExpiry {
+    if (subscriptionEndDate == null) return 0;
+    final diff = subscriptionEndDate!.difference(DateTime.now());
+    return diff.inDays > 0 ? diff.inDays : 0;
+  }
+
+  /// Human-readable time remaining, e.g. "2 months 5 days left", "7 days left", "Expires today", "Expired 3 days ago"
+  String get expiryLabel {
+    if (subscriptionEndDate == null) return 'No end date';
+    final now = DateTime.now();
+    final diff = subscriptionEndDate!.difference(now);
+
+    if (diff.isNegative) {
+      final pastDays = diff.inDays.abs();
+      if (pastDays == 0) return 'Expired today';
+      if (pastDays < 30) return 'Expired $pastDays day${pastDays == 1 ? '' : 's'} ago';
+      final months = (pastDays / 30).floor();
+      return 'Expired $months month${months == 1 ? '' : 's'} ago';
+    }
+
+    final totalDays = diff.inDays;
+    if (totalDays == 0) return 'Expires today';
+    if (totalDays == 1) return '1 day left';
+    if (totalDays < 30) return '$totalDays days left';
+
+    final months = (totalDays / 30).floor();
+    final remainingDays = totalDays % 30;
+    if (remainingDays == 0) return '$months month${months == 1 ? '' : 's'} left';
+    return '$months month${months == 1 ? '' : 's'} $remainingDays day${remainingDays == 1 ? '' : 's'} left';
+  }
+
+  /// 0 = no date, 1 = safe (>30 days), 2 = warning (7–30 days), 3 = critical (≤7 days or expired)
+  int get expiryUrgency {
+    if (subscriptionEndDate == null) return 0;
+    final days = daysUntilExpiry;
+    if (!isSubscriptionActive) return 3;
+    if (days <= 7) return 3;
+    if (days <= 30) return 2;
+    return 1;
   }
 
   @override

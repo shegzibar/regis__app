@@ -20,6 +20,9 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
+  final _cityCtrl = TextEditingController();
+  final _latCtrl = TextEditingController();
+  final _lngCtrl = TextEditingController();
   bool _isEditing = false;
   bool _isSaving = false;
 
@@ -27,6 +30,9 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
     _nameCtrl.text = c.name;
     _descCtrl.text = c.description ?? '';
     _addressCtrl.text = c.address ?? '';
+    _cityCtrl.text = c.city ?? '';
+    _latCtrl.text = c.lat?.toString() ?? '';
+    _lngCtrl.text = c.lng?.toString() ?? '';
   }
 
   Future<void> _saveProfile(Cyber c) async {
@@ -36,6 +42,9 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
         'address': _addressCtrl.text.trim(),
+        'city': _cityCtrl.text.trim(),
+        'lat': double.tryParse(_latCtrl.text.trim()),
+        'lng': double.tryParse(_lngCtrl.text.trim()),
       });
       ref.invalidate(currentCyberProvider);
       setState(() => _isEditing = false);
@@ -126,6 +135,21 @@ class _CyberProfilePageState extends ConsumerState<CyberProfilePage> {
                           const SizedBox(height: 16),
                           _buildTextField('cyber.address'.tr(),
                               _addressCtrl, _isEditing),
+                          const SizedBox(height: 16),
+                          _buildTextField('City',
+                              _cityCtrl, _isEditing),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildTextField('Latitude', _latCtrl, _isEditing),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildTextField('Longitude', _lngCtrl, _isEditing),
+                              ),
+                            ],
+                          ),
 
                           if (_isEditing) ...[
                             const SizedBox(height: 24),

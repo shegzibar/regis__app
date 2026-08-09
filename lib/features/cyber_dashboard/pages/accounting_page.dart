@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:excel/excel.dart' hide Border;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../data/models/booking.dart';
 import '../constants/cd_colors.dart';
 import '../providers/accounting_providers.dart';
@@ -43,6 +47,12 @@ class AccountingPage extends ConsumerWidget {
                   ],
                 ),
               ),
+              // Export button
+              bookingsAsync.maybeWhen(
+                data: (bookings) => _ExportButton(bookings: bookings, period: period, isAr: isAr),
+                orElse: () => const SizedBox.shrink(),
+              ),
+              const SizedBox(width: 12),
               // Period filter
               _PeriodSelector(current: period, isAr: isAr),
             ],
@@ -101,17 +111,56 @@ class AccountingPage extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
+                
+                // Inventory KPI Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _KpiCard(
+                        icon: Icons.inventory_2_outlined,
+                        iconBg: const Color(0xFFE8F5E9),
+                        iconColor: Colors.green,
+                        label: isAr ? 'إيرادات المخزون' : 'Inventory Revenue',
+                        value: 'EGP ${summary.inventoryRevenue.toStringAsFixed(0)}',
+                        sub: isAr ? 'إجمالي المبيعات' : 'Total Sales',
+                      ),
+                    ),
+                    const SizedBox(width: kGap),
+                    Expanded(
+                      child: _KpiCard(
+                        icon: Icons.shopping_cart_outlined,
+                        iconBg: const Color(0xFFFFF3E0),
+                        iconColor: Colors.orange,
+                        label: isAr ? 'تكلفة المخزون' : 'Inventory Cost',
+                        value: 'EGP ${summary.inventoryCost.toStringAsFixed(0)}',
+                        sub: isAr ? 'إجمالي التكلفة' : 'Total Cost',
+                      ),
+                    ),
+                    const SizedBox(width: kGap),
+                    Expanded(
+                      child: _KpiCard(
+                        icon: Icons.trending_up,
+                        iconBg: const Color(0xFFE3F2FD),
+                        iconColor: Colors.blue,
+                        label: isAr ? 'أرباح المخزون' : 'Inventory Profit',
+                        value: 'EGP ${summary.inventoryProfit.toStringAsFixed(0)}',
+                        sub: isAr ? 'صافي الربح' : 'Net Profit',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
 
                 // ── Charts + Room Breakdown Row ───────────────────────────
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Daily Revenue Chart
+                    // Revenue Chart (daily or monthly)
                     Expanded(
                       flex: 5,
                       child: _RevenueChart(
                         revenueByDay: summary.revenueByDay,
-                        period: period,
+                        period: summary.period,
                       ),
                     ),
                     const SizedBox(width: kGap),
@@ -137,6 +186,148 @@ class AccountingPage extends ConsumerWidget {
                 bookings: bookings, isAr: isAr),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Export Button ────────────────────────────────────────────────────────────
+
+class _ExportButton extends StatefulWidget {
+  final List<Booking> bookings;
+  final AccountingPeriod period;
+  final bool isAr;
+  const _ExportButton({required this.bookings, required this.period, required this.isAr});
+
+  @override
+  State<_ExportButton> createState() => _ExportButtonState();
+}
+
+class _ExportButtonState extends State<_ExportButton> {
+  bool _loading = false;
+
+  Future<void> _export() async {
+    setState(() => _loading = true);
+    try {
+      final excel = Excel.createExcel();
+      final sheetName = _periodLabel(widget.period, widget.isAr);
+      final Sheet sheet = excel[sheetName];
+      // Delete default sheet
+      excel.delete('Sheet1');
+
+      // Header row
+      final headers = [
+        widget.isAr ? 'التاريخ والوقت' : 'Date & Time',
+        widget.isAr ? 'العميل' : 'Client',
+        widget.isAr ? 'الغرفة' : 'Room',
+        widget.isAr ? 'المحطة' : 'Station',
+        widget.isAr ? 'المدة (ساعة)' : 'Duration (h)',
+        widget.isAr ? 'تكلفة الجلسة' : 'Session Cost (EGP)',
+        widget.isAr ? 'الإجمالي' : 'Total (EGP)',
+        widget.isAr ? 'النوع' : 'Type',
+        widget.isAr ? 'الحالة' : 'Status',
+      ];
+
+      final headerStyle = CellStyle(
+        bold: true,
+        backgroundColorHex: ExcelColor.fromHexString('#534AB7'),
+        fontColorHex: ExcelColor.fromHexString('#FFFFFF'),
+      );
+
+      for (int i = 0; i < headers.length; i++) {
+        final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0));
+        cell.value = TextCellValue(headers[i]);
+        cell.cellStyle = headerStyle;
+      }
+
+      // Data rows
+      for (int rowIdx = 0; rowIdx < widget.bookings.length; rowIdx++) {
+        final b = widget.bookings[rowIdx];
+        final localStart = b.startTime.toLocal();
+        final dateStr = DateFormat('yyyy-MM-dd HH:mm').format(localStart);
+        final client = b.source == 'manual'
+            ? (b.userName ?? 'Walk-in')
+            : (b.userName ?? 'App user');
+        final values = [
+          dateStr,
+          client,
+          b.roomName ?? '—',
+          b.stationName ?? '—',
+          b.durationHours.toStringAsFixed(1),
+          b.roomCost.toStringAsFixed(0),
+          (b.totalAmount - b.bookingFee).toStringAsFixed(0),
+          b.source == 'manual' ? 'Walk-in' : 'App',
+          b.statusDisplay,
+        ];
+
+        final rowBg = rowIdx.isEven
+            ? ExcelColor.fromHexString('#F8F8FF')
+            : ExcelColor.fromHexString('#FFFFFF');
+
+        for (int colIdx = 0; colIdx < values.length; colIdx++) {
+          final cell = sheet.cell(CellIndex.indexByColumnRow(
+              columnIndex: colIdx, rowIndex: rowIdx + 1));
+          cell.value = TextCellValue(values[colIdx]);
+          cell.cellStyle = CellStyle(backgroundColorHex: rowBg);
+        }
+      }
+
+      // Auto-size columns (set reasonable widths)
+      sheet.setColumnWidth(0, 20);
+      sheet.setColumnWidth(1, 18);
+      sheet.setColumnWidth(2, 18);
+      sheet.setColumnWidth(3, 18);
+      sheet.setColumnWidth(4, 12);
+      sheet.setColumnWidth(5, 18);
+      sheet.setColumnWidth(6, 14);
+      sheet.setColumnWidth(7, 10);
+      sheet.setColumnWidth(8, 14);
+
+      // Save to temp dir
+      final dir = await getTemporaryDirectory();
+      final now = DateTime.now();
+      final filename = 'report_${now.year}${now.month.toString().padLeft(2,'0')}${now.day.toString().padLeft(2,'0')}.xlsx';
+      final file = File('${dir.path}/$filename');
+      final bytes = excel.encode()!;
+      await file.writeAsBytes(bytes);
+
+      // Share / open with Files app
+      await Share.shareXFiles([XFile(file.path)], subject: 'Accounting Report – $sheetName');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _periodLabel(AccountingPeriod period, bool isAr) {
+    switch (period) {
+      case AccountingPeriod.today: return isAr ? 'اليوم' : 'Today';
+      case AccountingPeriod.week: return isAr ? 'هذا الأسبوع' : 'This Week';
+      case AccountingPeriod.month: return isAr ? 'هذا الشهر' : 'This Month';
+      case AccountingPeriod.year: return isAr ? 'هذا العام' : 'This Year';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: widget.bookings.isEmpty || _loading ? null : _export,
+      icon: _loading
+          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+          : const Icon(Icons.download_outlined, size: 18),
+      label: Text(widget.isAr ? 'تصدير Excel' : 'Export Excel',
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF0F6E56),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusSm)),
+        elevation: 0,
       ),
     );
   }
@@ -178,6 +369,12 @@ class _PeriodSelector extends ConsumerWidget {
             selected: current == AccountingPeriod.month,
             onTap: () => ref.read(accountingPeriodProvider.notifier).state =
                 AccountingPeriod.month,
+          ),
+          _PeriodBtn(
+            label: isAr ? 'سنوي' : 'Year',
+            selected: current == AccountingPeriod.year,
+            onTap: () => ref.read(accountingPeriodProvider.notifier).state =
+                AccountingPeriod.year,
           ),
         ],
       ),
@@ -295,9 +492,23 @@ class _RevenueChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Build sorted day list
-    final days = revenueByDay.keys.toList()..sort();
-    final maxVal = revenueByDay.values.fold<double>(0, (a, b) => a > b ? a : b);
+    final isYear = period == AccountingPeriod.year;
+
+    // For yearly view: ensure all 12 months are present (fill zeros)
+    Map<DateTime, double> dataMap;
+    if (isYear) {
+      final now = DateTime.now();
+      dataMap = {};
+      for (int m = 1; m <= 12; m++) {
+        final key = DateTime(now.year, m, 1);
+        dataMap[key] = revenueByDay[key] ?? 0.0;
+      }
+    } else {
+      dataMap = revenueByDay;
+    }
+
+    final days = dataMap.keys.toList()..sort();
+    final maxVal = dataMap.values.fold<double>(0, (a, b) => a > b ? a : b);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -310,19 +521,19 @@ class _RevenueChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'cyber.revenue_over_time'.tr(),
+            isYear ? 'Monthly Revenue – ${DateTime.now().year}' : 'cyber.revenue_over_time'.tr(),
             style: const TextStyle(
                 fontSize: 15, fontWeight: FontWeight.bold, color: kSidebarText),
           ),
           const SizedBox(height: 24),
-          if (days.isEmpty)
+          if (days.isEmpty || maxVal == 0)
             SizedBox(
               height: 160,
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.bar_chart, size: 48, color: kBorder),
+                    const Icon(Icons.bar_chart, size: 48, color: kBorder),
                     const SizedBox(height: 8),
                     Text('cyber.no_revenue_data'.tr(),
                         style: const TextStyle(color: kGray)),
@@ -362,12 +573,18 @@ class _RevenueChart extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: days.map((day) {
-                          final val = revenueByDay[day] ?? 0;
+                          final val = dataMap[day] ?? 0;
                           final frac = maxVal > 0 ? val / maxVal : 0.0;
                           final barH = (frac * 130).clamp(4.0, 130.0);
-                          final label = period == AccountingPeriod.month
-                              ? '${day.day}'
-                              : DateFormat('E').format(day);
+                          final String label;
+                          if (isYear) {
+                            label = DateFormat('MMM').format(day);
+                          } else if (period == AccountingPeriod.month) {
+                            label = '${day.day}';
+                          } else {
+                            label = DateFormat('E').format(day);
+                          }
+                          final hasData = val > 0;
                           return Column(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
@@ -376,12 +593,14 @@ class _RevenueChart extends StatelessWidget {
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 400),
                                   width: barWidth - 4,
-                                  height: barH,
+                                  height: hasData ? barH : 4,
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
+                                    gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
-                                      colors: [kPurple, Color(0xFF8B83E0)],
+                                      colors: hasData
+                                          ? [kPurple, const Color(0xFF8B83E0)]
+                                          : [kBorder, kBorder],
                                     ),
                                     borderRadius:
                                         BorderRadius.circular(4),
@@ -675,10 +894,12 @@ class _TransactionRow extends StatelessWidget {
   }
 
   Color get _statusBg {
-    if (booking.isConfirmed || booking.isCompleted)
+    if (booking.isConfirmed || booking.isCompleted) {
       return const Color(0xFFE6F7F3);
-    if (booking.isCancelled || booking.isRejected)
+    }
+    if (booking.isCancelled || booking.isRejected) {
       return const Color(0xFFFCECEC);
+    }
     return const Color(0xFFFFF8EC);
   }
 

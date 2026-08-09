@@ -10,17 +10,15 @@ Future<void> main() async {
   print('Running query...');
   
   try {
-    final data = await _db.from('bookings').select('''
-        *,
-        stations ( id, name, rooms ( id, name, type, cyber_id ) )
-      ''').order('start_time');
+    final data = await _db.from('cybers').select().order('created_at');
         
-    print('Query succeeded! Found \${data.length} bookings.');
-    for (var b in data) {
-      print("- Booking ID: \${b['id']} | Start: \${b['start_time']} | Station ID: \${b['station_id']} | Status: \${b['status']}");
+    print('Query succeeded! Found ${data.length} cybers.');
+    for (var c in data) {
+      print("- Cyber ID: ${c['id']} | Name: ${c['name']} | End Date: ${c['subscription_end_date']}");
+      print("  Raw data: $c");
     }
   } catch (e, stacktrace) {
-    print('Query failed with error: \$e');
+    print('Query failed with error: $e');
     print(stacktrace);
   }
   

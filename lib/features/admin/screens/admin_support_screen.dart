@@ -5,6 +5,8 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../bootstrap.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/support_chat_provider.dart';
+import '../../../data/models/user.dart';
+import '../widgets/admin_user_bookings_sheet.dart';
 
 class AdminSupportScreen extends ConsumerStatefulWidget {
   const AdminSupportScreen({super.key});
@@ -477,6 +479,8 @@ class _ChatDetailViewState extends ConsumerState<_ChatDetailView> {
   @override
   Widget build(BuildContext context) {
     final messagesSnap = ref.watch(supportMessagesProvider(widget.chatId));
+    final chatsSnap = ref.watch(adminChatsProvider);
+    final chat = chatsSnap.valueOrNull?.where((c) => c.id == widget.chatId).firstOrNull;
 
     return Column(
       children: [
@@ -501,6 +505,34 @@ class _ChatDetailViewState extends ConsumerState<_ChatDetailView> {
                     fontWeight: FontWeight.bold),
               ),
               const Spacer(),
+              if (chat != null)
+                TextButton.icon(
+                  onPressed: () {
+                    // Build a basic user from the chat session — the sheet loads
+                    // bookings and wallet data internally, so no async needed here.
+                    final user = AppUser(
+                      id: chat.userId,
+                      name: chat.userName,
+                      role: 'user',
+                      createdAt: DateTime.now(),
+                    );
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => AdminUserBookingsSheet(
+                        user: user,
+                        roleColor: AppColors.green,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.person_outline, size: 18),
+                  label: const Text('View Profile'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.green,
+                  ),
+                ),
+              const SizedBox(width: 8),
               ElevatedButton.icon(
                 onPressed: widget.onResolve,
                 icon: const Icon(Icons.check_circle_outline, size: 18),

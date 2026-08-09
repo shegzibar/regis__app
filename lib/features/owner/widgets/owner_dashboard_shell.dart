@@ -22,7 +22,7 @@ class OwnerDashboardShell extends ConsumerStatefulWidget {
 class _OwnerDashboardShellState extends ConsumerState<OwnerDashboardShell> {
   int _selectedIndex = 0;
 
-  static const _profileIndex = 5;
+  static const _profileIndex = 6;
 
   static const _ownerRoutes = [
     '/owner/home',
@@ -30,6 +30,7 @@ class _OwnerDashboardShellState extends ConsumerState<OwnerDashboardShell> {
     '/owner/payments',
     '/owner/schedule',
     '/owner/stations',
+    '/owner/tournaments',
     '/owner/profile',
   ];
 
@@ -204,6 +205,7 @@ class _Sidebar extends StatelessWidget {
       _NavItem(Icons.payments_outlined, 'owner_dashboard.payments'.tr()),
       _NavItem(Icons.calendar_month_outlined, 'owner_dashboard.schedule'.tr()),
       _NavItem(Icons.computer_outlined, 'owner_dashboard.stations'.tr()),
+      _NavItem(Icons.emoji_events_outlined, 'Tournaments'),
     ];
 
     final adminItems = [
@@ -240,8 +242,8 @@ class _Sidebar extends StatelessWidget {
                 Icons.person_outline,
                 'owner_dashboard.my_profile'.tr(),
               ),
-              selected: selectedIndex == 5,
-              onTap: () => onSelect(5),
+              selected: selectedIndex == 6,
+              onTap: () => onSelect(6),
             ),
             if (showAdminItems) ...[
               const Padding(

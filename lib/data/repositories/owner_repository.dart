@@ -409,6 +409,45 @@ class OwnerRepository {
         .eq('id', itemId);
   }
 
+  Future<void> updateInventoryItemStock(String itemId, int additionalStock) async {
+    // 1. Fetch current stock
+    final current = await _supabase
+        .from('cyber_inventory_items')
+        .select('stock')
+        .eq('id', itemId)
+        .single();
+    final currentStock = (current['stock'] as num?)?.toInt() ?? 0;
+    
+    // 2. Update with new stock
+    await _supabase
+        .from('cyber_inventory_items')
+        .update({'stock': currentStock + additionalStock})
+        .eq('id', itemId);
+  }
+
+  Future<void> recordInventoryItemUsage(String itemId, int amountUsed) async {
+    // 1. Fetch current stock and used
+    final current = await _supabase
+        .from('cyber_inventory_items')
+        .select('stock, used')
+        .eq('id', itemId)
+        .single();
+    final currentStock = (current['stock'] as num?)?.toInt() ?? 0;
+    final currentUsed = (current['used'] as num?)?.toInt() ?? 0;
+    
+    final newStock = currentStock - amountUsed;
+    final newUsed = currentUsed + amountUsed;
+    
+    // 2. Update stock and used
+    await _supabase
+        .from('cyber_inventory_items')
+        .update({
+          'stock': newStock < 0 ? 0 : newStock, // prevent negative stock if they forgot to restock
+          'used': newUsed,
+        })
+        .eq('id', itemId);
+  }
+
   // --- Booking Items Management ---
   
   Future<List<BookingItem>> getBookingItems(String bookingId) async {
@@ -430,6 +469,7 @@ class OwnerRepository {
       'item_id': item.id,
       'quantity': quantity,
       'price_at_time': item.price,
+      'cost_at_time': item.costPrice,
       'total_price': totalPrice,
     }).select('*, cyber_inventory_items(*)').single();
 
@@ -437,6 +477,9 @@ class OwnerRepository {
     final bookingRaw = await _supabase.from('bookings').select('total_amount').eq('id', bookingId).single();
     final currentTotal = (bookingRaw['total_amount'] as num).toDouble();
     await _supabase.from('bookings').update({'total_amount': currentTotal + totalPrice}).eq('id', bookingId);
+
+    // Deduct stock and increment used/sold count automatically
+    await recordInventoryItemUsage(item.id, quantity);
 
     return BookingItem.fromMap(row);
   }
@@ -449,7 +492,12 @@ class OwnerRepository {
         .eq('id', bookingId)
         .single();
     
-    final startTime = DateTime.parse(bookingRaw['start_time']);
+    // Ensure start_time is treated as UTC if it lacks a timezone indicator
+    String startTimeStr = bookingRaw['start_time'];
+    if (!startTimeStr.contains('Z') && !startTimeStr.contains('+')) {
+      startTimeStr += 'Z';
+    }
+    final startTime = DateTime.parse(startTimeStr).toLocal();
     final bookingFee = (bookingRaw['booking_fee'] as num).toDouble();
     
     // Parse the joined data safely
@@ -490,7 +538,12 @@ class OwnerRepository {
         .eq('id', bookingId)
         .single();
     
-    final startTime = DateTime.parse(bookingRaw['start_time']);
+    // Ensure start_time is treated as UTC if it lacks a timezone indicator
+    String startTimeStr = bookingRaw['start_time'];
+    if (!startTimeStr.contains('Z') && !startTimeStr.contains('+')) {
+      startTimeStr += 'Z';
+    }
+    final startTime = DateTime.parse(startTimeStr).toLocal();
     final bookingFee = (bookingRaw['booking_fee'] as num).toDouble();
     
     final stationData = bookingRaw['stations'] as Map<String, dynamic>;

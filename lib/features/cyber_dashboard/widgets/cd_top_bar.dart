@@ -61,9 +61,30 @@ class CdTopBar extends ConsumerWidget {
 
           const Spacer(),
 
+          // Plan badge + Renew + Clock
+          cyberAsync.when(
+            data: (cyber) {
+              if (cyber == null) return const SizedBox.shrink();
+              return Row(
+                children: [
+                  // Plan badge
+                  _PlanBadge(plan: cyber.subscriptionPlan),
+                  const SizedBox(width: 8),
+                  // Renew button — only when expiring soon or expired
+                  if (cyber.subscriptionEndDate != null && cyber.expiryUrgency >= 2) ...[
+                    _RenewButton(urgency: cyber.expiryUrgency),
+                    const SizedBox(width: 8),
+                  ],
+                ],
+              );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+
           // Live Clock
           const _LiveClock(),
-          
+
           const SizedBox(width: 16),
 
           // Language toggle
@@ -219,6 +240,79 @@ class _LiveClockState extends State<_LiveClock> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PlanBadge extends StatelessWidget {
+  final String plan;
+  const _PlanBadge({required this.plan});
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color;
+    final String label;
+    switch (plan.toLowerCase()) {
+      case 'growth':
+        color = Colors.blue;
+        label = 'Growth';
+        break;
+      case 'custom':
+        color = Colors.purple;
+        label = 'Custom';
+        break;
+      case 'starter':
+      default:
+        color = Colors.orange;
+        label = 'Starter';
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.workspace_premium_outlined, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RenewButton extends StatelessWidget {
+  final int urgency;
+  const _RenewButton({required this.urgency});
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color = urgency >= 3 ? kRed : kAmber;
+    return ElevatedButton.icon(
+      onPressed: () {},
+      icon: const Icon(Icons.autorenew, size: 14, color: Colors.white),
+      label: const Text(
+        'Renew',
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        minimumSize: const Size(0, 32),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       ),
     );
   }

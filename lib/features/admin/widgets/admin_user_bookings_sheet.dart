@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/user.dart';
+import '../../../core/providers/wallet_provider.dart';
 import '../providers/admin_accounts_providers.dart';
 
 class AdminUserBookingsSheet extends ConsumerWidget {
@@ -117,6 +118,13 @@ class AdminUserBookingsSheet extends ConsumerWidget {
                   ],
                 ),
               ),
+
+              const SizedBox(height: 8),
+              const Divider(color: AppColors.darkBorder, height: 1),
+              const SizedBox(height: 4),
+
+              // ── Wallet Section ──
+              _AdminUserWalletSection(user: user),
 
               const SizedBox(height: 8),
               const Divider(color: AppColors.darkBorder, height: 1),
@@ -449,6 +457,256 @@ class AdminBookingCard extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _AdminUserWalletSection extends ConsumerStatefulWidget {
+  final AppUser user;
+  const _AdminUserWalletSection({required this.user});
+
+  @override
+  ConsumerState<_AdminUserWalletSection> createState() => _AdminUserWalletSectionState();
+}
+
+class _AdminUserWalletSectionState extends ConsumerState<_AdminUserWalletSection> {
+  final _amountController = TextEditingController();
+  final _noteController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _submitTransaction(String type, int amount, String note, String shortId) async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+
+    try {
+      await ref.read(walletRepositoryProvider).addWalletTransaction(
+        shortId: shortId,
+        type: type,
+        amount: amount,
+        note: note.isNotEmpty ? note : null,
+        cyberName: 'Admin Compensation',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Transaction successful!'),
+            backgroundColor: AppColors.green,
+          ),
+        );
+        ref.invalidate(adminUserWalletProvider(widget.user.id));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showTransactionDialog(BuildContext context, String type, String shortId) {
+    // Clear previous values
+    _amountController.clear();
+    _noteController.clear();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.darkCard,
+          title: Text(
+            type == 'earned' ? 'Add Points' : 'Redeem Points',
+            style: const TextStyle(color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _amountController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Amount (Points)',
+                  labelStyle: const TextStyle(color: AppColors.textMuted),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.darkBorder),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _noteController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Note (Optional)',
+                  labelStyle: const TextStyle(color: AppColors.textMuted),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.darkBorder),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final amountText = _amountController.text.trim();
+                final amount = int.tryParse(amountText);
+                final note = _noteController.text.trim();
+
+                if (amount == null || amount <= 0) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(content: Text('Enter a valid positive amount')),
+                  );
+                  return;
+                }
+
+                // Close dialog first using its own context, then run async work
+                Navigator.of(dialogContext).pop();
+
+                // Defer so dialog is fully closed before setState runs
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _submitTransaction(type, amount, note, shortId);
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: type == 'earned' ? AppColors.green : AppColors.error,
+              ),
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final walletAsync = ref.watch(adminUserWalletProvider(widget.user.id));
+    // When the user was built from chat session data, shortId may be null.
+    // Fall back to fetching it from the profiles table.
+    final resolvedShortId = widget.user.shortId ??
+        ref.watch(adminUserShortIdProvider(widget.user.id)).valueOrNull;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.account_balance_wallet_outlined, color: AppColors.textMuted, size: 16),
+              const SizedBox(width: 8),
+              const Text(
+                'Wallet & Points',
+                style: TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const Spacer(),
+              if (_isLoading)
+                const SizedBox(
+                  width: 16, height: 16,
+                  child: CircularProgressIndicator(color: AppColors.green, strokeWidth: 2),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          walletAsync.when(
+            loading: () => const SizedBox(height: 40, child: Center(child: CircularProgressIndicator(color: AppColors.green, strokeWidth: 2))),
+            error: (e, _) => Text('Error loading wallet: $e', style: const TextStyle(color: AppColors.error)),
+            data: (wallet) {
+              if (wallet == null) {
+                return const Text('User has no wallet yet.', style: TextStyle(color: AppColors.textMuted));
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Balance: ${wallet['balance']} pts',
+                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Wallet ID: ${resolvedShortId ?? '...'}',
+                          style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      _ActionButton(
+                        icon: Icons.remove,
+                        color: AppColors.error,
+                        onTap: resolvedShortId != null
+                            ? () => _showTransactionDialog(context, 'redeemed', resolvedShortId)
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      _ActionButton(
+                        icon: Icons.add,
+                        color: AppColors.green,
+                        onTap: resolvedShortId != null
+                            ? () => _showTransactionDialog(context, 'earned', resolvedShortId)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _ActionButton({required this.icon, required this.color, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Icon(icon, color: color, size: 20),
       ),
     );
   }

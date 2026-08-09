@@ -8,6 +8,9 @@ import '../../../core/providers/room_provider.dart';
 import '../../../core/providers/review_provider.dart';
 import '../../../shared/widgets/room_card.dart';
 import '../../../shared/widgets/review_card.dart';
+import '../../../core/providers/tournament_provider.dart';
+import '../widgets/tournament_card.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CyberDetailsScreen extends ConsumerStatefulWidget {
   final String cyberId;
@@ -170,6 +173,78 @@ class _CyberDetailsScreenState extends ConsumerState<CyberDetailsScreen> {
                       },
                       loading: () => const SizedBox.shrink(),
                       error: (_, __) => const SizedBox.shrink(),
+                    ),
+
+                    // Upcoming Tournaments Section
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final tournamentsAsync = ref.watch(
+                            localTournamentsProvider(widget.cyberId));
+                        return tournamentsAsync.when(
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                          data: (tournaments) {
+                            if (tournaments.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.emoji_events,
+                                        color: Colors.amber, size: 20),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Upcoming Tournaments',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF7C3AED),
+                                        borderRadius:
+                                            BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '${tournaments.length}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                                SizedBox(
+                                  height: 230,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: tournaments.length,
+                                    itemBuilder: (context, i) {
+                                      return TournamentCard(
+                                        tournament: tournaments[i],
+                                        onJoined: () => ref.invalidate(
+                                            localTournamentsProvider(
+                                                widget.cyberId)),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 32),
+                              ],
+                            );
+                          },
+                        );
+                      },
                     ),
 
                     // Room Selection

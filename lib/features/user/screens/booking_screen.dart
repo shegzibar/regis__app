@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/room_provider.dart';
 import '../../../core/providers/booking_provider.dart';
+import '../../../core/providers/cyber_provider.dart';
 import '../../../data/repositories/booking_repository.dart';
 import '../../../shared/widgets/date_card.dart';
 import '../../../shared/widgets/duration_button.dart';
@@ -35,7 +36,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
   late final List<DateTime> _availableDates;
 
-  final List<String> _timeSlots = [
+  List<String> _timeSlots = [
     '10:00 AM',
     '10:30 AM',
     '11:00 AM',
@@ -95,6 +96,14 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
   Future<void> _initRealtime() async {
     try {
+      final room = await ref.read(roomByIdProvider(widget.roomId).future);
+      if (room != null) {
+        final cyber = await ref.read(cyberByIdProvider(room.cyberId).future);
+        if (cyber != null) {
+          _generateTimeSlots(cyber.workingHoursFrom, cyber.workingHoursTo);
+        }
+      }
+
       final stations = await ref.read(roomStationsProvider(widget.roomId).future);
       if (stations.isEmpty || !mounted) return;
       _allStationIds = stations.map((s) => s.id).toList();
@@ -196,6 +205,41 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     setState(() {
       _selectedDuration = duration;
     });
+  }
+
+  void _generateTimeSlots(String? from, String? to) {
+    if (from == null || to == null) return;
+    try {
+      final fromParts = from.split(':');
+      final toParts = to.split(':');
+      int fromHour = int.parse(fromParts[0]);
+      int fromMin = int.parse(fromParts[1]);
+      int toHour = int.parse(toParts[0]);
+      int toMin = int.parse(toParts[1]);
+
+      final now = DateTime.now();
+      DateTime start = DateTime(now.year, now.month, now.day, fromHour, fromMin);
+      DateTime end = DateTime(now.year, now.month, now.day, toHour, toMin);
+
+      if (end.isBefore(start) || end.isAtSameMomentAs(start)) {
+        end = end.add(const Duration(days: 1));
+      }
+
+      final List<String> newSlots = [];
+      DateTime current = start;
+      while (current.isBefore(end)) {
+        newSlots.add(DateFormat('hh:mm a').format(current));
+        current = current.add(const Duration(minutes: 30));
+      }
+
+      if (mounted) {
+        setState(() {
+          _timeSlots = newSlots;
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to generate time slots: $e');
+    }
   }
 
   void _selectTimeSlot(String timeSlot) {

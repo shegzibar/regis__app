@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../data/models/booking.dart';
+import '../../../data/models/cyber.dart';
 import '../../owner/screens/owner_inventory_screen.dart'; // We can use the inventory provider here
 import '../constants/cd_colors.dart';
 import '../providers/cd_providers.dart';
@@ -48,6 +49,8 @@ class HomePage extends ConsumerWidget {
             style: const TextStyle(fontSize: 12, color: kGray),
           ),
           const SizedBox(height: 20),
+
+
 
           // Stats Row
           Row(
@@ -404,6 +407,89 @@ class _QuickAction extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SubscriptionBanner extends StatelessWidget {
+  final Cyber cyber;
+  const _SubscriptionBanner({required this.cyber});
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color;
+    final IconData icon;
+    switch (cyber.expiryUrgency) {
+      case 3:
+        color = kRed;
+        icon = Icons.warning_amber_rounded;
+        break;
+      case 2:
+        color = kAmber;
+        icon = Icons.hourglass_bottom_rounded;
+        break;
+      case 1:
+        color = kGreen;
+        icon = Icons.verified_outlined;
+        break;
+      default:
+        color = kGray;
+        icon = Icons.schedule;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(kRadius),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Subscription Plan: ${cyber.subscriptionPlan.toUpperCase()} (${cyber.subscriptionBilling})',
+                  style: const TextStyle(
+                    color: kSidebarText,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  cyber.expiryLabel,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (cyber.expiryUrgency > 1)
+            ElevatedButton(
+              onPressed: () {
+                // Here the owner could theoretically click to contact admin
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusSm)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                minimumSize: const Size(0, 36),
+              ),
+              child: const Text('Renew Now', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            ),
+        ],
       ),
     );
   }

@@ -62,6 +62,11 @@ const _navItems = [
     icon: Icons.account_balance_outlined,
     labelKey: 'cyber.accounting',
   ),
+  _NavItem(
+    key: 'tournaments',
+    icon: Icons.emoji_events_outlined,
+    labelKey: 'cyber.tournaments',
+  ),
 ];
 
 class CdSidebar extends ConsumerWidget {
@@ -73,18 +78,19 @@ class CdSidebar extends ConsumerWidget {
     final userProfile = ref.watch(currentUserProfileProvider).value;
     final isAr = context.locale.languageCode == 'ar';
     
-    final isManager = userProfile?.role == 'manager';
-    final isWorker = userProfile?.role == 'worker';
+    // In Supabase, the owner often has a default role of 'user'. 
+    // Workers and managers explicitly have 'worker' or 'manager'.
+    final isOwner = userProfile != null && userProfile.role != 'worker' && userProfile.role != 'manager';
     
     final visibleItems = _navItems.where((item) {
-      if (isManager) {
-        return item.key != 'workers' && item.key != 'accounting' && item.key != 'profile';
-      } else if (isWorker) {
-        return item.key == 'home' || 
-               item.key == 'manual' ||
-               item.key == 'schedule' || 
-               item.key == 'stations' || 
-               item.key == 'wallet_points';
+      if (!isOwner) {
+        // Workers and managers should not see these sensitive owner pages
+        if (item.key == 'accounting' ||
+            item.key == 'inventory' ||
+            item.key == 'profile' ||
+            item.key == 'workers') {
+          return false;
+        }
       }
       return true;
     }).toList();

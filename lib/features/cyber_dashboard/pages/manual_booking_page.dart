@@ -40,9 +40,9 @@ class _ManualBookingPageState extends ConsumerState<ManualBookingPage> {
         startTime.minute,
       );
 
-      // Conflict check
-      final isAvailable = await ref.read(cdBookingRepoProvider).isStationAvailable(
-        selectedStationId!,
+      // Conflict check: ensure no station in the room is booked at this time
+      final isAvailable = await ref.read(cdBookingRepoProvider).isRoomAvailable(
+        selectedRoomId!,
         start,
         start.add(Duration(hours: durationHours)),
       );

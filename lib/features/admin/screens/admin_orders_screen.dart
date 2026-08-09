@@ -404,78 +404,87 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.darkCard,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Text(
-                  'Order Details',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+      builder: (_) => SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            24 + MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'Order Details',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                _StatusChip(status: status),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _DetailRow(
-              icon: Icons.person_outline,
-              label: 'Customer',
-              value: user?['name'] ?? '—',
-            ),
-            _DetailRow(
-              icon: Icons.phone_outlined,
-              label: 'Phone',
-              value: user?['phone'] ?? '—',
-            ),
-            _DetailRow(
-              icon: Icons.store_outlined,
-              label: 'Cyber',
-              value: '${cyber?['name'] ?? '—'} (${cyber?['city'] ?? ''})',
-            ),
-            _DetailRow(
-              icon: Icons.room_outlined,
-              label: 'Room / Station',
-              value:
-                  '${room?['name'] ?? '—'} › ${station?['name'] ?? '—'}',
-            ),
-            _DetailRow(
-              icon: Icons.access_time,
-              label: 'Start',
-              value: _formatDateTime(booking['start_time']),
-            ),
-            _DetailRow(
-              icon: Icons.timer_off_outlined,
-              label: 'End',
-              value: _formatDateTime(booking['end_time']),
-            ),
-            _DetailRow(
-              icon: Icons.payments_outlined,
-              label: 'Amount',
-              value:
-                  '${booking['total_amount'] ?? 0} EGP  (fee: ${booking['booking_fee'] ?? 0} EGP)',
-            ),
-            if ((booking['notes'] ?? '').isNotEmpty)
-              _DetailRow(
-                icon: Icons.note_outlined,
-                label: 'Notes',
-                value: booking['notes'].toString(),
+                  const Spacer(),
+                  _StatusChip(status: status),
+                ],
               ),
-          ],
+              const SizedBox(height: 20),
+              _DetailRow(
+                icon: Icons.person_outline,
+                label: 'Customer',
+                value: user?['name'] ?? '—',
+              ),
+              _DetailRow(
+                icon: Icons.phone_outlined,
+                label: 'Phone',
+                value: user?['phone'] ?? '—',
+              ),
+              _DetailRow(
+                icon: Icons.store_outlined,
+                label: 'Cyber',
+                value: '${cyber?['name'] ?? '—'} (${cyber?['city'] ?? ''})',
+              ),
+              _DetailRow(
+                icon: Icons.room_outlined,
+                label: 'Room / Station',
+                value:
+                    '${room?['name'] ?? '—'} › ${station?['name'] ?? '—'}',
+              ),
+              _DetailRow(
+                icon: Icons.access_time,
+                label: 'Start',
+                value: _formatDateTime(booking['start_time']),
+              ),
+              _DetailRow(
+                icon: Icons.timer_off_outlined,
+                label: 'End',
+                value: _formatDateTime(booking['end_time']),
+              ),
+              _DetailRow(
+                icon: Icons.payments_outlined,
+                label: 'Amount',
+                value:
+                    '${booking['total_amount'] ?? 0} EGP  (fee: ${booking['booking_fee'] ?? 0} EGP)',
+              ),
+              if ((booking['notes'] ?? '').isNotEmpty)
+                _DetailRow(
+                  icon: Icons.note_outlined,
+                  label: 'Notes',
+                  value: booking['notes'].toString(),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
+
 
   String _formatDateTime(dynamic raw) {
     if (raw == null) return '—';

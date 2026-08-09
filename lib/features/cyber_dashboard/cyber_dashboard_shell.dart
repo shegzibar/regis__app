@@ -18,6 +18,7 @@ import 'pages/cd_edit_room_page.dart';
 import 'pages/manual_booking_page.dart';
 import 'pages/accounting_page.dart';
 import '../owner/screens/owner_inventory_screen.dart';
+import '../owner/screens/owner_tournaments_screen.dart';
 import 'widgets/cd_top_bar.dart';
 import 'widgets/cd_sidebar.dart';
 
@@ -151,6 +152,7 @@ class _CyberDashboardShellState
       'wallet_points' => const WalletPointsPage(),
       'inventory' => const OwnerInventoryScreen(),
       'accounting' => const AccountingPage(),
+      'tournaments' => const OwnerTournamentsScreen(),
       _ => const HomePage(),
     };
   }
@@ -158,29 +160,104 @@ class _CyberDashboardShellState
   @override
   Widget build(BuildContext context) {
     final page = ref.watch(cdSelectedPageProvider);
+    final cyberAsync = ref.watch(currentCyberProvider);
     final isAr = context.locale.languageCode == 'ar';
-    return Directionality(
-      textDirection: isAr ? ui.TextDirection.rtl : ui.TextDirection.ltr,
-      child: Scaffold(
+    
+    return cyberAsync.when(
+      loading: () => const Scaffold(
         backgroundColor: kBg,
-        body: Column(
-          children: [
-            const CdTopBar(),
-            Expanded(
-              child: Row(
-                children: [
-                  const CdSidebar(),
-                  Expanded(
-                    child: ClipRect(
-                      child: _currentPage(page),
-                    ),
+        body: Center(child: CircularProgressIndicator(color: kPurple)),
+      ),
+      error: (e, st) => Scaffold(
+        backgroundColor: kBg,
+        body: Center(child: Text('Error loading cyber data: $e', style: const TextStyle(color: Colors.red))),
+      ),
+      data: (cyber) {
+        if (cyber != null && !cyber.isSubscriptionActive) {
+          return Directionality(
+            textDirection: isAr ? ui.TextDirection.rtl : ui.TextDirection.ltr,
+            child: Scaffold(
+              backgroundColor: kBg,
+              body: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(40),
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  decoration: BoxDecoration(
+                    color: kCardBg,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                   ),
-                ],
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.block, color: Colors.red, size: 64),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Subscription Expired',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Your cyber café subscription has expired. Please contact the administrator to renew your plan and restore access to your dashboard.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Supabase.instance.client.auth.signOut();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPurple,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text('Logout', style: TextStyle(color: Colors.white)),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        return Directionality(
+          textDirection: isAr ? ui.TextDirection.rtl : ui.TextDirection.ltr,
+          child: Scaffold(
+            backgroundColor: kBg,
+            body: Column(
+              children: [
+                const CdTopBar(),
+                Expanded(
+                  child: Row(
+                    children: [
+                      const CdSidebar(),
+                      Expanded(
+                        child: ClipRect(
+                          child: _currentPage(page),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
